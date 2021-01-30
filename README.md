@@ -1,11 +1,11 @@
 # gene-paths
 
-Determine gene order and orientation in assemblies
+_Determine gene order and orientation in assemblies._
 
 
 ## Motivation
 
-These tools were developed to help anser the question "where are genes
+These tools  were developed to help answer the question "where are genes
 relative to each other?"  For instance, when typing _Staphyloccos aureus_
 SCCmec cassettes, it is relevant whether IS431 is up- or downstream of the
 _mecA_ gene, and whether it is inverted.
@@ -17,12 +17,13 @@ when repetitions and mobile elements are involved.
 It would seem that if we find features A and B on separate contigs, we are
 out of luck.  Not knowing what is between the contigs, or even their order,
 we can't tell which of A or B is upstream, whether one is inverted relative
-to the other, and we certainly can't know the distance between them.
+to the other, and we certainly can't know the distance between them.  Or so
+you would think.
 
 You may be surprised to learn that quite the opposite is true.
 
 Contigs do not generally end because of a lack of data, i.e. because what
-comes next is not covered by reads.  In most cases its left and right ends
+comes next is not covered by reads.  In most cases their left and right ends
 are covered by reads, but these imply that there are multiple continuations.
 
 In the assembly graph this could look like this:
@@ -34,16 +35,19 @@ In the assembly graph this could look like this:
 
 Here contig 1 cannot be extended further because in one place on the genome
 it is followed by the sequence captured in contig 2, whereas elsewhere it is
-followed by the (different) sequence of contig 3.
+followed by the (different) sequence in contig 3.
 
 However, if we know that our genes of interest are on contigs 1 and 2, then,
 with the knowledge of the assembly graph, we can actually find their genomic
-distance, relative orientation, and order.  In fact, we would know the exact
+distance, relative orientation, and order.  In fact, we know the exact
 nucleotide sequence connecting the two genes!
 
 Even if the features were located on contigs 1 and 4, we could still put a
 bound on their genomic distance, and (with a bit of luck) know their relative
 orientation and order with certainty.
+
+It is remarkable how much information we discard by routinely working with
+assembled contigs rather than assembly graphs.
 
 Clearly, as the number of edges between the features of interest increases,
 the number of possible paths between them rapidly explodes.  It is already
@@ -54,12 +58,12 @@ impossible to predict from this continuation of the graph:
                       +--- contig 4 ---+
      ___ contig 3 ___/                  \___ contig 6 ___
 
-which of the sequences 2-4-5, 2-4-6, 3-4-5, 3-4-6 are present with certainty
-on the genome (though we know that at least two must be).
+which of the sequences `2-4-5`, `2-4-6`, `3-4-5`, `3-4-6` are present with
+certainty on the genome (though we know that at least two must be).
 
-Nevertheless, it should be clear that the assembly graph provides a wealth
-of information that we normally discard by working with just the assembled
-contigs.
+Nevertheless, for the analysis of localised features such as arrangement of
+gene cassettes, insertion sites, promoter regions, etc. the assembly graph
+provides indispensable information.
 
 This is the motivation for writing `gene-paths` (and yes, the work is still
 in progress).

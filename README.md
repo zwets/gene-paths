@@ -3,7 +3,28 @@
 _Determine gene order and orientation in assemblies._
 
 
-## Motivation
+## Installation
+
+#### Requirements
+
+* A C++ compiler
+
+#### Building
+
+* `make`
+
+
+## Quick Usage
+
+* `gene-paths --help`
+* `gene-paths -g examples/assembly.gfa
+              -f examples assembly.fna
+              -q examples/query1.gfa`
+
+
+## Background
+
+#### Motivation
 
 These tools  were developed to help answer the question "where are genes
 relative to each other?"  For instance, when typing _Staphyloccos aureus_
@@ -50,13 +71,13 @@ It is remarkable how much information we discard by routinely working with
 assembled contigs rather than assembly graphs.
 
 Clearly, as the number of edges between the features of interest increases,
-the number of possible paths between them rapidly explodes.  It is already
+the number of possible paths connecting them rapidly explodes.  It is already
 impossible to predict from this continuation of the graph:
 
-     ___ contig 2 ___                    ___ contig 5 ___
-                     \                  /
-                      +--- contig 4 ---+
-     ___ contig 3 ___/                  \___ contig 6 ___
+     __ contig 2 ___                    ___ contig 5 __
+                    \                  /
+                     +--- contig 4 ---+
+     __ contig 3 ___/                  \___ contig 6 __
 
 which of the sequences `2-4-5`, `2-4-6`, `3-4-5`, `3-4-6` are present with
 certainty on the genome (though we know that at least two must be).
@@ -68,20 +89,50 @@ provides indispensable information.
 This is the motivation for writing `gene-paths` (and yes, the work is still
 in progress).
 
+#### How are assembly graphs stored?
 
-## Usage
+The GFA format is the de facto standard for assembly graphs.  Its spec is
+maintained at <https://github.com/GFA-spec/GFA-spec>.
+[GFA2](https://github.com/GFA-spec/GFA-spec/blob/master/GFA2.md) is the
+current recommended format, and can be easily upgraded to from GFA v1.
 
-#### Where to get assembly graphs?
+#### How do I get an assembly graph?
 
-SPAdes by default writes the assembly graph to  `contigs.gfa`.
-[Unicycler](https://github.com/rrwick/Unicycler) can be used to further
-polish assemblies.  SKESA can generate the assembly graph post-hoc using
-`gfa-connector`.  It's recent addition `saute` generates GFA by default.
+* [SPAdes](http://cab.spbu.ru/software/spades/) by default writes the assembly
+  graph to `contigs.gfa`, but note the points made about overlap removal in
+  the [Unicycler documentation](https://github.com/rrwick/Unicycler#background).
+* [Unicycler](https://github.com/rrwick/Unicycler) and its successor,
+  [Trycycler](https://github.com/rrwick/Trycycler/wiki) optimise SPAdes and
+  can perform hybrid short and long read assembly.
+* [SKESA](https://github.com/ncbi/SKESA.git) can generate assembly graphs for
+  assemblies and reads using its `gfa_connector` utility.  SKESA's assemblies
+  tend to be more fragmented than SPAdes's, but there is a
+  [trade-off with speed and the number of misassemblies](https://cab.spbu.ru/benchmarking-tools-for-de-novo-microbial-assembly/).
+* [SAUTE](https://github.com/ncbi/SKESA#saute---sequence-assembly-using-target-enrichment)
+  was recently added to SKESA, and combines _de novo_ assembly with alignment
+  to a reference, producing all paths through the assembly graph consistent
+  with the reference.
 
 #### Can I look at assembly graphs?
 
 Yes, and it's very insightful.  Get the fabulous
 [Bandage](https://github.com/rrwick/Bandage) and enjoy!
+
+#### What other tools work with GFA?
+
+* [gfatools](https://github.com/lh3/gfatools) is a GFA parser with a succinct
+  C implementation of data structures to hold assembly graphs.  It has tools
+  to convert GFA to FASTA, BED, and SQL, and to perform miniasm-like
+  transformations on the graph.
+* [gfakluge](https://github.com/edawson/gfakluge) is a GFA parser and C++
+  class library that maps one-to-one to the entities in GFA.  Its `gfak` tool
+  converts between GFA formats, and can sort, subset, merge, and trim graphs.
+* The [page on modularising assemblers](https://github.com/GFA-spec/assembler-components)
+  will have more references of interest.
+* [vg](https://github.com/vgteam/vg) is the nuclear option.  Whereas the tools
+  above target GFA specifically, and (thus far) provide primarily parsers and
+  basic data structures, VG is the tool of the trade for working with [genome
+  variation graphs]().
 
 
 ---

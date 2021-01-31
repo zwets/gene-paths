@@ -22,7 +22,7 @@
 #include <cassert>
 
 
-#include "tinyFA.hpp"
+//#include "tinyFA.hpp"
 #include "pliib.hpp"
 
 namespace gfak{
@@ -165,7 +165,7 @@ namespace gfak{
          *  Adds a GFA 0.1-style path_element (a "Walk") to a
          *  GFA1-style path container (which is a collection of these elements).
          */
-        void add_ranked_segment( const int& rank, const std::string& seg_name, const bool& ori, const std::string& overlap, std::vector<opt_elem> opts){
+        void add_ranked_segment( const int& rank, const std::string& seg_name, const bool& ori, const std::string& overlap, std::vector<opt_elem> /*opts*/){
             size_t corrected_rank = rank;
             if (rank == 0){
                 corrected_rank = this->segment_names.size() + 1;
@@ -2208,7 +2208,7 @@ namespace gfak{
              *  that file with a correspondinmg name. If no entry is present, maintain
              *  the "*" placeholder that should be present in that element's sequence field.
              */
-            inline void fill_sequences(const char* fasta_file){
+/*            inline void fill_sequences(const char* fasta_file){
 
                 TFA::tiny_faidx_t tf;
                 if (TFA::checkFAIndexFileExists(fasta_file)){
@@ -2233,7 +2233,7 @@ namespace gfak{
                     }
                 }
             }
-
+*/
             /**
              * Remove any sequence_elems (and any edges connected to them) that have
              * a sequence shorter than a certain length.

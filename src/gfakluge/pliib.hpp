@@ -91,7 +91,7 @@ namespace pliib{
 
 
     inline void reverse_complement(const char* seq, char*& ret, std::size_t len){
-        for (std::size_t i = len - 1; i >=0; i--){
+        for (std::size_t i = len - 1; i != static_cast<size_t>(-1); i--){
             ret[ len - 1 - i ] = (char) complement_array[ (int) seq[i] - 65];
         }
     }
@@ -128,7 +128,7 @@ namespace pliib{
         }
     }
 
-    inline void destroy_splits(char**& splits, const std::size_t& num_splits, int*& split_sizes){
+    inline void destroy_splits(char**& splits, const std::size_t&, int*& split_sizes){
         delete [] splits;
         delete [] split_sizes;
     }
@@ -363,7 +363,7 @@ namespace pliib{
     // TODO convert to template
     inline std::string join(std::uint64_t* x, int xlen, char glue){
         std::stringstream ret;
-        for (std::size_t i = 0; i < xlen; i++){
+        for (std::size_t i = 0; i < static_cast<size_t>(xlen); i++){
             if (i != 0){
                 ret << glue;
             }
@@ -376,8 +376,8 @@ namespace pliib{
         const int& len,
         char*& contig,
         uint32_t& position,
-        int& type,
-        bool forward = false){
+        int& /*type*/,
+        bool /*forward*/ = false){
             int first_bracket_index = -1;
             int last_bracket_index = len;
             int colon_index = -1;

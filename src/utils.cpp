@@ -70,6 +70,6 @@ verbose_emit(const char *fmt, ...)
     }
 }
 
-} // namespace khc
+} // namespace gene_paths
 
 // vim: sts=4:sw=4:ai:si:et

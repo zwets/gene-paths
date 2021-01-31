@@ -1,10 +1,10 @@
 CXXFLAGS += -std=c++14 -O3 -DNDEBUG -Wall -Wextra -pedantic #-march=native
 
-OBJS = gene-paths.o utils.o 
+OBJS = gene-paths.o parsegfa.o utils.o 
 
 LIBS =
 
-HDRS = utils.h
+HDRS = utils.h gfakluge/*.hpp
 
 TARGET = gene-paths
 
@@ -21,5 +21,5 @@ test:
 	$(MAKE) -C unit-test test
 
 %.o: %.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) -c $<
+	$(CXX) $(CXXFLAGS) -I gfakluge -c $<
 

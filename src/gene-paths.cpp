@@ -19,9 +19,12 @@
 
 #include <stdexcept>
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <cstring>
 #include <cstdlib>
+#include "gfakluge.hpp"
+#include "parsegfa.h"
 #include "utils.h"
 
 
@@ -69,18 +72,34 @@ int main (int /*argc*/, char *argv[])
         }
     }
 
-    if (!*argv) {
+    if (!*argv)
         usage_exit();
-    }
 
     gfa_fname = *argv++;
 
-    if (*argv) {
+    if (*argv)
         usage_exit();
-    }
 
-    verbose_emit("GFA file: %s", gfa_fname.c_str());
-    verbose_emit("FNA file: %s", fna_fname.c_str());
+    gfak::GFAKluge gfa;
+
+    std::ifstream gfa_file(gfa_fname);
+    if (!gfa_file)
+        raise_error("failed to open file: %s", gfa_fname.c_str());
+
+    if (fna_fname.length()) {
+
+        std::ifstream fna_file(fna_fname);
+        if (!fna_file)
+            raise_error("failed to open file: %s", fna_fname.c_str());
+
+        verbose_emit("reading GFA file: %s", gfa_fname.c_str());
+        verbose_emit("reading FASTA file: %s", fna_fname.c_str());
+        parse_gfa(gfa, gfa_file, fna_file);
+    }
+    else {
+        verbose_emit("reading GFA file: %s", gfa_fname.c_str());
+        parse_gfa(gfa, gfa_file);
+    }
 
     return 0;
 }

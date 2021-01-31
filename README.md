@@ -3,18 +3,18 @@
 _Determine gene order and orientation in assemblies._
 
 
+## Requirements
+
+* C++ compiler
+* BLAST+ suite (`blastn`, `makeblastdb`)
+
+
 ## Installation
 
-#### Requirements
-
-* A C++ compiler
-
-#### Building
-
-* `make`
+* `cd src && make`
 
 
-## Quick Usage
+## Usage
 
 * `gene-paths --help`
 * `gene-paths -g examples/assembly.gfa

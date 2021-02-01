@@ -683,28 +683,6 @@ namespace gfak{
             double weighted_connectivity = -1;
 
             public:
-            GFAKluge(){
-                std::map<std::string, header_elem> header;
-                std::map<std::string, std::vector<contained_elem>, custom_key > seq_to_contained;
-                std::map<std::string, std::vector<link_elem>, custom_key > seq_to_link;
-                std::map<std::string, std::vector<alignment_elem> , custom_key> seq_to_alignment;
-                //Since we can't compare sequence elements for hashing,
-                // we cheat and use their names (which are sort of guaranteed to be
-                // unique.
-                std::map<std::string, sequence_elem, custom_key> name_to_seq;
-                std::map<std::string, path_elem> name_to_path;
-                //cout << fixed << setprecision(2);
-
-
-                /** GFA 2.0 containers **/
-                std::map<std::string, std::vector<fragment_elem> > seq_to_fragments;
-                std::map<std::string, std::vector<edge_elem> > seq_to_edges;
-                std::map<std::string, std::vector<gap_elem> > seq_to_gaps;
-                std::map<std::string, group_elem> groups;
-            }
-            ~GFAKluge(){
-
-            }
 
             inline double detect_version_from_file(const char* filename){
                 std::ifstream gfi;

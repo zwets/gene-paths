@@ -1,4 +1,4 @@
-CXXFLAGS += -std=c++14 -O3 -DNDEBUG -Wall -Wextra -pedantic #-march=native
+CXXFLAGS += -std=c++14 -O3 -DNDEBUG -Wall -Wextra -pedantic -Wno-unknown-pragmas -march=native
 
 OBJS = gene-paths.o parsegfa.o utils.o 
 

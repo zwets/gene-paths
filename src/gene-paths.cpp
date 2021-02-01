@@ -86,7 +86,7 @@ int main (int /*argc*/, char *argv[])
     if (!gfa_file)
         raise_error("failed to open file: %s", gfa_fname.c_str());
 
-    if (fna_fname.length()) {
+    if (!fna_fname.empty()) {
 
         std::ifstream fna_file(fna_fname);
         if (!fna_file)

@@ -44,9 +44,13 @@ parse_gfa(gfak::GFAKluge& gfak, std::istream& gfa, std::istream& fasta)
     std::string seqid;
     std::string data;
 
-    std::getline(fasta, line);
+    while (line.empty() && std::getline(fasta, line))
+        /* be lenient about empty lines at start */;
 
-    while (line.length()) {
+    if (!fasta)
+        raise_error("failed to read FASTA");
+
+    while (!line.empty()) {
 
         if (line[0] != '>')
             raise_error("invalid FASTA header: %s", line.c_str());
@@ -62,7 +66,7 @@ parse_gfa(gfak::GFAKluge& gfak, std::istream& gfa, std::istream& fasta)
             data.clear();
 
             while (std::getline(fasta, line)) {
-                if (!line.length())
+                if (line.empty())
                     continue;
                 if (line[0] == '>')
                     break;

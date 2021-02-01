@@ -1,2 +1,4 @@
 *.o
+*.a
 gene-paths
+run-all-tests

@@ -18,6 +18,7 @@
 #ifndef parsegfa_h_INCLUDED
 #define parsegfa_h_INCLUDED
 
+#include <fstream>
 #include <string>
 #include "gfakluge.hpp"
 

@@ -18,14 +18,13 @@
 #ifndef parsegfa_h_INCLUDED
 #define parsegfa_h_INCLUDED
 
-#include <fstream>
-#include <string>
-#include "gfakluge.hpp"
+#include <iostream>
+#include "gfagraph.h"
 
 namespace gene_paths {
 
-extern void parse_gfa(gfak::GFAKluge&, std::istream& gfa);
-extern void parse_gfa(gfak::GFAKluge&, std::istream& gfa, std::istream& fna);
+extern gfa::graph parse_gfa(std::istream& gfa);
+extern gfa::graph parse_gfa(std::istream& gfa, std::istream& fna);
 
 } // namespace gene_paths
 

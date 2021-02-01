@@ -23,8 +23,8 @@
 #include <string>
 #include <cstring>
 #include <cstdlib>
-#include "gfakluge.hpp"
 #include "parsegfa.h"
+#include "gfagraph.h"
 #include "utils.h"
 
 
@@ -80,11 +80,11 @@ int main (int /*argc*/, char *argv[])
     if (*argv)
         usage_exit();
 
-    gfak::GFAKluge gfa;
-
     std::ifstream gfa_file(gfa_fname);
     if (!gfa_file)
         raise_error("failed to open file: %s", gfa_fname.c_str());
+
+    gfa::graph graph;
 
     if (!fna_fname.empty()) {
 
@@ -94,12 +94,14 @@ int main (int /*argc*/, char *argv[])
 
         verbose_emit("reading GFA file: %s", gfa_fname.c_str());
         verbose_emit("reading FASTA file: %s", fna_fname.c_str());
-        parse_gfa(gfa, gfa_file, fna_file);
+        graph = parse_gfa(gfa_file, fna_file);
     }
     else {
         verbose_emit("reading GFA file: %s", gfa_fname.c_str());
-        parse_gfa(gfa, gfa_file);
+        graph = parse_gfa(gfa_file);
     }
+
+    std::cout << graph.segs.size() <<std::endl;
 
     return 0;
 }

@@ -16,12 +16,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "utils.h"
+
 #include <iostream>
 #include <string>
 #include <cstdio>
 #include <cstdarg>
 #include <cstdlib>
-#include "utils.h"
 
 namespace gene_paths {
 

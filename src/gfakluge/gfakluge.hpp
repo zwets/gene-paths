@@ -1328,6 +1328,13 @@ namespace gfak{
                 return st.str();
             }
 
+            /** Zwets: work around everything being copied by value. */
+            void set_sequence_data(const std::string& name, std::string data) {
+                auto iter = name_to_seq.find(name);
+                if (iter != name_to_seq.end()) {
+                    iter->second.sequence = data;
+                }
+            }
 
             /** Getter methods for elements, to keep users out of our data structures
              *  All of these return a copy of the backing structure in the GFAKluge object. 

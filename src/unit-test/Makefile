@@ -32,7 +32,7 @@ USER_HEADERS = $(USER_DIR)/*.h
 
 USER_OBJS = ../gfagraph.o ../parsegfa.o ../utils.o 
 
-TEST_OBJS = parsegfa-test.o utils-test.o
+TEST_OBJS = utils-test.o parsegfa-test.o gfagraph-test.o
 
 # Build targets.
 

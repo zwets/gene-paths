@@ -23,12 +23,6 @@ using namespace gene_paths;
 
 namespace {
 
-TEST(utils_test, dummy) {
-    for (int i=0; i < 10; ++i) {
-        EXPECT_EQ(i, -i * -1);
-    }
-}
-
 TEST(utils_test, raise_error) {
     ASSERT_EXIT( raise_error("test raise"), 
             testing::ExitedWithCode(1), ": error: test raise");

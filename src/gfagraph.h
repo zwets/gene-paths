@@ -63,11 +63,6 @@ struct graph {
 
     std::map<std::string, std::size_t> seg_ixs;
 
-    //seg* find_seg(const std::string& name) {
-        //auto i = seg_ixs.find(name);
-        //return i == seg_ixs.end() ? 0 : &(segs[i->second]);
-    //}
-
     void add_seg(const seg&);
 
     void add_edge(const std::string& sref, std::uint32_t sbeg, std::uint32_t send,

@@ -41,7 +41,7 @@ namespace gfa {
  *
  * We do not allow these (though this could be resolved by spitting into
  * four dovetailing segments).  We will not normally encounter these,
- * and will only work with dovetails and non-overlapping links.
+ * and will only work with dovetails and blunt (non-overlapping) links.
  *
  * This means we can use Heng Li's arc model from gfatools.  An arc is a
  * directed edge between two vertices v and w:
@@ -70,11 +70,10 @@ struct vtx {
 };
 
 struct arc {
-    std::uint64_t v_lv;     // 32 bits vtx_ix = seg_ix<<32|ori, lower 32 bits lv
-    std::uint32_t w;        // 32 bits vtx_ix = seg_ix<<32|ori
-    std::uint32_t dummy;    // reserved (align struct to 64 bits)
+    std::uint64_t v_lv;     // 32 bits vtx_ix = seg_ix<<1|ori, lower 32 bits lv
+    std::uint32_t w;        // 32 bits vtx_ix = seg_ix<<1|ori
     std::uint32_t ov, ow;
-    std::uint64_t arc_id;   // 31 bits edge ID, 1 bit complement
+    std::uint32_t dummy;    // reserved (align struct to 64 bits)
 };
 
 struct graph {

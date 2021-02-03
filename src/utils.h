@@ -18,8 +18,6 @@
 #ifndef utils_h_INCLUDED
 #define utils_h_INCLUDED
 
-#include <iostream>
-
 namespace gene_paths {
 
 extern void raise_error(const char* t, ...);

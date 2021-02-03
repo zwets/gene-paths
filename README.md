@@ -11,7 +11,7 @@ _Determine gene order and orientation in assemblies._
 
 ## Installation
 
-* `cd src && make`
+* `cd src && make && make test`
 
 
 ## Usage

@@ -1,6 +1,6 @@
 CXXFLAGS += -std=c++14 -O3 -DNDEBUG -Wall -Wextra -pedantic -Wno-unknown-pragmas -march=native
 
-OBJS = gene-paths.o gfagraph.o parsegfa.o utils.o 
+OBJS = gene-paths.o gfagraph.o gfa2logic.o parsegfa.o utils.o 
 
 LIBS =
 

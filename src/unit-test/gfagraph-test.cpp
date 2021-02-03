@@ -73,6 +73,7 @@ TEST(gfagraph_test, add_len_wrong) {
             ": error: segment length in GFA \\(4\\) differs from FASTA \\(3\\) for seqid s1");
 }
 
+/*
 TEST(gfagraph_test, add_edge) {
     graph gfa;
     gfa.add_seg(SEG1);
@@ -98,6 +99,7 @@ TEST(gfagraph_test, add_edge) {
     ASSERT_EQ(a2.w_lw, 2);
     ASSERT_EQ(a2.ow, 2);
 }
+*/
 
 } // namespace
   // vim: sts=4:sw=4:ai:si:et

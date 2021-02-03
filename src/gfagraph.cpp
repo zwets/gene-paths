@@ -21,6 +21,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include "gfa2logic.h"
 #include "utils.h"
 
 namespace gfa {
@@ -58,58 +59,37 @@ graph::add_edge(const std::string& sref, std::uint32_t sbeg, std::uint32_t send,
     if (*pd != '-' && *pd != '+')
         raise_error("sequence reference without sign: %s", dref.c_str());
 
-    std::uint64_t s_ori = *ps == '-' ? 1 : 0;
-    std::uint64_t d_ori = *pd == '-' ? 1 : 0;
+    std::uint64_t s_neg = *ps == '-' ? 1 : 0;
+    std::uint64_t d_neg = *pd == '-' ? 1 : 0;
 
         // look up segments
 
     std::string s_name(sref.begin(), ps);
     std::string d_name(dref.begin(), pd);
 
-    if (seg_ixs.find(s_name) == seg_ixs.end())
+    const auto s_iter = seg_ixs.find(s_name);
+    if (s_iter == seg_ixs.end())
         raise_error("unknown sequence in edge: %s", s_name.c_str());
 
-    if (seg_ixs.find(d_name) == seg_ixs.end())
+    const auto d_iter = seg_ixs.find(d_name);
+    if (d_iter == seg_ixs.end())
         raise_error("unknown sequence in edge: %s", d_name.c_str());
 
-    std::size_t s_ix = seg_ixs[s_name];
-    std::size_t d_ix = seg_ixs[d_name];
+    std::size_t s_ix = s_iter->second;
+    std::size_t d_ix = d_iter->second;
 
     const seg& s_seg = segs[s_ix];
     const seg& d_seg = segs[d_ix];
 
-        // check positions are on segs
+        // create the GFA2 representation with the logic
 
-    if (sbeg > s_seg.len || send > s_seg.len ||
-        dbeg > d_seg.len || dend > d_seg.len)
-        raise_error("edge positions outside sequence length");
+    gfa2::edge gfa2edge = {
+        { sref, std::uint32_t(s_seg.len), sbeg, send, bool(!s_neg) },
+        { dref, std::uint32_t(d_seg.len), dbeg, dend, bool(!d_neg) }
+    };
 
-        // translate positions to lengths
-
-    std::uint64_t v = (s_ix<<1) | s_ori;
-    std::uint64_t lv = sbeg;
-    std::uint64_t ov = send - sbeg;
-
-    std::uint64_t w = (d_ix<<1) | d_ori;
-    std::uint64_t lw = d_seg.len - dend;
-    std::uint64_t ow = dend - dbeg;
-
-    arc a1;
-    a1.v_lv = (v << 32) | lv;
-    a1.w_lw = (w << 32) | lw;
-    a1.ov = ov;
-    a1.ow = ow;
-
-    arc a2;
-    a2.v_lv = a1.w_lw;
-    a2.w_lw = a1.v_lv;
-    a2.ov = a1.ow;
-    a2.ow = a1.ov;
-
-    arcs.push_back(a1);
-    arcs.push_back(a2);
+    gfa2edge.validate();
 }
-
 
 } // namespace gfa
 

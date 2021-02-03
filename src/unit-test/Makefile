@@ -30,9 +30,9 @@ TARGET = run-all-tests
 
 USER_HEADERS = $(USER_DIR)/*.h
 
-USER_OBJS = ../gfagraph.o ../parsegfa.o ../utils.o 
+USER_OBJS = ../gfagraph.o gfa2logic.o ../parsegfa.o ../utils.o 
 
-TEST_OBJS = utils-test.o parsegfa-test.o gfagraph-test.o
+TEST_OBJS = utils-test.o parsegfa-test.o gfa2logic-test.o gfagraph-test.o
 
 # Build targets.
 

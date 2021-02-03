@@ -70,8 +70,9 @@ struct vtx {
 };
 
 struct arc {
-    std::uint64_t v_lv;     // 32 bits index, lower 32 bits lv
-    std::uint64_t w_lw;     // 32 bits index, lower 32 bits lw
+    std::uint64_t v_lv;     // 32 bits vtx_ix = seg_ix<<32|ori, lower 32 bits lv
+    std::uint32_t w;        // 32 bits vtx_ix = seg_ix<<32|ori
+    std::uint32_t dummy;    // reserved (align struct to 64 bits)
     std::uint32_t ov, ow;
     std::uint64_t arc_id;   // 31 bits edge ID, 1 bit complement
 };
@@ -82,6 +83,12 @@ struct graph {
     std::map<std::string, std::size_t> seg_ixs;
 
     std::vector<arc> arcs;
+
+    std::pair<std::vector<arc>::const_iterator, std::vector<arc>::const_iterator> 
+        arcs_from_vtx(std::uint64_t) const;
+
+    std::pair<std::vector<arc>::const_iterator, std::vector<arc>::const_iterator> 
+        arcs_from_v_lv(std::uint64_t) const;
 
     void add_seg(const seg&);
 

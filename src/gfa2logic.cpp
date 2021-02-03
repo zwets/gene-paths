@@ -42,6 +42,22 @@ edge::validate() const
 {
     s.validate();
     d.validate();
+
+    if ( !( (s.goes_left() && d.goes_right()) || (d.goes_left() && s.goes_right()) ) )
+        raise_error("impossible edge: %s to %s", s.id.c_str(), d.id.c_str());
+}
+
+bool
+edge::needs_flip() const
+{
+    if (!s.goes_left() && d.goes_left() && s.goes_right())
+        return true;
+    if (!d.goes_right() && s.goes_right() && d.goes_left())
+        return true;
+    if (s.goes_left() && d.goes_right())
+        return false;
+    raise_error("impossible edge: %s to %s", s.id.c_str(), d.id.c_str());
+    return false;
 }
 
 } // namespace gfa2

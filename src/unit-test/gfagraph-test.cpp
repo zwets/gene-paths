@@ -23,9 +23,6 @@ using namespace gfa;
 
 namespace {
 
-seg SEG1 = { 4, "s1", "ACGT" };
-seg SEG2 = { 9, "s2", "TAGCATACG" };
-
 TEST(gfagraph_test, empty_gfa) {
     graph gfa;
     ASSERT_EQ(gfa.segs.size(), 0);
@@ -73,12 +70,14 @@ TEST(gfagraph_test, add_len_wrong) {
             ": error: segment length in GFA \\(4\\) differs from FASTA \\(3\\) for seqid s1");
 }
 
-/*
+seg SEG1 = { 4, "s1", "ACGT" };
+seg SEG2 = { 9, "s2", "TAGCATACG" };
+
 TEST(gfagraph_test, add_edge) {
     graph gfa;
     gfa.add_seg(SEG1);
     gfa.add_seg(SEG2);
-    gfa.add_edge("s1+", 2, 4, "s2-", 6, 8);
+    gfa.add_edge("s1+", 1, 4, "s2-", 5, 9);
     ASSERT_EQ(gfa.segs.size(), 2);
     ASSERT_EQ(gfa.arcs.size(), 2);
 
@@ -88,18 +87,17 @@ TEST(gfagraph_test, add_edge) {
     ASSERT_EQ(s2.len, 9);
 
     auto a1 = gfa.arcs[0];
-    ASSERT_EQ(a1.v_lv, 2);
-    ASSERT_EQ(a1.ov, 2);
-    ASSERT_EQ(a1.w_lw, std::uint64_t(3)<<32|1);
-    ASSERT_EQ(a1.ow, 2);
+    ASSERT_EQ(a1.v_lv, 1);
+    ASSERT_EQ(a1.ov, 3);
+    ASSERT_EQ(a1.w, 3);
+    ASSERT_EQ(a1.ow, 4);
 
     auto a2 = gfa.arcs[1];
-    ASSERT_EQ(a2.v_lv, std::uint64_t(3)<<32|1);
-    ASSERT_EQ(a2.ov, 2);
-    ASSERT_EQ(a2.w_lw, 2);
-    ASSERT_EQ(a2.ow, 2);
+    ASSERT_EQ(a2.v_lv, std::uint64_t(3)<<32|5);
+    ASSERT_EQ(a2.w, 0);
+    ASSERT_EQ(a2.ov, 4);
+    ASSERT_EQ(a2.ow, 3);
 }
-*/
 
 } // namespace
   // vim: sts=4:sw=4:ai:si:et

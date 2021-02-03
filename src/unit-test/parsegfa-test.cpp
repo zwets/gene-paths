@@ -74,7 +74,7 @@ TEST(parsegfa_test, read_gfa_and_edge) {
     std::istringstream s_gfa("H\tVN:Z:2.0\n"
         "S\ts1\t4\tACGT\n"
         "S\ts2\t9\tTAGCATACG\n"
-        "E\t*\ts1+\ts2-\t2\t4$\t6\t8\t2M\n");
+        "E\t*\ts1+\ts2-\t1\t4$\t5\t9\t*\n");
 
     gfa::graph gfa = parse_gfa(s_gfa);
     ASSERT_EQ(gfa.segs.size(), 2);
@@ -86,16 +86,16 @@ TEST(parsegfa_test, read_gfa_and_edge) {
     ASSERT_EQ(s2.len, 9);
    
     auto a1 = gfa.arcs[0];
-    ASSERT_EQ(a1.v_lv, 2);
-    ASSERT_EQ(a1.ov, 2);
-    ASSERT_EQ(a1.w_lw, std::uint64_t(3)<<32|1);
-    ASSERT_EQ(a1.ow, 2);
+    ASSERT_EQ(a1.v_lv, 1);
+    ASSERT_EQ(a1.w, 3);
+    ASSERT_EQ(a1.ov, 3);
+    ASSERT_EQ(a1.ow, 4);
 
     auto a2 = gfa.arcs[1];
-    ASSERT_EQ(a2.v_lv, std::uint64_t(3)<<32|1);
-    ASSERT_EQ(a2.ov, 2);
-    ASSERT_EQ(a2.w_lw, 2);
-    ASSERT_EQ(a2.ow, 2);
+    ASSERT_EQ(a2.v_lv, std::uint64_t(3)<<32|5);
+    ASSERT_EQ(a2.w, 0);
+    ASSERT_EQ(a2.ov, 4);
+    ASSERT_EQ(a2.ow, 3);
 }
 
 } // namespace

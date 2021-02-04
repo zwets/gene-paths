@@ -69,8 +69,8 @@ graph::add_edge(const std::string& sref, std::uint32_t sbeg, std::uint32_t send,
 {
         // determine orientations and segment names
 
-    auto ps = sref.end() - 1;
-    auto pd = dref.end() - 1;
+    auto ps = sref.cend() - 1;
+    auto pd = dref.cend() - 1;
 
     if (*ps != '-' && *ps != '+')
         raise_error("sequence reference without sign: %s", sref.c_str());
@@ -83,15 +83,15 @@ graph::add_edge(const std::string& sref, std::uint32_t sbeg, std::uint32_t send,
 
         // look up segments
 
-    std::string s_name(sref.begin(), ps);
-    std::string d_name(dref.begin(), pd);
+    std::string s_name(sref.cbegin(), ps);
+    std::string d_name(dref.cbegin(), pd);
 
     const auto s_iter = seg_ixs.find(s_name);
-    if (s_iter == seg_ixs.end())
+    if (s_iter == seg_ixs.cend())
         raise_error("unknown sequence in edge: %s", s_name.c_str());
 
     const auto d_iter = seg_ixs.find(d_name);
-    if (d_iter == seg_ixs.end())
+    if (d_iter == seg_ixs.cend())
         raise_error("unknown sequence in edge: %s", d_name.c_str());
 
     std::size_t s_ix = s_iter->second;

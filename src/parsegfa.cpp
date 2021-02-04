@@ -53,7 +53,7 @@ gfak_to_graph(gfak::GFAKluge& gfak, gfa::graph& graph)
 
     for (auto p : n2s) {
         auto edges = s2e[p.first];
-        for (auto e = edges.begin(); e != edges.end(); ++e) {
+        for (auto e = edges.cbegin(); e != edges.cend(); ++e) {
             std::string sname = e->source_name + (e->source_orientation_forward ? '+' : '-');
             std::string dname = e->sink_name + (e->sink_orientation_forward ? '+' : '-');
             graph.add_edge(
@@ -80,9 +80,9 @@ add_fasta_to_gfak(gfak::GFAKluge& gfak, std::istream& fasta)
 
         data.clear();
 
-        std::string::const_iterator p = line.begin() + 1;
-        while (p != line.end() && !std::isspace(*p)) ++p;
-        seqid = std::string(line, 1, p - line.begin() - 1);
+        std::string::const_iterator p = line.cbegin() + 1;
+        while (p != line.cend() && !std::isspace(*p)) ++p;
+        seqid = std::string(line, 1, p - line.cbegin() - 1);
 
         while (std::getline(fasta, line)) {
             if (line.empty())

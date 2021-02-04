@@ -33,7 +33,7 @@ vtx::validate() const
         raise_error("begin or end beyond segment length on vertex %s", id.c_str());
     if (b > e)
         raise_error("begin past end on vertex %s", id.c_str());
-    if ((p && *(id.end()-1) != '+') || (!p && *(id.end()-1) != '-'))
+    if ((p && *(id.cend()-1) != '+') || (!p && *(id.cend()-1) != '-'))
         raise_error("inconsistent name and orientation: %s defined %s", id.c_str(), (p ? "pos" : "neg"));
 }
 

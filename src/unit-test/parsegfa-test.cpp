@@ -92,8 +92,8 @@ TEST(parsegfa_test, read_gfa_and_edge) {
     ASSERT_EQ(a1.ow, 4);
 
     auto a2 = gfa.arcs[1];
-    ASSERT_EQ(a2.v_lv, std::uint64_t(3)<<32|5);
-    ASSERT_EQ(a2.w, 0);
+    ASSERT_EQ(a2.v_lv, std::uint64_t(3^1)<<32|5);
+    ASSERT_EQ(a2.w, 0^1);
     ASSERT_EQ(a2.ov, 4);
     ASSERT_EQ(a2.ow, 3);
 }

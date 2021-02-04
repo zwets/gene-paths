@@ -131,8 +131,8 @@ graph::add_edge(const std::string& sref, std::uint32_t sbeg, std::uint32_t send,
     arcs.emplace(it1, a1);
 
     arc a2;
-    a2.v_lv = (std::uint64_t(w)<<32) | g2e.vtx_r().overhang_r();
-    a2.w = v;
+    a2.v_lv = (std::uint64_t(w^1)<<32) | g2e.vtx_r().overhang_r();
+    a2.w = v^1;
     a2.ov = a1.ow;
     a2.ow = a1.ov;
 

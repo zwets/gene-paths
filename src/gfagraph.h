@@ -29,7 +29,9 @@ namespace gfa {
  * A segment is a sequence with length and data.  A vertex is one side of
  * the segment, and corresponds to the + or - orientation of the segment.
  * The sequence data in the + and - orientations are reverse complements.
- * Segments and vertices are identified by indices.  The vertices of
+ * We store the data for the + orientation.
+ *
+ * Segments and vertices are identified by indices.  The two vertices of
  * segment seg_ix are given by seg_ix<<1|ori, thus seg_ix = vtx_ix>>1.
  *
  * GFA2 allows arbitrary overlaps between segments in an edge, allowing:
@@ -39,9 +41,10 @@ namespace gfa {
  *       /       \
  *      /         \ s2
  *
- * We do not allow these (though this could be resolved by spitting into
- * four dovetailing segments).  We will not normally encounter these,
- * and will only work with dovetails and blunt (non-overlapping) links.
+ * We do not cater for this type of overlap, nor its special case of
+ * containment where the length of s1 or s2 is equal to the overlap.  
+ * Overlaps must be at the ends of the segments (dovetailing), or be
+ * absent altogether (typical in a final assembly graph).
  *
  * This means we can use Heng Li's arc model from gfatools.  An arc is a
  * directed edge between two vertices v and w:
@@ -53,11 +56,12 @@ namespace gfa {
  *                   |<-- ow -->|<---- lw ---->
  *
  * Values lv are lw are lengths that contribute to the sort order of the
- * arcs.  Arcs are identified by their index in the arcs vector.  For each
- * edge we store both the forward and complement arc.
+ * forward and reverse arcs respectively.  For each edge we store both
+ * the forward and reverse arc.
  *
- * The arc array is kept sorted on (vtx_id<<32|vl), so that iteration over
- * the outbound arcs from any vertex is simple and efficient.
+ * Arcs are stored in a vector that is sorted on v_vl = vtx_id<<32|vl.
+ * Hence the outbound arcs from any v are contiguous and sorted on how
+ * "early" they leaves the vertex.
  */
 
 struct seg {

@@ -296,6 +296,7 @@ TEST(gfa2logic_test, edge_inv_needs_flip) {
     ASSERT_TRUE(e.needs_flip());
 }
 
+/*
 TEST(gfa2logic_test, container_flip) {
     edge e = {
      { s1p, 3, 0, 3, true },
@@ -323,7 +324,7 @@ TEST(gfa2logic_test, container_no_flip) {
     ASSERT_EQ(e.vtx_l().id, s1p);
     ASSERT_EQ(e.vtx_r().id, s2p);
 }
-
+*/
 
 } // namespace
   // vim: sts=5:sw=4:ai:si:et

@@ -38,14 +38,13 @@ when repetitions and mobile elements are involved.
 It would seem that if we find features A and B on separate contigs, we are
 out of luck.  Not knowing what is between the contigs, or even their order,
 we can't tell which of A or B is upstream, whether one is inverted relative
-to the other, and we certainly can't know the distance between them.  Or so
-you would think.
+to the other, and certainly not their distance.  Or so you'd think.
 
 You may be surprised to learn that quite the opposite is true.
 
-Contigs do not generally end because of a lack of data, i.e. because what
-comes next is not covered by reads.  In most cases their left and right ends
-are covered by reads, but these imply that there are multiple continuations.
+Contigs in an assembly do not generally end because of a lack of data, i.e.
+because what comes next is not covered.  On the contrary, their ends are
+covered by reads, but these imply multiple possible continuations.
 
 In the assembly graph this could look like this:
 
@@ -56,7 +55,7 @@ In the assembly graph this could look like this:
 
 Here contig 1 cannot be extended further because in one place on the genome
 it is followed by the sequence captured in contig 2, whereas elsewhere it is
-followed by the (different) sequence in contig 3.
+followed by the different sequence in contig 3.
 
 However, if we know that our genes of interest are on contigs 1 and 2, then,
 with the knowledge of the assembly graph, we can actually find their genomic
@@ -116,7 +115,7 @@ current recommended format, and can be easily upgraded to from GFA v1.
 #### Can I look at assembly graphs?
 
 Yes, and it's very insightful.  Get the fabulous
-[Bandage](https://github.com/rrwick/Bandage) and enjoy!
+[Bandage](https://github.com/rrwick/Bandage) for visualisation.
 
 #### What other tools work with GFA?
 

@@ -72,8 +72,8 @@ TEST(gfa2logic_test, contained_vtx) {
     ASSERT_FALSE(v.is_container());
     ASSERT_FALSE(v.is_blunt_r());
     ASSERT_FALSE(v.is_blunt_l());
-    ASSERT_TRUE(v.dovetails_r());
-    ASSERT_TRUE(v.dovetails_l());
+    ASSERT_FALSE(v.dovetails_r());
+    ASSERT_FALSE(v.dovetails_l());
     ASSERT_EQ(v.overlap(), v.l);
     ASSERT_EQ(v.overhang_l(), 0);
     ASSERT_EQ(v.overhang_r(), 0);
@@ -86,8 +86,8 @@ TEST(gfa2logic_test, contained_vtx_inv) {
     ASSERT_FALSE(v.is_container());
     ASSERT_FALSE(v.is_blunt_r());
     ASSERT_FALSE(v.is_blunt_l());
-    ASSERT_TRUE(v.dovetails_r());
-    ASSERT_TRUE(v.dovetails_l());
+    ASSERT_FALSE(v.dovetails_r());
+    ASSERT_FALSE(v.dovetails_l());
     ASSERT_EQ(v.overlap(), v.l);
     ASSERT_EQ(v.overhang_l(), 0);
     ASSERT_EQ(v.overhang_r(), 0);

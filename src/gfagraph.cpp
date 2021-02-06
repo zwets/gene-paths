@@ -41,11 +41,28 @@ v_lv_less_u(std::uint64_t v_lv, const arc& it)
     return v_lv < it.v_lv;
 }
 
-//static bool // for equal_range - returns true when *it1 goes before *it2
-//vtx_less_e(std::vector<arc>::const_iterator it1, std::vector<arc>::const_iterator it2)
-//{
-//    return it1->v_lv < it2->v_lv;
-//}
+const seg*
+graph::find_seg(const std::string& name) const
+{
+    const auto it = seg_ixs.find(name);
+    return it == seg_ixs.cend() ? 0 : &(segs[it->second]);
+}
+
+std::size_t
+graph::find_seg_ix(const std::string& name) const
+{
+    const auto it = seg_ixs.find(name);
+    return it == seg_ixs.cend() ? std::size_t(-1) : it->second;
+}
+
+std::size_t
+graph::get_seg_ix(const std::string& name) const
+{
+    const auto it = seg_ixs.find(name);
+    if (it == seg_ixs.cend())
+        raise_error("unknown segment: %s", name.c_str());
+    return it->second;
+}
 
 void
 graph::add_seg(const seg& s)
@@ -86,16 +103,8 @@ graph::add_edge(const std::string& sref, std::uint32_t sbeg, std::uint32_t send,
     std::string s_name(sref.cbegin(), ps);
     std::string d_name(dref.cbegin(), pd);
 
-    const auto s_iter = seg_ixs.find(s_name);
-    if (s_iter == seg_ixs.cend())
-        raise_error("unknown sequence in edge: %s", s_name.c_str());
-
-    const auto d_iter = seg_ixs.find(d_name);
-    if (d_iter == seg_ixs.cend())
-        raise_error("unknown sequence in edge: %s", d_name.c_str());
-
-    std::size_t s_ix = s_iter->second;
-    std::size_t d_ix = d_iter->second;
+    std::size_t s_ix = get_seg_ix(s_name);
+    std::size_t d_ix = get_seg_ix(d_name);
 
     const seg& s_seg = segs[s_ix];
     const seg& d_seg = segs[d_ix];
@@ -147,12 +156,6 @@ graph::arcs_from_v_lv(std::uint64_t v_lv) const
     std::vector<arc>::const_iterator lo = std::lower_bound(arcs.cbegin(), arcs.cend(), v_lv, v_lv_less_l);
 
     return std::make_pair(lo, std::upper_bound(lo, arcs.cend(), next, v_lv_less_u));
-}
-
-std::pair<std::vector<arc>::const_iterator, std::vector<arc>::const_iterator>
-graph::arcs_from_vtx(std::uint64_t vtx_id) const
-{
-    return arcs_from_v_lv(vtx_id << 32);
 }
 
 

@@ -37,13 +37,13 @@ struct vtx {
     bool is_container() const { return b != 0 && e != l; }
     bool is_blunt_r() const { return p ? b == l : e == 0; }
     bool is_blunt_l() const { return p ? e == 0 : b == l; }
-    bool dovetails_r() const { return p ? e == l && b < l : b == 0 && e > 0; }
-    bool dovetails_l() const { return p ? b == 0 && e > 0 : e == l && b < l; }
+    bool dovetails_r() const { return p ? e == l && b < l && b > 0 : b == 0 && e > 0 && e < l; }
+    bool dovetails_l() const { return p ? b == 0 && e > 0 && e < l : e == l && b < l && b > 0; }
     std::uint32_t overlap() const { return e - b; }
     std::uint32_t overhang_l() const { return p ? b : l - e; }
     std::uint32_t overhang_r() const { return p ? l - e : b; }
-    bool goes_left() const { return is_blunt_r() || dovetails_r() || is_contained(); }
-    bool goes_right() const { return is_blunt_l() || dovetails_l() || is_contained(); }
+    bool goes_left() const { return is_blunt_r() || dovetails_r(); }
+    bool goes_right() const { return is_blunt_l() || dovetails_l(); }
 };
 
 struct edge {

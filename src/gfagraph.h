@@ -1,5 +1,5 @@
 /* gfagraph.h
- * 
+ *
  * Copyright (C) 2021  Marco van Zwetselaar <io@zwets.it>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -53,7 +53,7 @@ namespace gfa {
  *
  *      |<--- lv --->|<-- ov -->|
  *   v: -------------============
- *                     overlap         
+ *                     overlap
  *                w: ============--------------
  *                   |<-- ow -->|<---- lw ---->
  *
@@ -105,7 +105,7 @@ struct graph {
 
     std::size_t find_seg_ix(const std::string& name) const;     // ix or size_t(-1)
     std::size_t get_seg_ix(const std::string& name) const;      // ix or error out
-    
+
     const seg* find_seg(const std::string& name) const;         // pointer or null
     inline const seg& get_seg(const std::string& name) const    // ref or error out
         { return segs.at(get_seg_ix(name)); }
@@ -124,7 +124,7 @@ struct graph {
     std::vector<arc> arcs;
 
     // begin and past-the-end iterator for all arcs leaving v at lv or later
-    std::pair<std::vector<arc>::const_iterator, std::vector<arc>::const_iterator> 
+    std::pair<std::vector<arc>::const_iterator, std::vector<arc>::const_iterator>
         arcs_from_v_lv(std::uint64_t) const;
 
     // begin and past-the-end iterator for all arcs leaving vtx

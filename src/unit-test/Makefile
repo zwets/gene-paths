@@ -19,7 +19,7 @@ CPPFLAGS += -isystem $(GTEST_DIR)/include
 # Flags passed to the C++ compiler.
 CXXFLAGS += -std=c++14 -O3 -DNDEBUG -Wall -Wextra -pedantic -Wno-unknown-pragmas -march=native -pthread -I$(USER_DIR) -I$(USER_DIR)/gfakluge
 
-OBJS = 
+OBJS =
 # All Google Test headers.  Normally you shouldn't change this definition.
 GTEST_HEADERS = $(GTEST_DIR)/include/gtest/*.h \
                 $(GTEST_DIR)/include/gtest/internal/*.h
@@ -30,7 +30,7 @@ TARGET = run-all-tests
 
 USER_HEADERS = $(USER_DIR)/*.h
 
-USER_OBJS = gfapaths.o gfagraph.o gfa2logic.o parsegfa.o utils.o 
+USER_OBJS = gfapaths.o gfagraph.o gfa2logic.o parsegfa.o utils.o
 
 TEST_OBJS = utils-test.o parsegfa-test.o gfa2logic-test.o gfagraph-test.o gfapaths-test.o
 

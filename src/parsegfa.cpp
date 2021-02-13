@@ -1,5 +1,5 @@
 /* parsegfa.cpp
- * 
+ *
  * Copyright (C) 2021  Marco van Zwetselaar <io@zwets.it>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -110,7 +110,7 @@ parse_gfa(std::istream& file)
         raise_error("failed to parse GFA");
 
     gfak_to_graph(gfak, graph);
-    
+
     return graph;
 }
 

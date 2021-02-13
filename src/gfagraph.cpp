@@ -1,5 +1,5 @@
 /* gfagraph.cpp
- * 
+ *
  * Copyright (C) 2021  Marco van Zwetselaar <io@zwets.it>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -182,7 +182,7 @@ graph::start_path(std::uint32_t vtx_id, std::uint32_t pos)
     arc0.ov = 0;
     arc0.ow = pos;
 
-    // Add the pseudo arc to the path_starts array 
+    // Add the pseudo arc to the path_starts array
     path_starts.push_back(arc0);
 
     // Create the new path and add to the paths vector

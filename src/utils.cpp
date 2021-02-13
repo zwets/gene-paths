@@ -1,5 +1,5 @@
 /* utils.cpp
- * 
+ *
  * Copyright (C) 2018,2021  Marco van Zwetselaar <io@zwets.it>
  *
  * This program is free software: you can redistribute it and/or modify

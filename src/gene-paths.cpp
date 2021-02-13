@@ -48,14 +48,14 @@ static void usage_exit()
     std::exit(1);
 }
 
-int main (int /*argc*/, char *argv[]) 
+int main (int /*argc*/, char *argv[])
 {
     set_progname("gene-paths");
 
     std::string gfa_fname;
     std::string fna_fname;
 
-    while (*++argv && **argv == '-') 
+    while (*++argv && **argv == '-')
     {
         if (!std::strcmp("-v", *argv) || !std::strcmp("--verbose", *argv)) {
             set_verbose(true);

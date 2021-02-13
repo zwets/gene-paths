@@ -82,6 +82,13 @@ struct arc {
     std::uint32_t dummy;    // reserved (align struct to 64 bits)
 };
 
+struct path {
+    static const std::size_t START;
+
+    std::size_t pre_ix;     // index of preceding path in paths or START
+    const arc* p_arc;       // points to the arc added to make this path
+};
+
 struct graph {
 
         // building the graph
@@ -124,6 +131,22 @@ struct graph {
     inline std::pair<std::vector<arc>::const_iterator, std::vector<arc>::const_iterator>
         arcs_from_vtx(std::uint64_t vtx_ix) const
         { return arcs_from_v_lv(vtx_ix<<32); }
+
+        // path storage and lookup
+
+    std::vector<arc> path_starts;
+    std::vector<path> paths;
+
+    // starts path on pos at vtx_ix, returns path_ix
+    std::size_t start_path(std::uint32_t vtx_ix, std::uint32_t pos);
+
+    // creates new path that extends path_ix with the arc at arc_it
+    inline void grow_path(std::size_t path_ix, std::vector<arc>::const_iterator arc_it) {
+        path p = { path_ix, reinterpret_cast<const arc*>(&*arc_it) };
+        paths.push_back(p);
+    }
+
+    std::ostream& write_path_seq(std::ostream& is, std::size_t path_ix) const;
 
 };
 

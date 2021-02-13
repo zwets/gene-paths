@@ -22,12 +22,15 @@
 #include <vector>
 #include <algorithm>
 #include <map>
+#include <ostream>
 #include "gfa2logic.h"
 #include "utils.h"
 
 namespace gfa {
 
 using gene_paths::raise_error;
+
+const std::size_t path::START = std::uint64_t(-1);
 
 static bool // for lower_bound - returns true when it is before v_lv
 v_lv_less_l(const arc& it, std::uint64_t v_lv)
@@ -156,6 +159,59 @@ graph::arcs_from_v_lv(std::uint64_t v_lv) const
     std::vector<arc>::const_iterator lo = std::lower_bound(arcs.cbegin(), arcs.cend(), v_lv, v_lv_less_l);
 
     return std::make_pair(lo, std::upper_bound(lo, arcs.cend(), next, v_lv_less_u));
+}
+
+std::size_t
+graph::start_path(std::uint32_t vtx_id, std::uint32_t pos)
+{
+    // We allocate the array path_starts for a fixed size, arbitrarily
+    // chosen so that one path could start from every segment.
+    // We want it fixed size because we use pointers to the arcs in it,
+    // and growing it will reallocate and invalidate those.
+    // Not ideal but works for now, and can be optimised later.
+    if (path_starts.empty())
+        path_starts.reserve(segs.size());
+    else if (path_starts.size() == path_starts.capacity())
+        raise_error("sorry, start_path is limited to %d", segs.size());
+
+    // The path start is a 'pseudo-arc' arriving on w=vtx_id at ow=pos,
+    // coming from v_lv at that same location and with ov=0.
+    arc arc0;
+    arc0.v_lv = std::uint64_t(vtx_id)<<32 | pos;
+    arc0.w = vtx_id;
+    arc0.ov = 0;
+    arc0.ow = pos;
+
+    // Add the pseudo arc to the path_starts array 
+    path_starts.push_back(arc0);
+
+    // Create the new path and add to the paths vector
+    path p;
+    p.pre_ix = path::START;
+    p.p_arc = reinterpret_cast<const arc*>(&*path_starts.crbegin());
+
+    paths.push_back(p);
+    return paths.size() - 1;
+}
+
+std::ostream&
+graph::write_path_seq(std::ostream& os, std::size_t path_ix) const
+{
+    const path& p = paths.at(path_ix);
+    if (p.pre_ix != path::START)
+    {
+        write_path_seq(os, p.pre_ix);
+
+        const seg& sv = segs.at(vtx_seg(p.p_arc->v_lv>>32));
+        std::uint32_t start_at = paths.at(p.pre_ix).p_arc->ow;
+        std::uint32_t count = sv.len - p.p_arc->ov - start_at;
+        os.write(reinterpret_cast<const char*>(&*sv.data.cbegin()) + start_at, count);
+
+        const seg& sw = segs.at(vtx_seg(p.p_arc->w));
+        os.write(reinterpret_cast<const char*>(&*sw.data.cbegin()), p.p_arc->ow);
+    }
+
+    return os;
 }
 
 

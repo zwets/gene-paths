@@ -17,7 +17,8 @@
  */
 
 #include <gtest/gtest.h>
-#include "gfapath.h"
+#include <sstream>
+#include "gfagraph.h"
 #include "utils.h"
 
 using namespace gfa;
@@ -42,29 +43,48 @@ static graph make_graph() {
     return gfa;
 }
 
-TEST(gfapath_tes, empty_path) {
-    path p(1, 100);
-    ASSERT_EQ(p.len, 0);
-    ASSERT_EQ(p.start, std::uint64_t(1)<<32|100);
-    ASSERT_EQ(p.now_at, p.start);
-    ASSERT_TRUE(p.arc_ixs.empty());
-}
-
-TEST(gfapath_test, test) {
+TEST(gfapath_test, empty_path) {
     graph g = make_graph();
-    path p(graph::seg_vtx_p(2), 2);
-    ASSERT_EQ(p.len, 0);
-    ASSERT_EQ(p.start, graph::seg_vtx_p(2)<<32|2);
-    ASSERT_EQ(p.now_at, p.start);
-    p.add_arc(g, 5);
-    ASSERT_EQ(p.now_at, graph::seg_vtx_p(0)<<32|1);
-    ASSERT_EQ(p.len, 3);
-    ASSERT_EQ(p.arc_ixs.size(), 1);
-    p.add_arc(g, 0);
-    ASSERT_EQ(p.now_at, graph::seg_vtx_n(1)<<32|4);
-    ASSERT_EQ(p.len, 8);
+    std::size_t p_ix = g.start_path(graph::seg_vtx_p(0), 0);
+    ASSERT_EQ(p_ix, 0);
+    ASSERT_EQ(g.path_starts.size(), 1);
+    ASSERT_EQ(g.paths.size(), 1);
+    ASSERT_EQ(g.paths.at(0).pre_ix, path::START);
+    ASSERT_EQ(g.paths.at(0).p_arc, &*g.path_starts.cbegin());
 }
 
+TEST(gfapath_test, path_1) {
+    graph g = make_graph();
+    std::size_t p_ix = g.start_path(graph::seg_vtx_p(0), 0);
+    g.grow_path(p_ix, g.arcs.cbegin());
+    ASSERT_EQ(g.path_starts.size(), 1);
+    ASSERT_EQ(g.paths.size(), 2);
+    ASSERT_EQ(g.paths.at(1).pre_ix, p_ix);
+    ASSERT_EQ(g.paths.at(1).p_arc, &*g.arcs.cbegin());
+}
+
+TEST(gfapath_test, write_empty) {
+    graph g = make_graph();
+    std::size_t p_ix = g.start_path(graph::seg_vtx_p(0), 0);
+
+    std::stringstream ss;
+    g.write_path_seq(ss, p_ix);
+    ASSERT_EQ(ss.str(), "");
+}
+
+TEST(gfapath_test, write_1) {
+    graph g = make_graph();
+    std::size_t p_ix = g.start_path(graph::seg_vtx_p(2), 2);
+    g.grow_path(p_ix, g.arcs.cbegin() + 5);
+    ASSERT_EQ(g.path_starts.size(), 1);
+    ASSERT_EQ(g.paths.size(), 2);
+    ASSERT_EQ(g.paths.at(1).pre_ix, p_ix);
+    ASSERT_EQ(g.paths.at(1).p_arc, &*g.arcs.cbegin() + 5);
+
+    std::stringstream ss;
+    g.write_path_seq(ss, 1);
+    ASSERT_EQ(ss.str(), "TTA");
+}
 
 } // namespace
   // vim: sts=4:sw=4:ai:si:et

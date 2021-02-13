@@ -1,4 +1,4 @@
-/* gfapath.cpp
+/* gfapaths.h
  * 
  * Copyright (C) 2021  Marco van Zwetselaar <io@zwets.it>
  *
@@ -15,21 +15,16 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#ifndef gfapaths_h_INCLUDED
+#define gfapaths_h_INCLUDED
 
-#include "gfapath.h"
+#include <vector>
+#include "gfagraph.h"
 
 namespace gfa {
 
-void
-path::add_arc(const graph& g, std::size_t arc_ix)
-{
-    const arc& a = g.arcs.at(arc_ix);
-
-    arc_ixs.push_back(arc_ix);
-    len += a.v_lv - now_at + a.ow;
-    now_at = std::uint64_t(a.w)<<32 | a.ow;
-}
 
 } // namespace gfa
 
-// vim: sts=4:sw=4:ai:si:et
+#endif // gfapaths_h_INCLUDED
+       // vim: sts=4:sw=4:ai:si:et

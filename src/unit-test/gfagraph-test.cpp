@@ -75,65 +75,63 @@ static seg SEG2 = { 9, "s2", "TAGCATACG" };
 static seg SEG3 = { 5, "s3", "CATTA" };
 static seg SEG4 = { 8, "s4", "GCGCAATT" };
 
-/*
- * TEMP
 TEST(gfagraph_test, add_edge) {
     graph gfa;
-    gfa.add_seg(SEG1);
-    gfa.add_seg(SEG2);
-    gfa.add_edge("s1+", 1, 4, "s2-", 5, 9);
+    gfa.add_seg(SEG1);                         // ACGT
+    gfa.add_seg(SEG2);                         //  CGTATGCTA
+    gfa.add_edge("s1+", 1, 4, "s2-", 6, 9);
     ASSERT_EQ(gfa.segs.size(), 2);
-    ASSERT_EQ(gfa.arcs.size(), 2);
+    ASSERT_EQ(gfa.arcs.size(), 8);
 
     auto s1 = gfa.segs[0];
     auto s2 = gfa.segs[1];
     ASSERT_EQ(s1.len, 4);
     ASSERT_EQ(s2.len, 9);
 
-    auto a1 = gfa.arcs[0];
-    ASSERT_EQ(a1.v_lv, 1);
-    ASSERT_EQ(a1.ov, 3);
-    ASSERT_EQ(a1.w, 3);
-    ASSERT_EQ(a1.ow, 4);
+    ASSERT_EQ(gfa.arcs[0].v_lv, 0L<<32 | 1);
+    ASSERT_EQ(gfa.arcs[0].w_lw, 3L<<32 | 0);
 
-    auto a2 = gfa.arcs[1];
-    ASSERT_EQ(a2.v_lv, std::uint64_t(3^1)<<32|5);
-    ASSERT_EQ(a2.w, 0^1);
-    ASSERT_EQ(a2.ov, 4);
-    ASSERT_EQ(a2.ow, 3);
+    ASSERT_EQ(gfa.arcs[1].v_lv, 0L<<32 | 4);
+    ASSERT_EQ(gfa.arcs[1].w_lw, 3L<<32 | 3);
+
+    ASSERT_EQ(gfa.arcs[2].v_lv, 1L<<32 | 0);
+    ASSERT_EQ(gfa.arcs[2].w_lw, 2L<<32 | 6);
+
+    ASSERT_EQ(gfa.arcs[3].v_lv, 1L<<32 | 3);
+    ASSERT_EQ(gfa.arcs[3].w_lw, 2L<<32 | 9);
+
+    ASSERT_EQ(gfa.arcs[4].v_lv, gfa.arcs[2].w_lw);
+    ASSERT_EQ(gfa.arcs[4].w_lw, gfa.arcs[2].v_lv);
+
+    ASSERT_EQ(gfa.arcs[5].v_lv, gfa.arcs[3].w_lw);
+    ASSERT_EQ(gfa.arcs[5].w_lw, gfa.arcs[3].v_lv);
+
+    ASSERT_EQ(gfa.arcs[6].v_lv, gfa.arcs[0].w_lw);
+    ASSERT_EQ(gfa.arcs[6].w_lw, gfa.arcs[0].v_lv);
+
+    ASSERT_EQ(gfa.arcs[7].v_lv, gfa.arcs[1].w_lw);
+    ASSERT_EQ(gfa.arcs[7].w_lw, gfa.arcs[1].v_lv);
 }
 
-TEST(gfagraph_test, arcs_from_vtx_empty) {
+TEST(gfagraph_test, add_blunt_edge) {
     graph gfa;
-    ASSERT_EQ(gfa.segs.size(), 0);
-    ASSERT_EQ(gfa.arcs.size(), 0);
+    gfa.add_seg(SEG1);                         //          ACGT
+    gfa.add_seg(SEG2);                         // CGTATGCTA
+    gfa.add_edge("s1-", 4, 4, "s2+", 9, 9);
+    ASSERT_EQ(gfa.segs.size(), 2);
+    ASSERT_EQ(gfa.arcs.size(), 4);
 
-    auto arcs_from_vtx = gfa.arcs_from_vtx(0);
-    ASSERT_EQ(arcs_from_vtx.first, arcs_from_vtx.second);
-    auto arcs_from_v_lv = gfa.arcs_from_v_lv(0);
-    ASSERT_EQ(arcs_from_v_lv.first, arcs_from_v_lv.second);
-}
+    ASSERT_EQ(gfa.arcs[0].v_lv, 0L<<32 | 4);   // v+
+    ASSERT_EQ(gfa.arcs[0].w_lw, 3L<<32 | 0);
 
-TEST(gfagraph_test, arcs_order) {
-    graph gfa;
-    gfa.add_seg(SEG1);
-    gfa.add_seg(SEG2);
-    gfa.add_seg(SEG3);
-    gfa.add_edge("s1+", 1, 4, "s2-", 5, 9); // s1+ .[--) s2- (---].....   and s2+ .....[---) s1- (--].
-    gfa.add_edge("s2-", 0, 0, "s3+", 0, 0); // s2- .........) s3+ (.....  and s3- .....) s2+ (.........
-    gfa.add_edge("s3+", 4, 5, "s1+", 0, 1); // s3+ ....[) s1+ (]...       and s1- ...[) s3- (]...
+    ASSERT_EQ(gfa.arcs[1].v_lv, 1L<<32 | 0);   // v- 
+    ASSERT_EQ(gfa.arcs[1].w_lw, 2L<<32 | 9);
 
-    ASSERT_EQ(gfa.segs.size(), 3);
-    ASSERT_EQ(gfa.arcs.size(), 6);
+    ASSERT_EQ(gfa.arcs[2].v_lv, gfa.arcs[1].w_lw);  // back w+ to v-
+    ASSERT_EQ(gfa.arcs[2].w_lw, gfa.arcs[1].v_lv);
 
-    arc& o = gfa.arcs[0];
-
-    o = gfa.arcs[0]; ASSERT_EQ(o.ov, 3); ASSERT_EQ(o.ow, 4); ASSERT_EQ(o.w, 3); ASSERT_EQ(o.v_lv, (std::uint64_t(0)<<32)|1); // s1+ s2-
-    o = gfa.arcs[1]; ASSERT_EQ(o.ov, 1); ASSERT_EQ(o.ow, 1); ASSERT_EQ(o.w, 5); ASSERT_EQ(o.v_lv, (std::uint64_t(1)<<32)|3); // s1- s3-
-    o = gfa.arcs[2]; ASSERT_EQ(o.ov, 4); ASSERT_EQ(o.ow, 3); ASSERT_EQ(o.w, 1); ASSERT_EQ(o.v_lv, (std::uint64_t(2)<<32)|5); // s2+ s1-
-    o = gfa.arcs[3]; ASSERT_EQ(o.ov, 0); ASSERT_EQ(o.ow, 0); ASSERT_EQ(o.w, 4); ASSERT_EQ(o.v_lv, (std::uint64_t(3)<<32)|9); // s2- s3+
-    o = gfa.arcs[4]; ASSERT_EQ(o.ov, 1); ASSERT_EQ(o.ow, 1); ASSERT_EQ(o.w, 0); ASSERT_EQ(o.v_lv, (std::uint64_t(4)<<32)|4); // s3+ s1+
-    o = gfa.arcs[5]; ASSERT_EQ(o.ov, 0); ASSERT_EQ(o.ow, 0); ASSERT_EQ(o.w, 2); ASSERT_EQ(o.v_lv, (std::uint64_t(5)<<32)|5); // s3- s2+
+    ASSERT_EQ(gfa.arcs[3].v_lv, gfa.arcs[0].w_lw);  // back w- to v+
+    ASSERT_EQ(gfa.arcs[3].w_lw, gfa.arcs[0].v_lv);
 }
 
 TEST(gfagraph_test, vtx_iter) {
@@ -145,72 +143,52 @@ TEST(gfagraph_test, vtx_iter) {
     gfa.add_edge("s2-", 0, 0, "s3+", 0, 0); // s2- .........) s3+ (.....  and s3- .....) s2+ (.........
     gfa.add_edge("s3+", 4, 5, "s1+", 0, 1); // s3+ ....[) s1+ (]...       and s1- ...[) s3- (]...
 
-    const auto afv0 = gfa.arcs_from_vtx(0);
-    ASSERT_EQ(std::distance(gfa.arcs.cbegin(), afv0.first), 0);
-    ASSERT_EQ(std::distance(afv0.first, afv0.second), 1);
+    auto afv = gfa.arcs_from_vtx(0); // s1+
+    ASSERT_EQ(std::distance(gfa.arcs.cbegin(), afv.first), 0);
+    ASSERT_EQ(std::distance(afv.first, afv.second), 4);
+    ASSERT_EQ(afv.first->v_lv, 0);
+    ASSERT_EQ(afv.first->w_lw, 4L<<32|4);
 
-    const auto afv1 = gfa.arcs_from_vtx(1);
-    ASSERT_EQ(std::distance(afv1.first, afv1.second), 1);
+    auto nxt = ++afv.first;
+    ASSERT_EQ(nxt->v_lv, 1);
+    ASSERT_EQ(nxt->w_lw, 3L<<32|0);
 
-    const auto afv2 = gfa.arcs_from_vtx(2);
-    ASSERT_EQ(std::distance(afv2.first, afv2.second), 1);
+    nxt = ++afv.first;
+    ASSERT_EQ(nxt->v_lv, 1);
+    ASSERT_EQ(nxt->w_lw, 4L<<32|5);
 
-    const auto afv3 = gfa.arcs_from_vtx(3);
-    ASSERT_EQ(std::distance(gfa.arcs.cbegin(), afv3.first), 3);
-    ASSERT_EQ(std::distance(afv3.first, afv3.second), 1);
+    nxt = ++afv.first;
+    ASSERT_EQ(nxt->v_lv, 4);
+    ASSERT_EQ(nxt->w_lw, 3L<<32|4);
+
+    afv = gfa.arcs_from_vtx(1); // s1-
+    ASSERT_EQ(std::distance(afv.first, afv.second), 4);
+    ASSERT_EQ(afv.first->v_lv, 1L<<32|0);
+    ASSERT_EQ(afv.first->w_lw, 2L<<32|5);
+
+    afv = gfa.arcs_from_vtx(2); // s2+
+    ASSERT_EQ(std::distance(afv.first, afv.second), 3);
+
+    afv = gfa.arcs_from_vtx(3); // s2-
+    ASSERT_EQ(std::distance(afv.first, afv.second), 3);
+
+    afv = gfa.arcs_from_vtx(4); // s3+
+    ASSERT_EQ(std::distance(afv.first, afv.second), 3);
+
+    afv = gfa.arcs_from_vtx(5); // s3-
+    ASSERT_EQ(std::distance(afv.first, afv.second), 3);
+    ASSERT_EQ(afv.first->v_lv, 5L<<32|0);
+    ASSERT_EQ(afv.first->w_lw, 1L<<32|3);
+
+    nxt = ++afv.first;
+    ASSERT_EQ(afv.first->v_lv, 5L<<32|1);
+    ASSERT_EQ(afv.first->w_lw, 1L<<32|4);
+
+    nxt = ++afv.first;
+    ASSERT_EQ(afv.first->v_lv, 5L<<32|5);
+    ASSERT_EQ(afv.first->w_lw, 2L<<32|0);
 }
 
-//static seg SEG1 = { 4, "s1", "ACGT" };
-//static seg SEG2 = { 9, "s2", "TAGCATACG" };
-//static seg SEG3 = { 5, "s3", "CATTA" };
-//static seg SEG4 = { 8, "s4", "CTATAATT" };
-
-TEST(gfagraph_test, v_vl_iter) {
-    graph gfa;
-    gfa.add_seg(SEG1);
-    gfa.add_seg(SEG2);
-    gfa.add_seg(SEG3);
-    gfa.add_seg(SEG4);
-    gfa.add_edge("s1+", 1, 4, "s2-", 5, 9); // s1+ .[--) s2- (---].....     and s2+ .....[---) s1- (--].
-    gfa.add_edge("s2-", 0, 0, "s3+", 0, 0); // s2- .........) s3+ (.....    and s3- .....) s2+ (.........
-    gfa.add_edge("s2-", 0, 3, "s4+", 0, 3); // s2- ......[..) s4+ (..]..... and s4- .....[..) s2+ (..]......
-    gfa.add_edge("s3+", 4, 5, "s1+", 0, 1); // s3+ ....[) s1+ (]...         and s1- ...[) s3- (]...
-
-    arc& o = gfa.arcs[0];
-
-    o = gfa.arcs[0]; ASSERT_EQ(o.ov, 3); ASSERT_EQ(o.ow, 4); ASSERT_EQ(o.w, 3); ASSERT_EQ(o.v_lv, (std::uint64_t(0)<<32)|1); // s1+ s2-
-    o = gfa.arcs[1]; ASSERT_EQ(o.ov, 1); ASSERT_EQ(o.ow, 1); ASSERT_EQ(o.w, 5); ASSERT_EQ(o.v_lv, (std::uint64_t(1)<<32)|3); // s1- s3-
-    o = gfa.arcs[2]; ASSERT_EQ(o.ov, 4); ASSERT_EQ(o.ow, 3); ASSERT_EQ(o.w, 1); ASSERT_EQ(o.v_lv, (std::uint64_t(2)<<32)|5); // s2+ s1-
-    o = gfa.arcs[3]; ASSERT_EQ(o.ov, 3); ASSERT_EQ(o.ow, 3); ASSERT_EQ(o.w, 6); ASSERT_EQ(o.v_lv, (std::uint64_t(3)<<32)|6); // s2- s4+
-    o = gfa.arcs[4]; ASSERT_EQ(o.ov, 0); ASSERT_EQ(o.ow, 0); ASSERT_EQ(o.w, 4); ASSERT_EQ(o.v_lv, (std::uint64_t(3)<<32)|9); // s2- s3+
-    o = gfa.arcs[5]; ASSERT_EQ(o.ov, 1); ASSERT_EQ(o.ow, 1); ASSERT_EQ(o.w, 0); ASSERT_EQ(o.v_lv, (std::uint64_t(4)<<32)|4); // s3+ s1+
-    o = gfa.arcs[6]; ASSERT_EQ(o.ov, 0); ASSERT_EQ(o.ow, 0); ASSERT_EQ(o.w, 2); ASSERT_EQ(o.v_lv, (std::uint64_t(5)<<32)|5); // s3- s2+
-    o = gfa.arcs[7]; ASSERT_EQ(o.ov, 3); ASSERT_EQ(o.ow, 3); ASSERT_EQ(o.w, 2); ASSERT_EQ(o.v_lv, (std::uint64_t(7)<<32)|5); // s4- s2+
-
-    const auto itp0 = gfa.arcs_from_vtx(3);
-    ASSERT_EQ(std::distance(gfa.arcs.cbegin(), itp0.first), 3);
-    ASSERT_EQ(std::distance(itp0.first, itp0.second), 2);
-
-    const auto itp1 = gfa.arcs_from_v_lv(std::uint64_t(3)<<32|1);
-    ASSERT_EQ(std::distance(gfa.arcs.cbegin(), itp1.first), 3);
-    ASSERT_EQ(std::distance(itp1.first, itp1.second), 2);
-
-    const auto itp2 = gfa.arcs_from_v_lv(std::uint64_t(3)<<32|6);
-    ASSERT_EQ(std::distance(gfa.arcs.cbegin(), itp2.first), 3);
-    ASSERT_EQ(std::distance(itp2.first, itp2.second), 2);
-
-    const auto itp3 = gfa.arcs_from_v_lv(std::uint64_t(3)<<32|7);
-    ASSERT_EQ(std::distance(gfa.arcs.cbegin(), itp3.first), 4);
-    ASSERT_EQ(std::distance(itp3.first, itp3.second), 1);
-
-    const auto itp4 = gfa.arcs_from_v_lv(std::uint64_t(3)<<32|9);
-    ASSERT_EQ(std::distance(gfa.arcs.cbegin(), itp4.first), 4);
-    ASSERT_EQ(std::distance(itp4.first, itp4.second), 1);
-
-    const auto itp5 = gfa.arcs_from_v_lv(std::uint64_t(3)<<32|10);
-    ASSERT_EQ(std::distance(itp5.first, itp5.second), 0);
-}
-*/
 
 } // namespace
   // vim: sts=4:sw=4:ai:si:et

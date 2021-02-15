@@ -22,41 +22,69 @@
 
 namespace gfa2 {
 
-/* Data structures from GFA2, used while parsing. */
+/* Data structures from GFA2, used while parsing and converting to arcs. */
 
 struct vtx {
+
     const std::string& id;  // seg name, including + or -
     std::uint32_t l;        // length of the segment
     std::uint32_t b;        // begin overlap
     std::uint32_t e;        // end overlap
-    bool p;                 // positive (false is neg)
+    bool p;                 // is positive
 
+    // validates consistency of the fields, errors out if invalid
     void validate() const;
 
-    inline bool is_contained() const { return b == 0 && e == l; }
-    inline bool is_container() const { return b != 0 && e != l; }
-    inline bool is_blunt_r() const { return p ? b == l : e == 0; }
-    inline bool is_blunt_l() const { return p ? e == 0 : b == l; }
-    inline bool dovetails_r() const { return p ? e == l && b < l && b > 0 : b == 0 && e > 0 && e < l; }
-    inline bool dovetails_l() const { return p ? b == 0 && e > 0 && e < l : e == l && b < l && b > 0; }
-    inline std::uint32_t overlap() const { return e - b; }
-    inline std::uint32_t overhang_l() const { return p ? b : l - e; }
-    inline std::uint32_t overhang_r() const { return p ? l - e : b; }
+        // The following methods return the indicated lengths,
+        // after taking into account orientation.
+        // So if !p, they are measured from the end.
+        //
+        //      <--- l1 ---><- o -><-- r1 -->
+        //   v: ------------=======----------
+        //      <------ l2 ------->
+        //                  <------ r2 ----->
+
+    inline std::uint32_t o() const { return e - b; }
+
+    inline std::uint32_t l1() const { return p ? b : l - e; }
+    inline std::uint32_t l2() const { return p ? e : l - b; }
+    inline std::uint32_t r1() const { return p ? l - e : b; }
+    inline std::uint32_t r2() const { return p ? l - b : e; }
+
+        // same for inverse of the vertex
+
+    inline std::uint32_t l1i() const { return r1(); }
+    inline std::uint32_t l2i() const { return r2(); }
+    inline std::uint32_t r1i() const { return l1(); }
+    inline std::uint32_t r2i() const { return l2(); }
+
 };
 
 struct edge {
-    vtx v;   // source vertex
-    vtx w;   // dest vertex vertex
 
-    void validate() const;
+    vtx v;   // first vertex
+    vtx w;   // second vertex
 
-    inline std::uint32_t lv() const { return v.overhang_l(); }
-    inline std::uint32_t ov() const { return v.overlap(); }
-    inline std::uint32_t rv() const { return v.overhang_r(); }
+    // validates consistency of the edge and its vertices
+    inline void validate() const { v.validate(); w.validate(); }
 
-    inline std::uint32_t lw() const { return w.overhang_l(); }
-    inline std::uint32_t ow() const { return w.overlap(); }
-    inline std::uint32_t rw() const { return w.overhang_r(); }
+        // Return the lv and lw lengths as discussed in gfagraph.h,
+        // in the orientation of the segments.  lv2 and lw2 point
+        // at the end of the overlap.  The ~i methods return the
+        // parameters for the inverse orientation of the segment.
+
+    inline std::uint32_t ov() const { return v.o(); }
+    inline std::uint32_t lv() const { return v.l1(); }
+    inline std::uint32_t lv2() const { return v.l2(); }
+    inline std::uint32_t lvi() const { return v.l1i(); }
+    inline std::uint32_t lv2i() const { return v.l2i(); }
+
+    inline std::uint32_t ow() const { return w.o(); }
+    inline std::uint32_t lw() const { return w.l1(); }
+    inline std::uint32_t lw2() const { return w.l2(); }
+    inline std::uint32_t lwi() const { return w.l1i(); }
+    inline std::uint32_t lw2i() const { return w.l2i(); }
+
 };
 
 } // namespace gfa2

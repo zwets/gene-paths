@@ -37,13 +37,6 @@ vtx::validate() const
         raise_error("inconsistent name and orientation: %s defined %s", id.c_str(), (p ? "pos" : "neg"));
 }
 
-void
-edge::validate() const
-{
-    v.validate();
-    w.validate();
-}
-
 } // namespace gfa2
 
 // vim: sts=4:sw=4:ai:si:et

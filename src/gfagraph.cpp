@@ -159,20 +159,17 @@ graph::add_edge(const std::string& sref, std::uint32_t sbeg, std::uint32_t send,
 
         // add the paths from v to w
 
-    std::uint64_t v_id = (s_ix<<1)|s_neg;
-    std::uint64_t w_id = (d_ix<<1)|d_neg;
+    std::uint64_t v = ((s_ix<<1)|s_neg)<<32;
+    std::uint64_t w = ((d_ix<<1)|d_neg)<<32;
+    std::uint64_t vi = v^(1L<<32);
+    std::uint64_t wi = w^(1L<<32);
 
-    arc as[4];
-
-        // the left-to-right first turn-off from v and w and v.v.
-
-    as[0].v_lv = as[1].w_lw = v_id<<32 | edge.lv();
-    as[0].w_lw = as[1].v_lv = w_id<<32 | edge.lw();
-
-        // same for the complement arcs
-
-    as[2].v_lv = as[3].w_lw = (v_id^1)<<32 | edge.rv();
-    as[2].w_lw = as[3].v_lv = (w_id^1)<<32 | edge.rw();
+    arc as[4] = {
+        { v |edge.lv(),  w |edge.lw() },
+        { w |edge.lw(),  v |edge.lv() },
+        { vi|edge.lvi(), wi|edge.lwi() },
+        { wi|edge.lwi(), vi|edge.lvi() }
+    };
 
         // add them to the arcs array
 
@@ -180,12 +177,18 @@ graph::add_edge(const std::string& sref, std::uint32_t sbeg, std::uint32_t send,
         arcs.emplace(std::upper_bound(arcs.cbegin(), arcs.cend(), a, arc_less_u), a);
     }
 
-        // unless zero overlap, add the second turn-off for all
+        // if non-zero overlap add the second turn-off too
 
     if (edge.ov() != 0 || edge.ow() != 0) {
-        for (arc a : as) {
-            a.v_lv += edge.ov();
-            a.w_lw += edge.ow();
+
+        arc as2[4] = {
+            { v |edge.lv2(),  w |edge.lw2() },
+            { w |edge.lw2(),  v |edge.lv2() },
+            { vi|edge.lv2i(), wi|edge.lw2i() },
+            { wi|edge.lw2i(), vi|edge.lv2i() }
+        };
+
+        for (arc a : as2) {
             arcs.emplace(std::upper_bound(arcs.cbegin(), arcs.cend(), a, arc_less_u), a);
         }
     }

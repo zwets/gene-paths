@@ -1,4 +1,4 @@
-/* utils-test.cpp
+/* gfa2logic-test.cpp
  * 
  * Copyright (C) 2021  Marco van Zwetselaar <io@zwets.it>
  *
@@ -68,214 +68,205 @@ TEST(gfa2logic_test, begin_after_end) {
 TEST(gfa2logic_test, contained_vtx) {
     vtx v = { s, 3, 0, 3, true };
     v.validate();
-    ASSERT_TRUE(v.is_contained());
-    ASSERT_FALSE(v.is_container());
-    ASSERT_FALSE(v.is_blunt_r());
-    ASSERT_FALSE(v.is_blunt_l());
-    ASSERT_FALSE(v.dovetails_r());
-    ASSERT_FALSE(v.dovetails_l());
-    ASSERT_EQ(v.overlap(), v.l);
-    ASSERT_EQ(v.overhang_l(), 0);
-    ASSERT_EQ(v.overhang_r(), 0);
+    ASSERT_EQ(v.o(), v.l);
+    ASSERT_EQ(v.l1(), 0);
+    ASSERT_EQ(v.l2(), v.l);
+    ASSERT_EQ(v.r1(), 0);
+    ASSERT_EQ(v.r2(), v.l);
+    ASSERT_EQ(v.l1i(), 0);
+    ASSERT_EQ(v.l2i(), v.l);
+    ASSERT_EQ(v.r1i(), 0);
+    ASSERT_EQ(v.r2i(), v.l);
 }
 
 TEST(gfa2logic_test, contained_vtx_inv) {
     vtx v = { sn, 3, 0, 3, false };
     v.validate();
-    ASSERT_TRUE(v.is_contained());
-    ASSERT_FALSE(v.is_container());
-    ASSERT_FALSE(v.is_blunt_r());
-    ASSERT_FALSE(v.is_blunt_l());
-    ASSERT_FALSE(v.dovetails_r());
-    ASSERT_FALSE(v.dovetails_l());
-    ASSERT_EQ(v.overlap(), v.l);
-    ASSERT_EQ(v.overhang_l(), 0);
-    ASSERT_EQ(v.overhang_r(), 0);
+    ASSERT_EQ(v.o(), v.l);
+    ASSERT_EQ(v.l1(), 0);
+    ASSERT_EQ(v.l2(), v.l);
+    ASSERT_EQ(v.r1(), 0);
+    ASSERT_EQ(v.r2(), v.l);
+    ASSERT_EQ(v.l1i(), 0);
+    ASSERT_EQ(v.l2i(), v.l);
+    ASSERT_EQ(v.r1i(), 0);
+    ASSERT_EQ(v.r2i(), v.l);
 }
 
 TEST(gfa2logic_test, right_blunt) {
     vtx v = { s, 5, 5, 5, true };
     v.validate();
-    ASSERT_FALSE(v.is_contained());
-    ASSERT_FALSE(v.is_container());
-    ASSERT_TRUE(v.is_blunt_r());
-    ASSERT_FALSE(v.is_blunt_l());
-    ASSERT_FALSE(v.dovetails_r());
-    ASSERT_FALSE(v.dovetails_l());
-    ASSERT_EQ(v.overlap(), 0);
-    ASSERT_EQ(v.overhang_l(), v.l);
-    ASSERT_EQ(v.overhang_r(), 0);
+    ASSERT_EQ(v.o(), 0);
+    ASSERT_EQ(v.l1(), v.l);
+    ASSERT_EQ(v.l2(), v.l);
+    ASSERT_EQ(v.r1(), 0);
+    ASSERT_EQ(v.r2(), 0);
+    ASSERT_EQ(v.l1i(), 0);
+    ASSERT_EQ(v.l2i(), 0);
+    ASSERT_EQ(v.r1i(), v.l);
+    ASSERT_EQ(v.r2i(), v.l);
 }
 
 TEST(gfa2logic_test, right_blunt_inv) {
     vtx v = { sn, 5, 0, 0, false };
     v.validate();
-    ASSERT_FALSE(v.is_contained());
-    ASSERT_FALSE(v.is_container());
-    ASSERT_TRUE(v.is_blunt_r());
-    ASSERT_FALSE(v.is_blunt_l());
-    ASSERT_FALSE(v.dovetails_r());
-    ASSERT_FALSE(v.dovetails_l());
-    ASSERT_EQ(v.overlap(), 0);
-    ASSERT_EQ(v.overhang_l(), v.l);
-    ASSERT_EQ(v.overhang_r(), 0);
+    ASSERT_EQ(v.o(), 0);
+    ASSERT_EQ(v.l1(), v.l);
+    ASSERT_EQ(v.l2(), v.l);
+    ASSERT_EQ(v.r1(), 0);
+    ASSERT_EQ(v.r2(), 0);
+    ASSERT_EQ(v.l1i(), 0);
+    ASSERT_EQ(v.l2i(), 0);
+    ASSERT_EQ(v.r1i(), v.l);
+    ASSERT_EQ(v.r2i(), v.l);
 }
 
 TEST(gfa2logic_test, left_blunt) {
     vtx v = { s, 5, 0, 0, true };
     v.validate();
-    ASSERT_FALSE(v.is_contained());
-    ASSERT_FALSE(v.is_container());
-    ASSERT_FALSE(v.is_blunt_r());
-    ASSERT_TRUE(v.is_blunt_l());
-    ASSERT_FALSE(v.dovetails_r());
-    ASSERT_FALSE(v.dovetails_l());
-    ASSERT_EQ(v.overlap(), 0);
-    ASSERT_EQ(v.overhang_l(), 0);
-    ASSERT_EQ(v.overhang_r(), v.l);
+    ASSERT_EQ(v.o(), 0);
+    ASSERT_EQ(v.l1(), 0);
+    ASSERT_EQ(v.l2(), 0);
+    ASSERT_EQ(v.r1(), v.l);
+    ASSERT_EQ(v.r2(), v.l);
+    ASSERT_EQ(v.l1i(), v.l);
+    ASSERT_EQ(v.l2i(), v.l);
+    ASSERT_EQ(v.r1i(), 0);
+    ASSERT_EQ(v.r2i(), 0);
 }
 
 TEST(gfa2logic_test, left_blunt_inv) {
     vtx v = { sn, 5, 5, 5, false };
     v.validate();
-    ASSERT_FALSE(v.is_contained());
-    ASSERT_FALSE(v.is_container());
-    ASSERT_FALSE(v.is_blunt_r());
-    ASSERT_TRUE(v.is_blunt_l());
-    ASSERT_FALSE(v.dovetails_r());
-    ASSERT_FALSE(v.dovetails_l());
-    ASSERT_EQ(v.overlap(), 0);
-    ASSERT_EQ(v.overhang_l(), 0);
-    ASSERT_EQ(v.overhang_r(), v.l);
+    ASSERT_EQ(v.o(), 0);
+    ASSERT_EQ(v.l1(), 0);
+    ASSERT_EQ(v.l2(), 0);
+    ASSERT_EQ(v.r1(), v.l);
+    ASSERT_EQ(v.r2(), v.l);
+    ASSERT_EQ(v.l1i(), v.l);
+    ASSERT_EQ(v.l2i(), v.l);
+    ASSERT_EQ(v.r1i(), 0);
+    ASSERT_EQ(v.r2i(), 0);
 }
 
 TEST(gfa2logic_test, right_dovetail) {
-    vtx v = { s, 5, 3, 5, true };
+    vtx v = { s, 5, 3, 5, true };  // ---==
     v.validate();
-    ASSERT_FALSE(v.is_contained());
-    ASSERT_FALSE(v.is_container());
-    ASSERT_FALSE(v.is_blunt_r());
-    ASSERT_FALSE(v.is_blunt_l());
-    ASSERT_TRUE(v.dovetails_r());
-    ASSERT_FALSE(v.dovetails_l());
-    ASSERT_EQ(v.overlap(), 2);
-    ASSERT_EQ(v.overhang_l(), 3);
-    ASSERT_EQ(v.overhang_r(), 0);
+    ASSERT_EQ(v.o(), 2);
+    ASSERT_EQ(v.l1(), 3);  // ---==
+    ASSERT_EQ(v.l2(), 5);
+    ASSERT_EQ(v.r1(), 0);
+    ASSERT_EQ(v.r2(), 2);
+    ASSERT_EQ(v.l1i(), 0); // ==----
+    ASSERT_EQ(v.l2i(), 2);
+    ASSERT_EQ(v.r1i(), 3);
+    ASSERT_EQ(v.r2i(), 5);
 }
 
 TEST(gfa2logic_test, right_dovetail_inv) {
-    vtx v = { sn, 5, 0, 2, false };
+    vtx v = { sn, 5, 0, 2, false }; // ---== (==---)
     v.validate();
-    ASSERT_FALSE(v.is_contained());
-    ASSERT_FALSE(v.is_container());
-    ASSERT_FALSE(v.is_blunt_r());
-    ASSERT_FALSE(v.is_blunt_l());
-    ASSERT_TRUE(v.dovetails_r());
-    ASSERT_FALSE(v.dovetails_l());
-    ASSERT_EQ(v.overlap(), 2);
-    ASSERT_EQ(v.overhang_l(), 3);
-    ASSERT_EQ(v.overhang_r(), 0);
+    ASSERT_EQ(v.o(), 2);
+    ASSERT_EQ(v.l1(), 3);  // ---==
+    ASSERT_EQ(v.l2(), 5);
+    ASSERT_EQ(v.r1(), 0);
+    ASSERT_EQ(v.r2(), 2);
+    ASSERT_EQ(v.l1i(), 0); // ==---
+    ASSERT_EQ(v.l2i(), 2);
+    ASSERT_EQ(v.r1i(), 3);
+    ASSERT_EQ(v.r2i(), 5);
 }
 
 TEST(gfa2logic_test, left_dovetail) {
-    vtx v = { s, 5, 0, 2, true };
+    vtx v = { s, 5, 0, 2, true }; // ==----
     v.validate();
-    ASSERT_FALSE(v.is_contained());
-    ASSERT_FALSE(v.is_container());
-    ASSERT_FALSE(v.is_blunt_r());
-    ASSERT_FALSE(v.is_blunt_l());
-    ASSERT_FALSE(v.dovetails_r());
-    ASSERT_TRUE(v.dovetails_l());
-    ASSERT_EQ(v.overlap(), 2);
-    ASSERT_EQ(v.overhang_l(), 0);
-    ASSERT_EQ(v.overhang_r(), 3);
+    ASSERT_EQ(v.o(), 2);
+    ASSERT_EQ(v.l1(), 0);  // ==---
+    ASSERT_EQ(v.l2(), 2);
+    ASSERT_EQ(v.r1(), 3);
+    ASSERT_EQ(v.r2(), 5);
+    ASSERT_EQ(v.l1i(), 3); // ---==
+    ASSERT_EQ(v.l2i(), 5);
+    ASSERT_EQ(v.r1i(), 0);
+    ASSERT_EQ(v.r2i(), 2);
 }
 
 TEST(gfa2logic_test, left_dovetail_inv) {
     vtx v = { sn, 5, 3, 5, false };
     v.validate();
-    ASSERT_FALSE(v.is_contained());
-    ASSERT_FALSE(v.is_container());
-    ASSERT_FALSE(v.is_blunt_r());
-    ASSERT_FALSE(v.is_blunt_l());
-    ASSERT_FALSE(v.dovetails_r());
-    ASSERT_TRUE(v.dovetails_l());
-    ASSERT_EQ(v.overlap(), 2);
-    ASSERT_EQ(v.overhang_l(), 0);
-    ASSERT_EQ(v.overhang_r(), 3);
+    ASSERT_EQ(v.o(), 2);
+    ASSERT_EQ(v.l1(), 0);
+    ASSERT_EQ(v.l2(), 2);
+    ASSERT_EQ(v.r1(), 3);
+    ASSERT_EQ(v.r2(), 5);
+    ASSERT_EQ(v.l1i(), 3);
+    ASSERT_EQ(v.l2i(), 5);
+    ASSERT_EQ(v.r1i(), 0);
+    ASSERT_EQ(v.r2i(), 2);
 }
 
 TEST(gfa2logic_test, containing_vtx) {
     vtx v = { s, 6, 1, 3, true };
     v.validate();
-    ASSERT_FALSE(v.is_contained());
-    ASSERT_TRUE(v.is_container());
-    ASSERT_FALSE(v.is_blunt_r());
-    ASSERT_FALSE(v.is_blunt_l());
-    ASSERT_FALSE(v.dovetails_r());
-    ASSERT_FALSE(v.dovetails_l());
-    ASSERT_EQ(v.overlap(), 2);
-    ASSERT_EQ(v.overhang_l(), 1);
-    ASSERT_EQ(v.overhang_r(), 3);
+    ASSERT_EQ(v.o(), 2);
+    ASSERT_EQ(v.l1(), 1);
+    ASSERT_EQ(v.l2(), 3);
+    ASSERT_EQ(v.r1(), 3);
+    ASSERT_EQ(v.r2(), 5);
+    ASSERT_EQ(v.l1i(), 3);
+    ASSERT_EQ(v.l2i(), 5);
+    ASSERT_EQ(v.r1i(), 1);
+    ASSERT_EQ(v.r2i(), 3);
 }
 
 TEST(gfa2logic_test, containing_vtx_inv) {
-    vtx v = { sn, 6, 1, 3, false };
+    vtx v = { sn, 6, 1, 3, false };  // ---==-  (-==---)
     v.validate();
-    ASSERT_FALSE(v.is_contained());
-    ASSERT_TRUE(v.is_container());
-    ASSERT_FALSE(v.is_blunt_r());
-    ASSERT_FALSE(v.is_blunt_l());
-    ASSERT_FALSE(v.dovetails_r());
-    ASSERT_FALSE(v.dovetails_l());
-    ASSERT_EQ(v.overlap(), 2);
-    ASSERT_EQ(v.overhang_l(), 3);
-    ASSERT_EQ(v.overhang_r(), 1);
+    ASSERT_EQ(v.o(), 2);
+    ASSERT_EQ(v.l1(), 3);  // ---==-
+    ASSERT_EQ(v.l2(), 5);
+    ASSERT_EQ(v.r1(), 1);
+    ASSERT_EQ(v.r2(), 3);
+    ASSERT_EQ(v.l1i(), 1); // -==---
+    ASSERT_EQ(v.l2i(), 3);
+    ASSERT_EQ(v.r1i(), 3);
+    ASSERT_EQ(v.r2i(), 5);
 }
 
-TEST(gfa2logic_test, possible_edge1_inv) {
+TEST(gfa2logic_test, dovetail_edge) {
     edge e = {
      { s1p, 3, 2, 3, true },
      { s2n, 5, 3, 5, false }};
     e.validate();
+    ASSERT_EQ(e.ov(), 1);
+    ASSERT_EQ(e.lv(), 2);
+    ASSERT_EQ(e.lv2(), 3);
+    ASSERT_EQ(e.lvi(), 0);
+    ASSERT_EQ(e.lv2i(), 1);
+    ASSERT_EQ(e.ow(), 2);
+    ASSERT_EQ(e.lw(), 0);
+    ASSERT_EQ(e.lw2(), 2);
+    ASSERT_EQ(e.lwi(), 3);
+    ASSERT_EQ(e.lw2i(), 5);
 }
 
-TEST(gfa2logic_test, flippable_possible) {
+TEST(gfa2logic_test, general_edge) {
     edge e = {
-     { s2n, 5, 3, 5, false },
-     { s1p, 3, 2, 3, true }};
+     { s2n, 6, 3, 5, false },   // neg -==---    (---==-)
+     { s1p, 9, 2, 5, true }};   // pos --===----
     e.validate();
+    ASSERT_EQ(e.ov(), 2);
+    ASSERT_EQ(e.lv(), 1);
+    ASSERT_EQ(e.lv2(), 3);
+    ASSERT_EQ(e.lvi(), 3);
+    ASSERT_EQ(e.lv2i(), 5);
+    ASSERT_EQ(e.ow(), 3);
+    ASSERT_EQ(e.lw(), 2);
+    ASSERT_EQ(e.lw2(), 5);
+    ASSERT_EQ(e.lwi(), 4);
+    ASSERT_EQ(e.lw2i(), 7);
 }
 
-/*
-TEST(gfa2logic_test, container_flip) {
-    edge e = {
-     { s1p, 3, 0, 3, true },
-     { s2p, 5, 3, 5, true }};
-    e.validate();
-    ASSERT_TRUE(e.s.goes_left());
-    ASSERT_TRUE(e.s.goes_right());
-    ASSERT_TRUE(e.d.goes_left());
-    ASSERT_FALSE(e.d.goes_right());
-    ASSERT_TRUE(e.needs_flip());
-    ASSERT_EQ(e.vtx_l().id, s2p);
-    ASSERT_EQ(e.vtx_r().id, s1p);
-}
-
-TEST(gfa2logic_test, container_no_flip) {
-    edge e = {
-     { s1p, 3, 0, 3, true },
-     { s2p, 5, 0, 2, true }};
-    e.validate();
-    ASSERT_TRUE(e.s.goes_left());
-    ASSERT_TRUE(e.s.goes_right());
-    ASSERT_TRUE(e.d.goes_right());
-    ASSERT_FALSE(e.d.goes_left());
-    ASSERT_FALSE(e.needs_flip());
-    ASSERT_EQ(e.vtx_l().id, s1p);
-    ASSERT_EQ(e.vtx_r().id, s2p);
-}
-*/
 
 } // namespace
   // vim: sts=5:sw=4:ai:si:et

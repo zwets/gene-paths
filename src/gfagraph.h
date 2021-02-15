@@ -41,15 +41,9 @@ namespace gfa {
  *       /       \
  *      /         \ s2
  *
- * We do not cater for this type of overlap, nor its special case of
- * containment (where s1 or s2 equals the overlap).  These should not
- * occur in a completed assembly.
- *
- * Our data structure allows 'dovetailing' overlaps at the ends of
- * segments, and non-overlapping links.   This means we can use the arc
- * model as in gfatools.
- *
- * An arc is a directed edge between two vertices v and w:
+ * Though this H-shape should not occur in final assembly graphs, we can
+ * cater for it by slightly extending Heng Li's gfatools data model. That
+ * model assumes that edges dovetail or do not overlap at all:
  *
  *      |<--- lv --->|<-- ov -->|
  *   v: -------------============
@@ -57,19 +51,86 @@ namespace gfa {
  *                w: ============--------------
  *                   |<-- ow -->|<---- lw ---->
  *
- * Values lv and lw are lengths that contribute to the sort order of the
- * forward and reverse arcs respectively.  For each edge we store both
- * the forward and reverse arc.
+ * The graph is encoded as an array of directed arcs, two per undirected
+ * edge.  The arc from v to w leaves v at length lv, its complement arc
+ * leaves w' at lw.  The arcs always arrive at 0 (on +) or $ (on -).
  *
- * Arcs are stored in a vector that is sorted on v_vl = vtx_id<<32|lv,
- * so that it is natural to iterate over the outbound arcs from any vtx
- * starting with the one that leaves the vertex "earliest".
+ * Our extension is to additionally encode the lengths rv and rw, where
+ * l{v,w} are upstream of the overlap, and r{v,w} downstream:
+ *
+ *      |<--- lv --->|<-- ov -->|<- rv ->|
+ *   v: -------------============---------
+ *                     overlap
+ *       w: ---------============---------------
+ *          |<- lw ->|<-- ow -->|<---- rw ---->|
+ *
+ * We then encode each edge as eight arcs, corresponding to jumping from
+ * (1) v to w at (a) lv, (b) lv+ov, (2) w to v at (a) lw, (b) lw+ow, and
+ * their complements: w' to v' at rw or rw+ow, v' to w' at rv or rv+ov.
+ *
+ * Note that v and w above may be either + or -, as lv and lw are lengths
+ * measured from 0 for a + segment, and from $ for a - segment.
+ *
+ * As in gfatools, arcs are stored in an array sorted on v_lv, which is
+ * vtx_ix<<32|lv, so that the outbound arcs from every vertex vtx_ix are
+ * contiguous and sorted on how "early" they leave the vertex.
+ *
+ * -- Note 1: edge overlap is special case rv=0 && lw=0 (or lv=0 && rw=0)
+ *
+ * It would seem that there is no point in storing arcs w_0→v_lv and
+ * v'_0→w'_rw, but note that adding them adds a path to the overlap on
+ * the other segment from some other edge Z linked to w_0:
+ *
+ *   v: ------------->>>>>>>>>>>>
+ *                w: ^===========---------------
+ *        z: >>>>>>>>^
+ *
+ * -- Note 2: Non-overlapping links additionally have lv=L(v) && rw=L(w)
+ *
+ *      |<--- lv --->|
+ *   v: --------------              (or v and w reversed)
+ *                 w: ----------
+ *                    |<- rw ->|
+ *
+ * Again, we do not eliminate w_0→v_lv or its complement v'_0→w'_rw, as
+ * other arcs may continue (niche case ...) the path to other segments:
+ *
+ *                u: >>>>>>>>>>>>
+ *   v: -------------^
+ *                w: ^-------
+ *
+ * We can however leave out v_lv+ov→w_lw+ow and w_lw+ow→v_lv+ov, and
+ * their complements, because with ov=ow=0 they are equivalent to
+ * v_lv→w_lw and w_lw→v_lv which we already have.
+ *
+ * -- Note 3: Zero-overlap can theoretically happen in middle too
+ *
+ * But we treat it the same as at the end, including the ov=ow=0 case.
+ *
+ * -- Note 4: Containment can now be expressed too
+ *
+ * And this is convenient for defining paths: start and end region are
+ * containments:
+ *
+ *      |<--- lv --->|<-- ov -->|<- rv ->|
+ *   v: -------------============---------
+ *                w: ============             (lw=rw=0)
  */
 
 struct seg {
     std::uint64_t len;
     std::string name;
     std::string data;
+
+    // writes the sequence content in [beg,end) to os, optionally reverse complementing
+    // note that beg and end are forward positions as in GFA2, i.e. applied before rc
+    std::ostream& write_seq(std::ostream& os, bool rc = false, std::uint32_t beg = 0, std::uint32_t end = std::uint32_t(-1)) const;
+
+    // write the sequence content in [beg,end) on the pos or neg vertex of the segment
+    // where beg and end are interpreted on the vertex, i.e. from end when neg is true
+    std::ostream& write_vtx(std::ostream& os, bool neg, std::uint32_t beg = 0, std::uint32_t end = std::uint32_t(-1)) const {
+        return neg ? write_seq(os, true, end == std::uint32_t(-1) ? 0 : len-end, len-beg) : write_seq(os, false, beg, end);
+    }
 };
 
 struct vtx {
@@ -77,9 +138,7 @@ struct vtx {
 
 struct arc {
     std::uint64_t v_lv;     // vtx_ix<<32|lv packed for sorting
-    std::uint32_t w;        // vtx_ix
-    std::uint32_t ov, ow;
-    std::uint32_t dummy;    // reserved (align struct to 64 bits)
+    std::uint64_t w_lw;     // vtx_ix<<32|lw
 };
 
 struct path {
@@ -146,9 +205,10 @@ struct graph {
         paths.push_back(p);
     }
 
-    std::ostream& write_path_seq(std::ostream& is, std::size_t path_ix) const;
-
+    // write the path with id path_ix to an ostream
+    std::ostream& write_path_seq(std::ostream& os, std::size_t path_ix) const;
 };
+
 
 } // namespace gfa
 

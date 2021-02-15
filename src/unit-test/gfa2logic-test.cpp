@@ -233,15 +233,6 @@ TEST(gfa2logic_test, containing_vtx_inv) {
     ASSERT_EQ(v.overhang_r(), 1);
 }
 
-TEST(gfa2logic_test, impossible_edge1) {
-    edge e = {
-     { s1p, 3, 2, 3, true },
-     { s2p, 5, 3, 5, true }};
-    ASSERT_EXIT( e.validate(),
-            testing::ExitedWithCode(1), 
-            ": error: impossible edge: s1\\+ to s2+");
-}
-
 TEST(gfa2logic_test, possible_edge1_inv) {
     edge e = {
      { s1p, 3, 2, 3, true },
@@ -254,46 +245,6 @@ TEST(gfa2logic_test, flippable_possible) {
      { s2n, 5, 3, 5, false },
      { s1p, 3, 2, 3, true }};
     e.validate();
-}
-
-TEST(gfa2logic_test, edge_no_flip) {
-    edge e = {
-     { s1p, 3, 3, 3, true },
-     { s2p, 5, 0, 2, true }};
-    e.validate();
-    ASSERT_FALSE(e.needs_flip());
-}
-
-TEST(gfa2logic_test, edge_inv_no_flip) {
-    edge e = {
-     { s1p, 3, 3, 3, true },
-     { s2n, 5, 3, 5, false }};
-    e.validate();
-    ASSERT_FALSE(e.needs_flip());
-}
-
-TEST(gfa2logic_test, edge_needs_flip) {
-    edge e = {
-     { s1p, 3, 0, 1, true },
-     { s2p, 5, 3, 5, true }};
-    e.validate();
-    ASSERT_FALSE(e.s.goes_left());
-    ASSERT_FALSE(e.d.goes_right());
-    ASSERT_TRUE(e.d.goes_left());
-    ASSERT_TRUE(e.s.goes_right());
-    ASSERT_TRUE(e.needs_flip());
-}
-
-TEST(gfa2logic_test, edge_inv_needs_flip) {
-    edge e = {
-     { s1p, 3, 0, 1, true },
-     { s2n, 5, 0, 2, false }};
-    e.validate();
-    ASSERT_FALSE(e.s.goes_left());
-    ASSERT_FALSE(e.d.goes_right());
-    ASSERT_TRUE(e.d.goes_left());
-    ASSERT_TRUE(e.s.goes_right());
-    ASSERT_TRUE(e.needs_flip());
 }
 
 /*

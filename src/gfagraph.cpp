@@ -39,9 +39,45 @@ v_lv_less_l(const arc& it, std::uint64_t v_lv)
 }
 
 static bool // for upper_bound - returns true when v_lv is before it
-v_lv_less_u(std::uint64_t v_lv, const arc& it)
+arc_less_u(const arc& a, const arc& it)
 {
-    return v_lv < it.v_lv;
+    return a.v_lv < it.v_lv || (a.v_lv == it.v_lv && a.w_lw < it.w_lw);
+}
+
+static const char RC_MAP[256] = {
+  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,
+  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,
+  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,
+  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,
+  0 , 'T', 'V', 'G', 'H',  0 ,  0 , 'C', 'D',  0 ,  0 , 'M',  0 , 'K', 'N',  0 ,
+  0 ,  0 , 'Y', 'W', 'A',  0 , 'B', 'S',  0 , 'R',  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,
+  0 , 't', 'v', 'g', 'h',  0 ,  0 , 'c', 'd',  0 ,  0 , 'm',  0 , 'k', 'n',  0 ,
+  0 ,  0 , 'y', 'w', 'a',  0 , 'b', 's',  0 , 'r',  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,
+  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,
+  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,
+  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,
+  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,
+  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,
+  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,
+  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,
+  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0
+};
+
+std::ostream& 
+seg::write_seq(std::ostream& os, bool rc, std::uint32_t beg, std::uint32_t end) const
+{
+    if (end == std::uint32_t(-1))
+        end = len;
+
+    const char *p0 = data.data() + beg;
+    const char *p1 = data.data() + end;
+
+    if (rc)
+        while (p1 != p0) os << RC_MAP[std::size_t(*--p1)]; 
+    else
+        while (p0 != p1) os << *p0++;
+
+    return os;
 }
 
 const seg*
@@ -114,51 +150,54 @@ graph::add_edge(const std::string& sref, std::uint32_t sbeg, std::uint32_t send,
 
         // create the GFA2 representation having the logic
 
-    gfa2::edge g2e = {
+    gfa2::edge edge = {
         { sref, std::uint32_t(s_seg.len), sbeg, send, bool(!s_neg) },
         { dref, std::uint32_t(d_seg.len), dbeg, dend, bool(!d_neg) }
     };
 
-    g2e.validate();
+    edge.validate();
 
-        // We ignore containment and containers (for now)
+        // add the paths from v to w
 
-    if (g2e.s.is_contained())
-        raise_error("we do not handle containing/ed segments (yet): %s", g2e.s.id.c_str());
-    if (g2e.d.is_contained())
-        raise_error("we do not handle containing/ed segments (yet): %s", g2e.d.id.c_str());
+    std::uint64_t v_id = (s_ix<<1)|s_neg;
+    std::uint64_t w_id = (d_ix<<1)|d_neg;
 
-        // Now we are left with dovetailing or blunt
+    arc as[4];
 
-    std::uint32_t v = g2e.needs_flip() ? (d_ix<<1)|d_neg : (s_ix<<1)|s_neg;
-    std::uint32_t w = g2e.needs_flip() ? (s_ix<<1)|s_neg : (d_ix<<1)|d_neg;
+        // the left-to-right first turn-off from v and w and v.v.
 
-    arc a1;
-    a1.v_lv = (std::uint64_t(v)<<32) | g2e.vtx_l().overhang_l();
-    a1.w = w;
-    a1.ov = g2e.vtx_l().overlap();
-    a1.ow = g2e.vtx_r().overlap();
+    as[0].v_lv = as[1].w_lw = v_id<<32 | edge.lv();
+    as[0].w_lw = as[1].v_lv = w_id<<32 | edge.lw();
 
-    const auto it1 = std::upper_bound(arcs.cbegin(), arcs.cend(), a1.v_lv, v_lv_less_u);
-    arcs.emplace(it1, a1);
+        // same for the complement arcs
 
-    arc a2;
-    a2.v_lv = (std::uint64_t(w^1)<<32) | g2e.vtx_r().overhang_r();
-    a2.w = v^1;
-    a2.ov = a1.ow;
-    a2.ow = a1.ov;
+    as[2].v_lv = as[3].w_lw = (v_id^1)<<32 | edge.rv();
+    as[2].w_lw = as[3].v_lv = (w_id^1)<<32 | edge.rw();
 
-    const auto it2 = std::upper_bound(arcs.cbegin(), arcs.cend(), a2.v_lv, v_lv_less_u);
-    arcs.emplace(it2, a2);
+        // add them to the arcs array
+
+    for (arc a : as) {
+        arcs.emplace(std::upper_bound(arcs.cbegin(), arcs.cend(), a, arc_less_u), a);
+    }
+
+        // unless zero overlap, add the second turn-off for all
+
+    if (edge.ov() != 0 || edge.ow() != 0) {
+        for (arc a : as) {
+            a.v_lv += edge.ov();
+            a.w_lw += edge.ow();
+            arcs.emplace(std::upper_bound(arcs.cbegin(), arcs.cend(), a, arc_less_u), a);
+        }
+    }
 }
 
 std::pair<std::vector<arc>::const_iterator, std::vector<arc>::const_iterator>
 graph::arcs_from_v_lv(std::uint64_t v_lv) const
 {
-    std::uint64_t next = ((v_lv>>32)+1)<<32;
+    arc next = { ((v_lv>>32)+1)<<32, 0 };
     std::vector<arc>::const_iterator lo = std::lower_bound(arcs.cbegin(), arcs.cend(), v_lv, v_lv_less_l);
 
-    return std::make_pair(lo, std::upper_bound(lo, arcs.cend(), next, v_lv_less_u));
+    return std::make_pair(lo, std::upper_bound(lo, arcs.cend(), next, arc_less_u));
 }
 
 std::size_t
@@ -172,15 +211,13 @@ graph::start_path(std::uint32_t vtx_id, std::uint32_t pos)
     if (path_starts.empty())
         path_starts.reserve(segs.size());
     else if (path_starts.size() == path_starts.capacity())
-        raise_error("sorry, start_path is limited to %d", segs.size());
+        raise_error("sorry, start_path array exhausted");
 
-    // The path start is a 'pseudo-arc' arriving on w=vtx_id at ow=pos,
-    // coming from v_lv at that same location and with ov=0.
+    // The path start is a 'pseudo-arc' arriving on w=vtx_id at lw=pos,
+    // coming from v_lv at that same location.
     arc arc0;
     arc0.v_lv = std::uint64_t(vtx_id)<<32 | pos;
-    arc0.w = vtx_id;
-    arc0.ov = 0;
-    arc0.ow = pos;
+    arc0.w_lw = std::uint64_t(vtx_id)<<32 | pos;
 
     // Add the pseudo arc to the path_starts array
     path_starts.push_back(arc0);
@@ -198,17 +235,16 @@ std::ostream&
 graph::write_path_seq(std::ostream& os, std::size_t path_ix) const
 {
     const path& p = paths.at(path_ix);
+
     if (p.pre_ix != path::START)
     {
         write_path_seq(os, p.pre_ix);
 
-        const seg& sv = segs.at(vtx_seg(p.p_arc->v_lv>>32));
-        std::uint32_t start_at = paths.at(p.pre_ix).p_arc->ow;
-        std::uint32_t count = sv.len - p.p_arc->ov - start_at;
-        os.write(reinterpret_cast<const char*>(&*sv.data.cbegin()) + start_at, count);
+        const path& p0 = paths.at(p.pre_ix);
 
-        const seg& sw = segs.at(vtx_seg(p.p_arc->w));
-        os.write(reinterpret_cast<const char*>(&*sw.data.cbegin()), p.p_arc->ow);
+        std::uint64_t vtx_ix = p.p_arc->v_lv >> 32;
+
+        segs.at(graph::vtx_seg(vtx_ix)).write_vtx(os, (vtx_ix & 1) == 1, std::uint32_t(p0.p_arc->w_lw), std::uint32_t(p.p_arc->v_lv));
     }
 
     return os;

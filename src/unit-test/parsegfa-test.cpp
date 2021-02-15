@@ -78,24 +78,49 @@ TEST(parsegfa_test, read_gfa_and_edge) {
 
     gfa::graph gfa = parse_gfa(s_gfa);
     ASSERT_EQ(gfa.segs.size(), 2);
-    ASSERT_EQ(gfa.arcs.size(), 2);
+    ASSERT_EQ(gfa.arcs.size(), 8);
 
     auto s1 = gfa.segs[0];
     auto s2 = gfa.segs[1];
     ASSERT_EQ(s1.len, 4);
     ASSERT_EQ(s2.len, 9);
-   
-    auto a1 = gfa.arcs[0];
-    ASSERT_EQ(a1.v_lv, 1);
-    ASSERT_EQ(a1.w, 3);
-    ASSERT_EQ(a1.ov, 3);
-    ASSERT_EQ(a1.ow, 4);
 
-    auto a2 = gfa.arcs[1];
-    ASSERT_EQ(a2.v_lv, std::uint64_t(3^1)<<32|5);
-    ASSERT_EQ(a2.w, 0^1);
-    ASSERT_EQ(a2.ov, 4);
-    ASSERT_EQ(a2.ow, 3);
+    // We have:
+    // - v (v+) = 0, w (w-) = 3, v' (v-) = 0, w' (w+) = 2
+    // - v_lv 0<<32|1, w_lw 3<<32|0, v'_lv 1<<32|0, w'_lw 2<<32|5
+    // - v_lv+ov 0<<32|4, w_lw+ow 3<<32|4, v'_lv+ov 1<<32|3, w'_lw+ow 2<<32|9
+
+    // 0: v_lv -> w_lw
+    ASSERT_EQ(gfa.arcs[0].v_lv, 0L<<32|1);
+    ASSERT_EQ(gfa.arcs[0].w_lw, 3L<<32|0);
+
+    // 1: v_lv+ov -> w_lw+ow
+    ASSERT_EQ(gfa.arcs[1].v_lv, 0L<<32|4);
+    ASSERT_EQ(gfa.arcs[1].w_lw, 3L<<32|4);
+
+    // 2: v'_lv -> w'_lw
+    ASSERT_EQ(gfa.arcs[2].v_lv, 1L<<32|0);
+    ASSERT_EQ(gfa.arcs[2].w_lw, 2L<<32|5);
+
+    // 3: v'_lv+ov -> w'_lw+ow
+    ASSERT_EQ(gfa.arcs[3].v_lv, 1L<<32|3);
+    ASSERT_EQ(gfa.arcs[3].w_lw, 2L<<32|9);
+
+    // 4: w'_lw -> v'_lv
+    ASSERT_EQ(gfa.arcs[4].v_lv, gfa.arcs[2].w_lw); 
+    ASSERT_EQ(gfa.arcs[4].w_lw, gfa.arcs[2].v_lv);
+
+    // 5: w'_lw+ow -> v'_lv+ov
+    ASSERT_EQ(gfa.arcs[5].v_lv, gfa.arcs[3].w_lw); 
+    ASSERT_EQ(gfa.arcs[5].w_lw, gfa.arcs[3].v_lv);
+
+    // 6: w_lw -> v_lv
+    ASSERT_EQ(gfa.arcs[6].v_lv, gfa.arcs[0].w_lw);
+    ASSERT_EQ(gfa.arcs[6].w_lw, gfa.arcs[0].v_lv);
+
+    // 7: w_lw+ow -> v_lv+ov
+    ASSERT_EQ(gfa.arcs[7].v_lv, gfa.arcs[1].w_lw);
+    ASSERT_EQ(gfa.arcs[7].w_lw, gfa.arcs[1].v_lv);
 }
 
 } // namespace

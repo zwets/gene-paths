@@ -33,28 +33,30 @@ struct vtx {
 
     void validate() const;
 
-    bool is_contained() const { return b == 0 && e == l; }
-    bool is_container() const { return b != 0 && e != l; }
-    bool is_blunt_r() const { return p ? b == l : e == 0; }
-    bool is_blunt_l() const { return p ? e == 0 : b == l; }
-    bool dovetails_r() const { return p ? e == l && b < l && b > 0 : b == 0 && e > 0 && e < l; }
-    bool dovetails_l() const { return p ? b == 0 && e > 0 && e < l : e == l && b < l && b > 0; }
-    std::uint32_t overlap() const { return e - b; }
-    std::uint32_t overhang_l() const { return p ? b : l - e; }
-    std::uint32_t overhang_r() const { return p ? l - e : b; }
-    bool goes_left() const { return is_blunt_r() || dovetails_r(); }
-    bool goes_right() const { return is_blunt_l() || dovetails_l(); }
+    inline bool is_contained() const { return b == 0 && e == l; }
+    inline bool is_container() const { return b != 0 && e != l; }
+    inline bool is_blunt_r() const { return p ? b == l : e == 0; }
+    inline bool is_blunt_l() const { return p ? e == 0 : b == l; }
+    inline bool dovetails_r() const { return p ? e == l && b < l && b > 0 : b == 0 && e > 0 && e < l; }
+    inline bool dovetails_l() const { return p ? b == 0 && e > 0 && e < l : e == l && b < l && b > 0; }
+    inline std::uint32_t overlap() const { return e - b; }
+    inline std::uint32_t overhang_l() const { return p ? b : l - e; }
+    inline std::uint32_t overhang_r() const { return p ? l - e : b; }
 };
 
 struct edge {
-    vtx s;   // source vertex
-    vtx d;   // dest vertex vertex
+    vtx v;   // source vertex
+    vtx w;   // dest vertex vertex
 
     void validate() const;
-    bool needs_flip() const;
 
-    const vtx& vtx_l() const { return needs_flip() ? d : s; }
-    const vtx& vtx_r() const { return needs_flip() ? s : d; }
+    inline std::uint32_t lv() const { return v.overhang_l(); }
+    inline std::uint32_t ov() const { return v.overlap(); }
+    inline std::uint32_t rv() const { return v.overhang_r(); }
+
+    inline std::uint32_t lw() const { return w.overhang_l(); }
+    inline std::uint32_t ow() const { return w.overlap(); }
+    inline std::uint32_t rw() const { return w.overhang_r(); }
 };
 
 } // namespace gfa2

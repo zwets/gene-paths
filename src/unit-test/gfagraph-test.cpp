@@ -75,6 +75,8 @@ static seg SEG2 = { 9, "s2", "TAGCATACG" };
 static seg SEG3 = { 5, "s3", "CATTA" };
 static seg SEG4 = { 8, "s4", "GCGCAATT" };
 
+/*
+ * TEMP
 TEST(gfagraph_test, add_edge) {
     graph gfa;
     gfa.add_seg(SEG1);
@@ -208,6 +210,7 @@ TEST(gfagraph_test, v_vl_iter) {
     const auto itp5 = gfa.arcs_from_v_lv(std::uint64_t(3)<<32|10);
     ASSERT_EQ(std::distance(itp5.first, itp5.second), 0);
 }
+*/
 
 } // namespace
   // vim: sts=4:sw=4:ai:si:et

@@ -1,4 +1,4 @@
-/* utils-test.cpp
+/* gfapaths-test.cpp
  * 
  * Copyright (C) 2021  Marco van Zwetselaar <io@zwets.it>
  *
@@ -43,7 +43,7 @@ static graph make_graph() {
     return gfa;
 }
 
-TEST(gfapath_test, empty_path) {
+TEST(gfapaths_test, empty_path) {
     graph g = make_graph();
     std::size_t p_ix = g.start_path(graph::seg_vtx_p(0), 0);
     ASSERT_EQ(p_ix, 0);
@@ -53,7 +53,7 @@ TEST(gfapath_test, empty_path) {
     ASSERT_EQ(g.paths.at(0).p_arc, &*g.path_starts.cbegin());
 }
 
-TEST(gfapath_test, path_1) {
+TEST(gfapaths_test, path_1) {
     graph g = make_graph();
     std::size_t p_ix = g.start_path(graph::seg_vtx_p(0), 0);
     g.grow_path(p_ix, g.arcs.cbegin());
@@ -63,7 +63,7 @@ TEST(gfapath_test, path_1) {
     ASSERT_EQ(g.paths.at(1).p_arc, &*g.arcs.cbegin());
 }
 
-TEST(gfapath_test, write_empty) {
+TEST(gfapaths_test, write_empty) {
     graph g = make_graph();
     std::size_t p_ix = g.start_path(graph::seg_vtx_p(0), 0);
 
@@ -72,18 +72,23 @@ TEST(gfapath_test, write_empty) {
     ASSERT_EQ(ss.str(), "");
 }
 
-TEST(gfapath_test, write_1) {
+TEST(gfapaths_test, write_1) {
     graph g = make_graph();
     std::size_t p_ix = g.start_path(graph::seg_vtx_p(2), 2);
-    g.grow_path(p_ix, g.arcs.cbegin() + 5);
+
+    std::vector<arc>::const_iterator arc_it = g.arcs_from_v_lv(graph::seg_vtx_p(2)<<32|2).first;
+    ASSERT_EQ(arc_it->v_lv, 2L<<33|4);
+    ASSERT_EQ(arc_it->w_lw, 0);
+
+    g.grow_path(p_ix, arc_it);
     ASSERT_EQ(g.path_starts.size(), 1);
     ASSERT_EQ(g.paths.size(), 2);
     ASSERT_EQ(g.paths.at(1).pre_ix, p_ix);
-    ASSERT_EQ(g.paths.at(1).p_arc, &*g.arcs.cbegin() + 5);
+    ASSERT_EQ(g.paths.at(1).p_arc, &*arc_it);
 
     std::stringstream ss;
     g.write_path_seq(ss, 1);
-    ASSERT_EQ(ss.str(), "TTA");
+    ASSERT_EQ(ss.str(), "TT");
 }
 
 } // namespace

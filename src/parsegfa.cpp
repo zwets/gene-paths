@@ -44,11 +44,12 @@ gfak_to_graph(gfak::GFAKluge& gfak, gfa::graph& graph)
     }
 
     auto s2e = gfak.get_seq_to_edges();
-    std::size_t n_arcs = 0;
+    std::size_t n_edge = 0;
     for (auto p : n2s)
-        n_arcs += 2 * s2e[p.first].size();
+        n_edge += s2e[p.first].size();
 
-    verbose_emit("graphs has %ld arcs", n_arcs);
+    std::size_t n_arcs = 8 * n_edge;
+    verbose_emit("graph has %ld edges, reserving %ld arcs", n_edge, n_arcs);
     graph.arcs.reserve(n_arcs);
 
     for (auto p : n2s) {
@@ -61,6 +62,9 @@ gfak_to_graph(gfak::GFAKluge& gfak, gfa::graph& graph)
                     dname, e->sink_begin, e->sink_end);
         }
     }
+
+    verbose_emit("packing arcs to actual number: %ld", graph.arcs.size());
+    graph.arcs.shrink_to_fit();
 }
 
 static void

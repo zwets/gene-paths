@@ -63,7 +63,7 @@ gfak_to_graph(gfak::GFAKluge& gfak, gfa::graph& graph)
         }
     }
 
-    verbose_emit("packing arcs to actual number: %ld", graph.arcs.size());
+    verbose_emit("packing arcs array to actual number: %ld", graph.arcs.size());
     graph.arcs.shrink_to_fit();
 }
 
@@ -98,9 +98,6 @@ add_fasta_to_gfak(gfak::GFAKluge& gfak, std::istream& fasta)
         }
 
         gfak.set_sequence_data(seqid, data);
-        //gfak::sequence_elem *psel = gfak.find_sequence_elem(seqid);
-        //if (psel)
-        //    psel->sequence = data;
     }
 }
 

@@ -21,28 +21,14 @@
 #include <string>
 #include <vector>
 #include <algorithm>
-#include <map>
 #include <ostream>
+#include <map>
 #include "gfa2logic.h"
 #include "utils.h"
 
 namespace gfa {
 
 using gene_paths::raise_error;
-
-const std::size_t path::START = std::uint64_t(-1);
-
-static bool // for lower_bound - returns true when it is before v_lv
-v_lv_less_l(const arc& it, std::uint64_t v_lv)
-{
-    return it.v_lv < v_lv;
-}
-
-static bool // for upper_bound - returns true when v_lv is before it
-arc_less_u(const arc& a, const arc& it)
-{
-    return a.v_lv < it.v_lv || (a.v_lv == it.v_lv && a.w_lw < it.w_lw);
-}
 
 static const char RC_MAP[256] = {
   0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,
@@ -78,6 +64,18 @@ seg::write_seq(std::ostream& os, bool rc, std::uint32_t beg, std::uint32_t end) 
         while (p0 != p1) os << *p0++;
 
     return os;
+}
+
+static bool // for lower_bound - returns true when it is before v_lv
+v_lv_less_l(const arc& it, std::uint64_t v_lv)
+{
+    return it.v_lv < v_lv;
+}
+
+static bool // for upper_bound - returns true when v_lv is before it
+arc_less_u(const arc& a, const arc& it)
+{
+    return a.v_lv < it.v_lv || (a.v_lv == it.v_lv && a.w_lw < it.w_lw);
 }
 
 const seg*
@@ -157,7 +155,8 @@ graph::add_edge(const std::string& sref, std::uint32_t sbeg, std::uint32_t send,
 
     edge.validate();
 
-        // add the paths from v to w
+        // the arc at the beginning of the overlap
+        // creates arc from v to w, and back, and their complements
 
     std::uint64_t v = ((s_ix<<1)|s_neg)<<32;
     std::uint64_t w = ((d_ix<<1)|d_neg)<<32;
@@ -177,7 +176,8 @@ graph::add_edge(const std::string& sref, std::uint32_t sbeg, std::uint32_t send,
         arcs.emplace(std::upper_bound(arcs.cbegin(), arcs.cend(), a, arc_less_u), a);
     }
 
-        // if non-zero overlap add the second turn-off too
+        // if non-zero overlap add the arc at the end of the overlap
+        // again create arc from v to w, and back, and their complements
 
     if (edge.ov() != 0 || edge.ow() != 0) {
 
@@ -201,56 +201,6 @@ graph::arcs_from_v_lv(std::uint64_t v_lv) const
     std::vector<arc>::const_iterator lo = std::lower_bound(arcs.cbegin(), arcs.cend(), v_lv, v_lv_less_l);
 
     return std::make_pair(lo, std::upper_bound(lo, arcs.cend(), next, arc_less_u));
-}
-
-std::size_t
-graph::start_path(std::uint32_t vtx_id, std::uint32_t pos)
-{
-    // We allocate the array path_starts for a fixed size, arbitrarily
-    // chosen so that one path could start from every segment.
-    // We want it fixed size because we use pointers to the arcs in it,
-    // and growing it will reallocate and invalidate those.
-    // Not ideal but works for now, and can be optimised later.
-    if (path_starts.empty())
-        path_starts.reserve(segs.size());
-    else if (path_starts.size() == path_starts.capacity())
-        raise_error("sorry, start_path array exhausted");
-
-    // The path start is a 'pseudo-arc' arriving on w=vtx_id at lw=pos,
-    // coming from v_lv at that same location.
-    arc arc0;
-    arc0.v_lv = std::uint64_t(vtx_id)<<32 | pos;
-    arc0.w_lw = std::uint64_t(vtx_id)<<32 | pos;
-
-    // Add the pseudo arc to the path_starts array
-    path_starts.push_back(arc0);
-
-    // Create the new path and add to the paths vector
-    path p;
-    p.pre_ix = path::START;
-    p.p_arc = reinterpret_cast<const arc*>(&*path_starts.crbegin());
-
-    paths.push_back(p);
-    return paths.size() - 1;
-}
-
-std::ostream&
-graph::write_path_seq(std::ostream& os, std::size_t path_ix) const
-{
-    const path& p = paths.at(path_ix);
-
-    if (p.pre_ix != path::START)
-    {
-        write_path_seq(os, p.pre_ix);
-
-        const path& p0 = paths.at(p.pre_ix);
-
-        std::uint64_t vtx_ix = p.p_arc->v_lv >> 32;
-
-        segs.at(graph::vtx_seg(vtx_ix)).write_vtx(os, (vtx_ix & 1) == 1, std::uint32_t(p0.p_arc->w_lw), std::uint32_t(p.p_arc->v_lv));
-    }
-
-    return os;
 }
 
 

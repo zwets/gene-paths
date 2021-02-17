@@ -23,23 +23,38 @@
 
 namespace gfa {
 
-/* path_arc
+/* This unit defines the data structures to hold paths over a graph.
  *
- * Recursively defines a path as an existing path extended with an arc.
+ * We define a path recursively as the "null" path or a path followed by
+ * an arc.  An arc, as defined in gfagraph, holds a source (v_lv) and
+ * destination location (w_lv).  Both contain a vertex identifier (v, w),
+ * and a distance from the start of the vertex (lv, lw).
  *
- * The existing path is referenced by its index in path_arcs, or the
- * reserved value 0 for the "null" path at the start.
+ * A way to think about paths is to view a gfa::graph as a metro network,
+ * where the segments are lines (that travel in one direction, and where
+ * you can get off at any point), and each arc is a station where you can
+ * hop onto another line.
  *
- * The extension arc is a pointer to an arc in a gfa::graph.
+ * A path then is a sequence of rides (on a segment) and hops (between
+ * segments).  We do not store the rides, only the hops.  The rides are
+ * implicit - they go from the w_lw of one hop to the v_lv of the next.
+ *
+ * This recursive definition of paths allows for very concise storage:
+ * we keep an array of 'path_arc' objects, each representing a new path
+ * by having a pointer to an existing path, and a pointer to an arc that
+ * that extends the path to be a new path.
  */
+
 struct path_arc {
     std::size_t pre_ix;     // index of preceding path in paths or 0
     const arc* p_arc;       // points to the arc added to make this path
 };
 
-/* paths
+/* The paths struct holds any number of paths defined over a graph.
  *
- * Holds paths defined over a graph.
+ * To start a new set of paths from some location (position on a vertex),
+ * call start_path(vtx, pos).  To create a path that extends an existing
+ * path, call extend(path_ix, arc).
  */
 struct paths {
 
@@ -48,15 +63,22 @@ struct paths {
     std::vector<path_arc> path_arcs;
 
     paths(const graph& gr, std::size_t max)
-        : g(gr) { path_starts.reserve(max); path_arcs.push_back({0,0}); }
+        : g(gr) { 
+        path_starts.reserve(max);
+        path_arcs.push_back( {0,0} /* the 'null' path_arc at path_ix 0 */ );
+    }
 
-    // starts path at pos on vtx_ix, returns path_ix
+    // starts a path at pos on vtx_ix, returns path_ix
     std::size_t start_path(std::uint32_t vtx_ix, std::uint32_t pos);
 
-    // creates new path that extends path_ix with the arc at arc_it
-    inline void grow_path(std::size_t path_ix, std::vector<arc>::const_iterator arc_it) {
-        path_arc p = { path_ix, reinterpret_cast<const arc*>(&*arc_it) };
-        path_arcs.push_back(p);
+    // creates new path that extends path_ix with the arc at p_arc
+    inline void extend(std::size_t path_ix, const arc *p_arc) {
+        path_arcs.push_back( { path_ix, p_arc } );
+    }
+
+    // creates new path that extends path_ix with the arc at it
+    inline void extend(std::size_t path_ix, std::vector<arc>::const_iterator it) {
+        extend(path_ix, reinterpret_cast<const arc*>(&*it));
     }
 
     // write the path sequence with id path_ix to an ostream

@@ -58,61 +58,63 @@ TEST(gfapaths_test, path_1) {
     graph g = make_graph();
     paths p = paths(g, 1);
     std::size_t p_ix = p.start_path(graph::seg_vtx_p(0), 0);
-    p.grow_path(p_ix, g.arcs.cbegin());
+    p.extend(p_ix, g.arcs.cbegin());
     ASSERT_EQ(p.path_starts.size(), 1);
     ASSERT_EQ(p.path_arcs.size(), 3);
     ASSERT_EQ(p.path_arcs.at(2).pre_ix, p_ix);
     ASSERT_EQ(p.path_arcs.at(2).p_arc, &*g.arcs.cbegin());
 }
 
+static std::string get_seq(const paths& ps, std::size_t pix)
+{
+    std::stringstream ss;
+    ps.write_path_seq(ss, pix);
+    return ss.str();
+}
+    
 TEST(gfapaths_test, write_empty) {
     graph g = make_graph();
     paths p = paths(g, 1);
     std::size_t p_ix = p.start_path(graph::seg_vtx_p(0), 0);
-
-    std::stringstream ss;
-    p.write_path_seq(ss, p_ix);
-    ASSERT_EQ(ss.str(), "");
+    ASSERT_EQ(get_seq(p, p_ix), "");
 }
 
 TEST(gfapaths_test, write_1) {
     graph g = make_graph();
     paths p = paths(g, 1);
-    std::size_t p_ix = p.start_path(graph::seg_vtx_p(2), 2);
+    std::size_t p_ix = p.start_path(graph::seg_vtx_p(2), 2); // s3+ CA|TTA
 
     std::vector<arc>::const_iterator arc_it = g.arcs_from_v_lv(graph::seg_vtx_p(2)<<32|2).first;
-    ASSERT_EQ(arc_it->v_lv, 2L<<33|4);
-    ASSERT_EQ(arc_it->w_lw, 0);
+    ASSERT_EQ(arc_it->v_lv, 2L<<33|4);  // s3+ CATT|A
+    ASSERT_EQ(arc_it->w_lw, 0);         // s1+ |ACGT
 
-    p.grow_path(p_ix, arc_it);
+    p.extend(p_ix, arc_it);
     ASSERT_EQ(p.path_starts.size(), 1);
     ASSERT_EQ(p.path_arcs.size(), 3);
     ASSERT_EQ(p.path_arcs.at(2).pre_ix, p_ix);
     ASSERT_EQ(p.path_arcs.at(2).p_arc, &*arc_it);
 
-    std::stringstream ss;
-    p.write_path_seq(ss, 2);
-    ASSERT_EQ(ss.str(), "TT");
+    ASSERT_EQ(get_seq(p, p_ix+1), "TT");
 }
 
 TEST(gfapaths_test, write_2) {
     graph g = make_graph();
     paths p = paths(g, 1);
-    std::size_t p_ix = p.start_path(graph::seg_vtx_p(2), 1);  // start at s3+: C|ATT[A]
+    std::size_t p_ix = p.start_path(graph::seg_vtx_p(g.get_seg_ix("s3")), 1);  // start at s3+: C|ATTA
 
-    // find first arc away from 3+, is the [A] overlap to s1+ [A]CTG
-    std::vector<arc>::const_iterator arc_it = g.arcs_from_v_lv(graph::seg_vtx_p(2)<<32|1).first;
-    ASSERT_EQ(arc_it->v_lv, 2L<<33|4);   // s3+:4
-    ASSERT_EQ(arc_it->w_lw, 0);          // s1+:0
+    std::vector<arc>::const_iterator arc_it = g.arcs_from_v_lv(graph::seg_vtx_p(g.get_seg_ix("s3"))<<32|1).first;
+    ASSERT_EQ(arc_it->v_lv, 2L<<33|4);   // s3+:4 C|ATT|A
+    ASSERT_EQ(arc_it->w_lw, 0);          // s1+:0 |A|CGT
 
     // add arc onto s1+ [A]CGT, so we have C|ATT|A
-    p.grow_path(p_ix, arc_it);
+    p.extend(p_ix++, arc_it);
     ASSERT_EQ(p.path_starts.size(), 1);
-    ASSERT_EQ(p.path_arcs.size(), 3);
-    ASSERT_EQ(p.path_arcs.at(2).pre_ix, p_ix);
-    ASSERT_EQ(p.path_arcs.at(2).p_arc, &*arc_it);
+    ASSERT_EQ(p.path_arcs.size(), p_ix+1);
+    ASSERT_EQ(p.path_arcs.at(p_ix).pre_ix, p_ix-1);
+    ASSERT_EQ(p.path_arcs.at(p_ix).p_arc, &*arc_it);
+    ASSERT_EQ(get_seq(p, p_ix), "ATT");
 
-    // find first arc away from 1+, is back to where we came from
+    // find first arc away from 1+, is return arc to where we came from
     arc_it = g.arcs_from_v_lv(arc_it->w_lw).first;
     ASSERT_EQ(arc_it->v_lv, 0);          // s1+:0
     ASSERT_EQ(arc_it->w_lw, 2L<<33|4);   // s3+:4
@@ -122,26 +124,24 @@ TEST(gfapaths_test, write_2) {
     ASSERT_EQ(arc_it->v_lv, 1);          // s1+:1
     ASSERT_EQ(arc_it->w_lw, 3L<<32|0);   // s2-:0
 
-    // so add arc onto s2- and we have C|ATT|A| with CGTATGCTA coming
-    p.grow_path(1, arc_it);
-    ASSERT_EQ(p.path_starts.size(), 1);
-    ASSERT_EQ(p.path_arcs.size(), 4);
+    // add that so we have C|ATT|A| with CGTATGCTA coming
+    p.extend(p_ix++, arc_it);
+    ASSERT_EQ(get_seq(p, p_ix), "ATTA");
 
-    // find first arc away from 2- is back to where we came from
+    // find first arc away from 2- is return arc to where we came from
     arc_it = g.arcs_from_v_lv(arc_it->w_lw).first;
-    // and next is to s1+ end
+    // next is to s1+ end
     arc_it = arc_it + 1;
-    // but next is to s4+ start
+    // next is to s4+ start
     arc_it = arc_it + 1;
     ASSERT_EQ(arc_it->v_lv, 3L<<32|6);   // s2-:6
     ASSERT_EQ(arc_it->w_lw, 6L<<32|0);   // s4+:0
 
-    // so add arc onto s1+ A[CGT] and we have C|ATT|A|CGTATG[CTA]
-    p.grow_path(2, arc_it);
-    ASSERT_EQ(p.path_starts.size(), 1);
-    ASSERT_EQ(p.path_arcs.size(), 5);
+    // add arc to s1+ A[CGT] and we have C|ATT|A|CGTATG|CTA
+    p.extend(p_ix++, arc_it);
+    ASSERT_EQ(get_seq(p, p_ix), "ATTACGTATG");
 
-    // find first arc away from 4+, is back to where we came from
+    // find first arc away from 4+, is return arc to where we came from
     arc_it = g.arcs_from_v_lv(arc_it->w_lw).first;
     // and next is to s2- end
     arc_it = arc_it + 1;
@@ -149,13 +149,8 @@ TEST(gfapaths_test, write_2) {
     ASSERT_EQ(arc_it->w_lw, 3L<<32|9);   // s2-:9
 
     // we take it and have |ATT|A|CGTATG|CTA|
-    p.grow_path(3, arc_it);
-    ASSERT_EQ(p.path_starts.size(), 1);
-    ASSERT_EQ(p.path_arcs.size(), 6);
-
-    std::stringstream ss;
-    p.write_path_seq(ss, 5);
-    ASSERT_EQ(ss.str(), "ATTACGTATGCTA");
+    p.extend(p_ix++, arc_it);
+    ASSERT_EQ(get_seq(p, p_ix), "ATTACGTATGCTA");
 }
 
 } // namespace

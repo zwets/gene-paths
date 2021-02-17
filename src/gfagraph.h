@@ -51,9 +51,9 @@ namespace gfa {
  *                w: ============--------------
  *                   |<-- ow -->|<---- lw ---->
  *
- * The graph is encoded as an array of directed arcs, two per undirected
- * edge.  The arc from v to w leaves v at length lv, its complement arc
- * leaves w' at lw.  The arcs always arrive at 0 (on +) or $ (on -).
+ * The gfatools model encodes the graph d as an array of directed arcs,
+ * two per edge.  One leaves v at length lv, its complement leaves w' at
+ * lw.  The arcs always arrive at 0 (on +) or $ (on -).
  *
  * Our extension is to additionally encode the lengths rv and rw, where
  * l{v,w} are upstream of the overlap, and r{v,w} downstream:
@@ -64,28 +64,29 @@ namespace gfa {
  *       w: ---------============---------------
  *          |<- lw ->|<-- ow -->|<---- rw ---->|
  *
- * We then encode each edge as eight arcs, corresponding to jumping from
+ * We then encode each edge as eight arcs, corresponding to going from
  * (1) v to w at (a) lv, (b) lv+ov, (2) w to v at (a) lw, (b) lw+ow, and
- * their complements: w' to v' at rw or rw+ow, v' to w' at rv or rv+ov.
+ * their four complements.  Iff ov=ow=0, there are no (b) arcs.
  *
- * Note that v and w above may be either + or -, as lv and lw are lengths
- * measured from 0 for a + segment, and from $ for a - segment.
+ * Note that v and w above may be either + or -, as lv and lw are always
+ * upstream of the overlap.  They are measured from 0 for a + segment,
+ * and from $ for a - segment.
  *
  * As in gfatools, arcs are stored in an array sorted on v_lv, which is
  * vtx_ix<<32|lv, so that the outbound arcs from every vertex vtx_ix are
  * contiguous and sorted on how "early" they leave the vertex.
  *
- * -- Note 1: edge overlap is special case rv=0 && lw=0 (or lv=0 && rw=0)
+ * -- Note 1: Dovetailing is special case rv=0 && lw=0 (or lv=0 && rw=0)
  *
- * It would seem that there is no point in storing arcs w_0→v_lv and
- * v'_0→w'_rw, but note that adding them adds a path to the overlap on
- * the other segment from some other edge Z linked to w_0:
+ * It would seem that in this case there is no point in storing w_0→v_lv
+ * and v'_0→w'_rw, but note that adding these arcs adds a path to the
+ * overlap on the other segment from some other edge Z linked to w_0:
  *
  *   v: ------------->>>>>>>>>>>>
  *                w: ^===========---------------
  *        z: >>>>>>>>^
  *
- * -- Note 2: Non-overlapping links additionally have lv=L(v) && rw=L(w)
+ * -- Note 2: Non-overlap additionally has lv=$ && rw=$ (or rv=$ && lw=$)
  *
  *      |<--- lv --->|
  *   v: --------------              (or v and w reversed)
@@ -99,9 +100,9 @@ namespace gfa {
  *   v: -------------^
  *                w: ^-------
  *
- * We can however leave out v_lv+ov→w_lw+ow and w_lw+ow→v_lv+ov, and
- * their complements, because with ov=ow=0 they are equivalent to
- * v_lv→w_lw and w_lw→v_lv which we already have.
+ * We can however leave out v_(lv+ov)→w_(lw+ow) and w_(lw+ow)→v_(lv+ov),
+ * and their complements, as ov=ow=0 so they are equivalent to the first
+ * arcs.
  *
  * -- Note 3: Zero-overlap can theoretically happen in middle too
  *
@@ -109,8 +110,8 @@ namespace gfa {
  *
  * -- Note 4: Containment can now be expressed too
  *
- * And this is convenient for defining paths: start and end region are
- * containments:
+ * And this will be convenient for defining paths, as the start and end
+ * regions can be defined as containments:
  *
  *      |<--- lv --->|<-- ov -->|<- rv ->|
  *   v: -------------============---------
@@ -175,7 +176,7 @@ struct graph {
 
     std::vector<arc> arcs;
 
-    // begin and past-the-end iterator for all arcs leaving v at lv or later
+    // begin and past-the-end iterator for all arcs leaving v at lv or further downstream
     std::pair<std::vector<arc>::const_iterator, std::vector<arc>::const_iterator>
         arcs_from_v_lv(std::uint64_t) const;
 

@@ -76,6 +76,8 @@ TEST(gfapaths_test, write_empty) {
     graph g = make_graph();
     paths p = paths(g, 1);
     std::size_t p_ix = p.start_path(graph::seg_vtx_p(0), 0);
+    ASSERT_EQ(p.ride_len(p.path_arcs.at(p_ix)), 0);
+    ASSERT_EQ(p.length(p.path_arcs.at(p_ix)), 0);
     ASSERT_EQ(get_seq(p, p_ix), "");
 }
 
@@ -93,7 +95,8 @@ TEST(gfapaths_test, write_1) {
     ASSERT_EQ(p.path_arcs.size(), 3);
     ASSERT_EQ(p.path_arcs.at(2).pre_ix, p_ix);
     ASSERT_EQ(p.path_arcs.at(2).p_arc, &*arc_it);
-
+    ASSERT_EQ(p.ride_len(p.path_arcs.at(p_ix+1)), 2);
+    ASSERT_EQ(p.length(p.path_arcs.at(p_ix+1)), 2);
     ASSERT_EQ(get_seq(p, p_ix+1), "TT");
 }
 
@@ -112,6 +115,8 @@ TEST(gfapaths_test, write_2) {
     ASSERT_EQ(p.path_arcs.size(), p_ix+1);
     ASSERT_EQ(p.path_arcs.at(p_ix).pre_ix, p_ix-1);
     ASSERT_EQ(p.path_arcs.at(p_ix).p_arc, &*arc_it);
+    ASSERT_EQ(p.ride_len(p.path_arcs.at(p_ix)), 3);
+    ASSERT_EQ(p.length(p.path_arcs.at(p_ix)), 3);
     ASSERT_EQ(get_seq(p, p_ix), "ATT");
 
     // find first arc away from 1+, is return arc to where we came from
@@ -126,6 +131,8 @@ TEST(gfapaths_test, write_2) {
 
     // add that so we have C|ATT|A| with CGTATGCTA coming
     p.extend(p_ix++, arc_it);
+    ASSERT_EQ(p.ride_len(p.path_arcs.at(p_ix)), 1);
+    ASSERT_EQ(p.length(p.path_arcs.at(p_ix)), 4);
     ASSERT_EQ(get_seq(p, p_ix), "ATTA");
 
     // find first arc away from 2- is return arc to where we came from
@@ -139,6 +146,8 @@ TEST(gfapaths_test, write_2) {
 
     // add arc to s1+ A[CGT] and we have C|ATT|A|CGTATG|CTA
     p.extend(p_ix++, arc_it);
+    ASSERT_EQ(p.ride_len(p.path_arcs.at(p_ix)), 6);
+    ASSERT_EQ(p.length(p.path_arcs.at(p_ix)), 10);
     ASSERT_EQ(get_seq(p, p_ix), "ATTACGTATG");
 
     // find first arc away from 4+, is return arc to where we came from
@@ -150,6 +159,8 @@ TEST(gfapaths_test, write_2) {
 
     // we take it and have |ATT|A|CGTATG|CTA|
     p.extend(p_ix++, arc_it);
+    ASSERT_EQ(p.ride_len(p.path_arcs.at(p_ix)), 3);
+    ASSERT_EQ(p.length(p.path_arcs.at(p_ix)), 13);
     ASSERT_EQ(get_seq(p, p_ix), "ATTACGTATGCTA");
 }
 

@@ -51,6 +51,12 @@ paths::start_path(std::uint32_t vtx_id, std::uint32_t pos)
     return path_arcs.size() - 1;
 }
 
+std::size_t
+paths::length(const path_arc& p) const
+{
+    return p.pre_ix ? length(path_arcs.at(p.pre_ix)) + ride_len(p) : 0;
+}
+
 std::ostream&
 paths::write_path_seq(std::ostream& os, std::size_t path_ix) const
 {

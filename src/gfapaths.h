@@ -81,6 +81,14 @@ struct paths {
         extend(path_ix, reinterpret_cast<const arc*>(&*it));
     }
 
+    // returns the length of the ride from previous hop to current hop
+    inline std::size_t ride_len(const path_arc& p) const {
+        return p.pre_ix == 0 ? 0 : p.p_arc->v_lv - path_arcs.at(p.pre_ix).p_arc->w_lw;
+    }
+
+    // return the length of the path
+    std::size_t length(const path_arc& p) const;
+
     // write the path sequence with id path_ix to an ostream
     std::ostream& write_path_seq(std::ostream& os, std::size_t path_ix) const;
 };

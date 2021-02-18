@@ -35,6 +35,12 @@ set_progname(const char *p)
     progname = p;
 }
 
+bool
+get_verbose()
+{
+    return verbose;
+}
+
 void
 set_verbose(bool v)
 {

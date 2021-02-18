@@ -1,4 +1,4 @@
-/* parsefga.h
+/* parsegfa.h
  *
  * Copyright (C) 2021  Marco van Zwetselaar <io@zwets.it>
  *
@@ -23,8 +23,13 @@
 
 namespace gene_paths {
 
-extern gfa::graph parse_gfa(std::istream& gfa);
-extern gfa::graph parse_gfa(std::istream& gfa, std::istream& fna);
+// parse a GFA file with embedded sequences into a gfa::graph
+// reserving extra room for spare_segs and spare_arcs
+extern gfa::graph parse_gfa(std::istream& gfa, int spare_segs = 0, int spare_arcs = 0);
+
+// parse a GFA file with sequences in a FASTA file into a gfa::graph
+// reserving extra room for spare_segs and spare_arcs
+extern gfa::graph parse_gfa(std::istream& gfa, std::istream& fna, int spare_segs = 0, int spare_arcs = 0);
 
 } // namespace gene_paths
 

@@ -27,13 +27,13 @@
 namespace gene_paths {
 
 static void
-gfak_to_graph(gfak::GFAKluge& gfak, gfa::graph& graph)
+gfak_to_graph(gfak::GFAKluge& gfak, gfa::graph& graph, int reserve_segs, int reserve_arcs)
 {
     auto n2s = gfak.get_name_to_seq();
     std::size_t n_segs = n2s.size() << 1;
 
     verbose_emit("graph has %ld segs", n_segs);
-    graph.segs.reserve(n_segs);
+    graph.segs.reserve(n_segs + reserve_segs);
 
     for (auto p : n2s) {
         gfa::seg seg;
@@ -48,8 +48,8 @@ gfak_to_graph(gfak::GFAKluge& gfak, gfa::graph& graph)
     for (auto p : n2s)
         n_edge += s2e[p.first].size();
 
-    std::size_t n_arcs = 8 * n_edge;
-    verbose_emit("graph has %ld edges, reserving %ld arcs", n_edge, n_arcs);
+    std::size_t n_arcs = 8 * n_edge + reserve_arcs;
+    verbose_emit("graph has %lu edges, reserving %lu arcs", n_edge, n_arcs);
     graph.arcs.reserve(n_arcs);
 
     for (auto p : n2s) {
@@ -63,8 +63,10 @@ gfak_to_graph(gfak::GFAKluge& gfak, gfa::graph& graph)
         }
     }
 
-    verbose_emit("packing arcs array to actual number: %ld", graph.arcs.size());
-    graph.arcs.shrink_to_fit();
+    verbose_emit("actual arc count %lu, packing for %lu", 
+            graph.arcs.size(), graph.arcs.size() + reserve_arcs);
+
+    graph.arcs.resize(graph.arcs.size() + reserve_arcs);
 }
 
 static void
@@ -102,7 +104,7 @@ add_fasta_to_gfak(gfak::GFAKluge& gfak, std::istream& fasta)
 }
 
 gfa::graph
-parse_gfa(std::istream& file)
+parse_gfa(std::istream& file, int res_segs, int res_arcs)
 {
     gfak::GFAKluge gfak;
     gfa::graph graph;
@@ -110,13 +112,13 @@ parse_gfa(std::istream& file)
     if (!gfak.parse_gfa_file(file))
         raise_error("failed to parse GFA");
 
-    gfak_to_graph(gfak, graph);
+    gfak_to_graph(gfak, graph, res_segs, res_arcs);
 
     return graph;
 }
 
 gfa::graph
-parse_gfa(std::istream& gfa, std::istream& fasta)
+parse_gfa(std::istream& gfa, std::istream& fasta, int res_segs, int res_arcs)
 {
     gfak::GFAKluge gfak;
     gfa::graph graph;
@@ -125,7 +127,7 @@ parse_gfa(std::istream& gfa, std::istream& fasta)
         raise_error("failed to parse GFA");
 
     add_fasta_to_gfak(gfak, fasta);
-    gfak_to_graph(gfak, graph);
+    gfak_to_graph(gfak, graph, res_segs, res_arcs);
 
     return graph;
 }

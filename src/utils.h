@@ -23,6 +23,7 @@ namespace gene_paths {
 extern void raise_error(const char* t, ...);
 
 extern void set_progname(const char *name);
+extern bool get_verbose();
 extern void set_verbose(bool verbose);
 extern void verbose_emit(const char* t, ...);
 

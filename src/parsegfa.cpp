@@ -30,9 +30,9 @@ static void
 gfak_to_graph(gfak::GFAKluge& gfak, gfa::graph& graph, int reserve_segs, int reserve_arcs)
 {
     auto n2s = gfak.get_name_to_seq();
-    std::size_t n_segs = n2s.size() << 1;
+    std::size_t n_segs = n2s.size();
 
-    verbose_emit("graph has %ld segs", n_segs);
+    verbose_emit("graph has %lu segs, reserving %lu", n_segs, n_segs + reserve_segs);
     graph.segs.reserve(n_segs + reserve_segs);
 
     for (auto p : n2s) {

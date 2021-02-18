@@ -20,7 +20,9 @@
 #include <stdexcept>
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <string>
+#include <regex>
 #include <cstring>
 #include <cstdlib>
 #include "parsegfa.h"
@@ -46,7 +48,7 @@ static const std::string USAGE(
 "\n"
 "  OPTIONS\n"
 "   -f, --fasta FILE  read sequences for GFA_FILE from FILE\n"
-"   -u, --undirected  search for TO both up- and downstream from FROM\n"
+"   -u, --undirected  also search for TO upstream of FROM\n"
 "   -v, --verbose     write detailed information to stderr\n"
 "   -h, --help        output this information and exit\n"
 "\n"
@@ -68,15 +70,89 @@ static void usage_exit()
     std::exit(1);
 }
 
+// parses the 
+static void parse_tgt_ref(std::string s, std::string* seg, bool* neg, std::uint64_t* beg, std::uint64_t* end)
+{
+    std::regex re("([^[:space:]]+)(\\+|-)(:([[:digit:]]+)(:([[:digit:]]+))?)?");
+    std::smatch m;
+    std::string n;
+    
+    if (!std::regex_match(s, m, re))
+        raise_error("invalid target syntax (see --help): %s", s.c_str());
+
+    *seg = m[1].str();
+    *neg = m[2].str().at(0) == '-';
+    if (!(n = m[4].str()).empty())
+        *beg = std::stoul(n);
+    if (!(n = m[6].str()).empty())
+        *end = std::stoul(n);
+
+    verbose_emit("parsed target: %s%c:%lu:%ld", seg->c_str(), *neg ? '-' : '+', *beg, *end);
+}
+
+static std::size_t add_target(gfa::graph& g, std::string ref, std::string name, int dir /* -1 from, 0 both, 1 to */)
+{
+    std::string ctg;
+    bool neg = false;
+    std::uint64_t beg = std::uint64_t(-1);
+    std::uint64_t end = std::uint64_t(-1);
+
+        // add segment to the graph
+
+    parse_tgt_ref(ref, &ctg, &neg, &beg, &end);
+
+    std::size_t ref_seg_ix = g.find_seg_ix(ctg);
+    if (ref_seg_ix == std::uint64_t(-1))
+        raise_error("contig not in graph: %s", ctg.c_str());
+
+    const gfa::seg& ref_seg = g.get_seg(ref_seg_ix);
+    if (beg == std::uint64_t(-1))
+        { beg = 0; end = ref_seg.len; }
+    else if (beg > ref_seg.len)
+        raise_error("start pos %lu exceeds segment length %lu for target: %s", beg, ref_seg.len, ref.c_str());
+    else if (end == std::uint64_t(-1))
+        end = beg;
+    else if (beg > end)
+        raise_error("begin position beyond end position on target: %s", ref.c_str());
+
+    std::stringstream ss;
+    ref_seg.write_seq(ss, neg, beg, end);
+
+    g.add_seg( { end - beg, name, ss.str() });
+    std::size_t seg_ix = g.get_seg_ix(name);
+
+    verbose_emit("added segment %lu: %s", seg_ix, name.c_str());
+
+        // add arcs to the graph
+
+    if (dir != 1) { // arcs when FROM or BOTH
+        // TODO
+    }
+
+    if (dir != -1) { // arcs when TO or BOTH
+        // TODO
+    }
+
+    return seg_ix;
+}
+
+static void add_targets(gfa::graph& g, std::string from_ref, std::string to_ref, bool undirected)
+{
+    std::size_t seg_ix0 = add_target(g, from_ref, "__TGT0__", undirected ? 0 : -1);
+    std::size_t seg_ix1 = add_target(g, to_ref, "__TGT1__", undirected ? 0 : 1);
+}
+
 int main (int /*argc*/, char *argv[])
 {
     set_progname("gene-paths");
 
     std::string gfa_fname;
     std::string fna_fname;
-    std::string arg_from;
-    std::string arg_to;
-    bool arg_undirected = false;
+    std::string from_tgt;
+    std::string to_tgt;
+    bool undirected = false;
+
+        // parse options
 
     while (*++argv && **argv == '-')
     {
@@ -88,7 +164,7 @@ int main (int /*argc*/, char *argv[])
             return 0;
         }
         else if (!std::strcmp("-u", *argv) || !std::strcmp("--undirected", *argv)) {
-            arg_undirected = true;
+            undirected = true;
         }
         else if ((!std::strcmp("-f", *argv) || !std::strcmp("--fasta", *argv)) && *++argv) {
             fna_fname = *argv;
@@ -98,6 +174,8 @@ int main (int /*argc*/, char *argv[])
         }
     }
 
+        // parse arguments
+
     if (!*argv) usage_exit();
     gfa_fname = *argv++;
 
@@ -106,12 +184,14 @@ int main (int /*argc*/, char *argv[])
         raise_error("failed to open file: %s", gfa_fname.c_str());
 
     if (!*argv) usage_exit();
-    arg_from = *argv++;
+    from_tgt = *argv++;
 
     if (!*argv) usage_exit();
-    arg_to = *argv++;
+    to_tgt = *argv++;
 
     if (*argv) usage_exit();
+
+        // read GFA (and FASTA) into graph
 
     gfa::graph graph;
 
@@ -121,15 +201,22 @@ int main (int /*argc*/, char *argv[])
         std::ifstream fna_file(fna_fname);
         if (!fna_file)
             raise_error("failed to open file: %s", fna_fname.c_str());
-
         verbose_emit("reading FASTA from file: %s", fna_fname.c_str());
-        graph = parse_gfa(gfa_file, fna_file);
+
+        graph = parse_gfa(gfa_file, fna_file, 2, 2*4);  // reserve 2 segments and 8 arcs for start and end
     }
     else {
-        graph = parse_gfa(gfa_file);
+        graph = parse_gfa(gfa_file, 2, 2*4);            // reserve 2 segments and 8 arcs for start and end
     }
 
-    std::cout << graph.segs.size() <<std::endl;
+        // add targets to the graph
+
+    add_targets(graph, from_tgt, to_tgt, undirected);
+
+        // call dijkstra
+
+    if (!get_verbose())
+        std::cerr << "nothing happening, try --verbose" << std::endl;
 
     return 0;
 }

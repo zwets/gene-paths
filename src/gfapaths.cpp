@@ -36,12 +36,11 @@ paths::start_path(std::uint64_t v_lv)
     if (path_starts.size() == path_starts.capacity())
         raise_error("sorry, start_path array exhausted");
 
-    // Add a 'pseudo arc' pointing at the start location to the
-    // path starts array.
+    // store a 'pseudo arc' pointing at the start location in path_starts
     path_starts.push_back({ v_lv, v_lv });
 
-    // Add the first path_arc of the path, having a null lead path, and
-    // the pseudo arc pointing at its start location as its extension.
+    // add the first path_arc of the path by extending the null path with
+    // the pseudo arc that point at the start location
     extend(0, path_starts.cend() - 1);
 
     // Return the index of the new path
@@ -55,25 +54,58 @@ paths::length(const path_arc& p) const
 }
 
 std::ostream&
-paths::write_path_seq(std::ostream& os, std::size_t path_ix) const
+paths::write_seq(std::ostream& os, std::size_t path_ix) const
 {
     const path_arc& p = path_arcs.at(path_ix);
 
-    // Unless we are the start arc
+    // unless we are the start arc
     if (p.pre_ix)
     {
-        // Write the path leading up to path_ix
-        write_path_seq(os, p.pre_ix);
+        // write the path leading up to path_ix
+        write_seq(os, p.pre_ix);
 
-        // Retrieve the vertex (metro line) that path_ix hops off from
-        std::uint64_t vtx_ix = p.p_arc->v_lv >> 32;
+        // retrieve the vertex (metro line) that path_ix hops off from
+        std::uint64_t v = graph::get_v(p.p_arc->v_lv);
 
-        // Write the sequence of vertex from where we got on it (w_lw of
+        // write the sequence of vertex from where we got on it (w_lw of
         // the previous arc) up to where we hop off it (v_lv of its arc)
-        g.segs.at(graph::vtx_seg(vtx_ix))
-            .write_vtx(os, vtx_ix & 1, 
-                std::uint32_t(path_arcs.at(p.pre_ix).p_arc->w_lw), 
-                std::uint32_t(p.p_arc->v_lv));
+        g.get_seg(graph::vtx_seg(v))
+            .write_vtx(os, graph::is_neg(v),
+                    graph::get_lv(path_arcs.at(p.pre_ix).p_arc->w_lw),
+                    graph::get_lv(p.p_arc->v_lv));
+    }
+
+    return os;
+}
+
+std::ostream&
+paths::write_route(std::ostream& os, std::size_t path_ix) const
+{
+    const path_arc& p = path_arcs.at(path_ix);
+
+    // unless we are the start arc
+    if (p.pre_ix)
+    {
+        // write the route path leading up to path_ix
+        write_route(os, p.pre_ix);
+
+        // retrieve the vertex (metro line) and where we got on and off
+        std::uint64_t v = graph::get_v(p.p_arc->v_lv);
+        std::uint64_t e = graph::get_lv(p.p_arc->v_lv);
+        std::uint64_t b = graph::get_lv(path_arcs.at(p.pre_ix).p_arc->w_lw);
+        const seg& s = g.get_seg(graph::vtx_seg(v));
+
+        // write separator if we are not the first route element
+        if (path_arcs.at(p.pre_ix).pre_ix != 0)
+            os << ' ';
+
+        // write segment name and orientation
+        os << s.name << (graph::is_pos(v) ? '+' : '-');
+
+        // unless the whole segment is traversed, write the ride
+        if (b != 0 || e != s.len)
+            os  << ':' << (graph::is_pos(v) ? b : s.len-e)
+                << ':' << (graph::is_pos(v) ? e : s.len-b);
     }
 
     return os;

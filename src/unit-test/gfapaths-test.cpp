@@ -26,7 +26,7 @@ using namespace gfa;
 namespace {
 
 static seg SEG1 = { 4, "s1", "ACGT" };
-static seg SEG2 = { 9, "s2", "TAGCATACG" };
+static seg SEG2 = { 9, "s2", "TAGCATACG" }; // rc: CGTATGCTA
 static seg SEG3 = { 5, "s3", "CATTA" };
 static seg SEG4 = { 8, "s4", "CTATAATT" };
 
@@ -68,7 +68,14 @@ TEST(gfapaths_test, path_1) {
 static std::string get_seq(const paths& ps, std::size_t pix)
 {
     std::stringstream ss;
-    ps.write_path_seq(ss, pix);
+    ps.write_seq(ss, pix);
+    return ss.str();
+}
+    
+static std::string get_route(const paths& ps, std::size_t pix)
+{
+    std::stringstream ss;
+    ps.write_route(ss, pix);
     return ss.str();
 }
     
@@ -78,6 +85,7 @@ TEST(gfapaths_test, write_empty) {
     std::size_t p_ix = p.start_path(graph::v_lv(graph::seg_vtx_p(0), 0));
     ASSERT_EQ(p.ride_len(p.path_arcs.at(p_ix)), 0);
     ASSERT_EQ(p.length(p.path_arcs.at(p_ix)), 0);
+    ASSERT_EQ(get_route(p, p_ix), "");
     ASSERT_EQ(get_seq(p, p_ix), "");
 }
 
@@ -97,6 +105,7 @@ TEST(gfapaths_test, write_1) {
     ASSERT_EQ(p.path_arcs.at(2).p_arc, &*arc_it);
     ASSERT_EQ(p.ride_len(p.path_arcs.at(p_ix+1)), 2);
     ASSERT_EQ(p.length(p.path_arcs.at(p_ix+1)), 2);
+    ASSERT_EQ(get_route(p, p_ix+1), "s3+:2:4");
     ASSERT_EQ(get_seq(p, p_ix+1), "TT");
 }
 
@@ -117,6 +126,7 @@ TEST(gfapaths_test, write_2) {
     ASSERT_EQ(p.path_arcs.at(p_ix).p_arc, &*arc_it);
     ASSERT_EQ(p.ride_len(p.path_arcs.at(p_ix)), 3);
     ASSERT_EQ(p.length(p.path_arcs.at(p_ix)), 3);
+    ASSERT_EQ(get_route(p, p_ix), "s3+:1:4");
     ASSERT_EQ(get_seq(p, p_ix), "ATT");
 
     // find first arc away from 1+, is return arc to where we came from
@@ -133,6 +143,7 @@ TEST(gfapaths_test, write_2) {
     p.extend(p_ix++, arc_it);
     ASSERT_EQ(p.ride_len(p.path_arcs.at(p_ix)), 1);
     ASSERT_EQ(p.length(p.path_arcs.at(p_ix)), 4);
+    ASSERT_EQ(get_route(p, p_ix), "s3+:1:4 s1+:0:1");
     ASSERT_EQ(get_seq(p, p_ix), "ATTA");
 
     // find first arc away from 2- is return arc to where we came from
@@ -148,6 +159,7 @@ TEST(gfapaths_test, write_2) {
     p.extend(p_ix++, arc_it);
     ASSERT_EQ(p.ride_len(p.path_arcs.at(p_ix)), 6);
     ASSERT_EQ(p.length(p.path_arcs.at(p_ix)), 10);
+    ASSERT_EQ(get_route(p, p_ix), "s3+:1:4 s1+:0:1 s2-:3:9");
     ASSERT_EQ(get_seq(p, p_ix), "ATTACGTATG");
 
     // find first arc away from 4+, is return arc to where we came from
@@ -161,6 +173,7 @@ TEST(gfapaths_test, write_2) {
     p.extend(p_ix++, arc_it);
     ASSERT_EQ(p.ride_len(p.path_arcs.at(p_ix)), 3);
     ASSERT_EQ(p.length(p.path_arcs.at(p_ix)), 13);
+    ASSERT_EQ(get_route(p, p_ix), "s3+:1:4 s1+:0:1 s2-:3:9 s4+:0:3");
     ASSERT_EQ(get_seq(p, p_ix), "ATTACGTATGCTA");
 }
 

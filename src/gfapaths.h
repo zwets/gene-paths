@@ -89,8 +89,11 @@ struct paths {
     // return the length of the path
     std::size_t length(const path_arc& p) const;
 
+    // write the path route for path path_ix to an ostream
+    std::ostream& write_route(std::ostream& os, std::size_t path_ix) const;
+
     // write the path sequence with id path_ix to an ostream
-    std::ostream& write_path_seq(std::ostream& os, std::size_t path_ix) const;
+    std::ostream& write_seq(std::ostream& os, std::size_t path_ix) const;
 };
 
 

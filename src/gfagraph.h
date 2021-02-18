@@ -172,11 +172,16 @@ struct graph {
     inline static std::uint64_t inv_vtx(std::uint64_t vtx_ix) { return vtx_ix^1; }
     inline static std::uint64_t vtx_seg(std::uint64_t vtx_ix) { return vtx_ix>>1; }
 
-        // converting v, lv to v_lv and back
+        // query vertex properties
 
-    inline static std::uint64_t v_lv(std::uint32_t v, std::uint32_t lv) { 
-        return std::uint64_t(v)<<32 | std::uint64_t(lv);
-    }
+    inline static bool is_pos(std::uint64_t v) { return !(v & 1); }
+    inline static bool is_neg(std::uint64_t v) { return v & 1; }
+
+        // convenience functions on v_lv 
+
+    inline static std::uint64_t v_lv(std::uint64_t v, std::uint64_t lv) { return v<<32|lv; }
+    inline static std::uint64_t get_v(std::uint64_t v_lv) { return v_lv>>32; }
+    inline static std::uint64_t get_lv(std::uint64_t v_lv) { return v_lv & 0xFFFFFFFFL; }
 
         // arc storage and lookup
 

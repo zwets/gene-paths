@@ -46,7 +46,7 @@ static graph make_graph() {
 TEST(gfapaths_test, empty_path) {
     graph g = make_graph();
     paths p = paths(g, 1);
-    std::size_t p_ix = p.start_path(graph::seg_vtx_p(0), 0);
+    std::size_t p_ix = p.start_path(graph::v_lv(0, 0));
     ASSERT_EQ(p_ix, 1);
     ASSERT_EQ(p.path_starts.size(), 1);
     ASSERT_EQ(p.path_arcs.size(), 2);
@@ -57,7 +57,7 @@ TEST(gfapaths_test, empty_path) {
 TEST(gfapaths_test, path_1) {
     graph g = make_graph();
     paths p = paths(g, 1);
-    std::size_t p_ix = p.start_path(graph::seg_vtx_p(0), 0);
+    std::size_t p_ix = p.start_path(graph::v_lv(graph::seg_vtx_p(0), 0));
     p.extend(p_ix, g.arcs.cbegin());
     ASSERT_EQ(p.path_starts.size(), 1);
     ASSERT_EQ(p.path_arcs.size(), 3);
@@ -75,7 +75,7 @@ static std::string get_seq(const paths& ps, std::size_t pix)
 TEST(gfapaths_test, write_empty) {
     graph g = make_graph();
     paths p = paths(g, 1);
-    std::size_t p_ix = p.start_path(graph::seg_vtx_p(0), 0);
+    std::size_t p_ix = p.start_path(graph::v_lv(graph::seg_vtx_p(0), 0));
     ASSERT_EQ(p.ride_len(p.path_arcs.at(p_ix)), 0);
     ASSERT_EQ(p.length(p.path_arcs.at(p_ix)), 0);
     ASSERT_EQ(get_seq(p, p_ix), "");
@@ -84,9 +84,9 @@ TEST(gfapaths_test, write_empty) {
 TEST(gfapaths_test, write_1) {
     graph g = make_graph();
     paths p = paths(g, 1);
-    std::size_t p_ix = p.start_path(graph::seg_vtx_p(2), 2); // s3+ CA|TTA
+    std::size_t p_ix = p.start_path(graph::v_lv(graph::seg_vtx_p(2), 2)); // s3+ CA|TTA
 
-    std::vector<arc>::const_iterator arc_it = g.arcs_from_v_lv(graph::seg_vtx_p(2)<<32|2).first;
+    std::vector<arc>::const_iterator arc_it = g.arcs_from_v_lv(graph::v_lv(graph::seg_vtx_p(2), 2)).first;
     ASSERT_EQ(arc_it->v_lv, 2L<<33|4);  // s3+ CATT|A
     ASSERT_EQ(arc_it->w_lw, 0);         // s1+ |ACGT
 
@@ -103,9 +103,9 @@ TEST(gfapaths_test, write_1) {
 TEST(gfapaths_test, write_2) {
     graph g = make_graph();
     paths p = paths(g, 1);
-    std::size_t p_ix = p.start_path(graph::seg_vtx_p(g.get_seg_ix("s3")), 1);  // start at s3+: C|ATTA
+    std::size_t p_ix = p.start_path(graph::v_lv(graph::seg_vtx_p(g.get_seg_ix("s3")), 1));  // start at s3+: C|ATTA
 
-    std::vector<arc>::const_iterator arc_it = g.arcs_from_v_lv(graph::seg_vtx_p(g.get_seg_ix("s3"))<<32|1).first;
+    std::vector<arc>::const_iterator arc_it = g.arcs_from_v_lv(graph::v_lv(graph::seg_vtx_p(g.get_seg_ix("s3")),1)).first;
     ASSERT_EQ(arc_it->v_lv, 2L<<33|4);   // s3+:4 C|ATT|A
     ASSERT_EQ(arc_it->w_lw, 0);          // s1+:0 |A|CGT
 

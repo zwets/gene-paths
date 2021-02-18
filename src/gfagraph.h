@@ -172,6 +172,12 @@ struct graph {
     inline static std::uint64_t inv_vtx(std::uint64_t vtx_ix) { return vtx_ix^1; }
     inline static std::uint64_t vtx_seg(std::uint64_t vtx_ix) { return vtx_ix>>1; }
 
+        // converting v, lv to v_lv and back
+
+    inline static std::uint64_t v_lv(std::uint32_t v, std::uint32_t lv) { 
+        return std::uint64_t(v)<<32 | std::uint64_t(lv);
+    }
+
         // arc storage and lookup
 
     std::vector<arc> arcs;

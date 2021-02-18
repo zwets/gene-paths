@@ -68,8 +68,8 @@ struct paths {
         path_arcs.push_back( {0,0} /* the 'null' path_arc at path_ix 0 */ );
     }
 
-    // starts a path at pos on vtx_ix, returns path_ix
-    std::size_t start_path(std::uint32_t vtx_ix, std::uint32_t pos);
+    // starts a path at v_lv (vtx<<32|pos)
+    std::size_t start_path(std::uint64_t v_lv);
 
     // creates new path that extends path_ix with the arc at p_arc
     inline void extend(std::size_t path_ix, const arc *p_arc) {

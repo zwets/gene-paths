@@ -28,7 +28,7 @@ using gene_paths::raise_error;
 using gene_paths::verbose_emit;
 
 std::size_t
-paths::start_path(std::uint32_t vtx_id, std::uint32_t pos)
+paths::start_path(std::uint64_t v_lv)
 {
     // The array path_starts is fixed at construction so we can store
     // pointers to the arcs in it.  Growing it would invalidate these.
@@ -38,10 +38,7 @@ paths::start_path(std::uint32_t vtx_id, std::uint32_t pos)
 
     // Add a 'pseudo arc' pointing at the start location to the
     // path starts array.
-    path_starts.push_back({
-        std::uint64_t(vtx_id)<<32 | pos,
-        std::uint64_t(vtx_id)<<32 | pos
-    });
+    path_starts.push_back({ v_lv, v_lv });
 
     // Add the first path_arc of the path, having a null lead path, and
     // the pseudo arc pointing at its start location as its extension.

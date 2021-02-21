@@ -17,7 +17,7 @@ USER_DIR = ..
 CPPFLAGS += -isystem $(GTEST_DIR)/include
 
 # Flags passed to the C++ compiler.
-CXXFLAGS += -std=c++14 -O3 -DNDEBUG -Wall -Wextra -pedantic -Wno-unknown-pragmas -march=native -pthread -I$(USER_DIR) -I$(USER_DIR)/gfakluge
+CXXFLAGS += -std=c++14 -g -Wall -Wextra -pedantic -Wno-unknown-pragmas -march=native -pthread -I$(USER_DIR) -I$(USER_DIR)/gfakluge
 
 OBJS =
 # All Google Test headers.  Normally you shouldn't change this definition.

@@ -19,6 +19,7 @@
 #include "gfapaths.h"
 
 #include <vector>
+#include <sstream>
 #include <ostream>
 #include "utils.h"
 
@@ -28,67 +29,86 @@ using gene_paths::raise_error;
 using gene_paths::verbose_emit;
 
 std::size_t
-paths::length(const path_arc& p) const
+paths::length(const path_arc& tip) const
 {
-    return p.pre_ix ? length(path_arcs.at(p.pre_ix)) + ride_len(p) : 0;
+    // recursive is nicer, but iterate friendlier
+    //return p.pre_ix ? ride_len(p) + length(path_arcs.at(p.pre_ix)) : 0;
+
+    std::size_t len = 0L;
+    const path_arc* p = &tip;
+
+    while (p->pre_ix) {
+        len += ride_len(*p);
+        p = &path_arcs.at(p->pre_ix);
+    }
+
+    return len;
 }
 
 std::ostream&
-paths::write_seq(std::ostream& os, std::size_t path_ix) const
+paths::write_seq(std::ostream& os, const path_arc& p) const
 {
-    const path_arc& p = path_arcs.at(path_ix);
-
-    // unless we are the start arc
-    if (p.pre_ix)
+    if (p.pre_ix) // unless we are the start arc
     {
-        // write the path leading up to path_ix
-        write_seq(os, p.pre_ix);
+            // recurse over the pre-path
 
-        // retrieve the vertex (metro line) that path_ix hops off from
-        std::uint64_t v = graph::get_v(p.p_arc->v_lv);
+        const path_arc& pp = path_arcs.at(p.pre_ix);
+        write_seq(os, pp);
 
-        // write the sequence of vertex from where we got on it (w_lw of
-        // the previous arc) up to where we hop off it (v_lv of its arc)
+            // write the seq of the ride, is v from pp.dst to p.src
+
+        std::uint64_t v = pp.dst_v(); // same as p.src_v()
         g.get_seg(graph::vtx_seg(v))
-            .write_vtx(os, graph::is_neg(v),
-                    graph::get_lv(path_arcs.at(p.pre_ix).p_arc->w_lw),
-                    graph::get_lv(p.p_arc->v_lv));
+            .write_vtx(os, graph::is_neg(v), pp.dst_lv(), p.src_lv());
     }
 
     return os;
 }
 
-std::ostream&
-paths::write_route(std::ostream& os, std::size_t path_ix) const
+std::string
+paths::seq_string(const path_arc& p) const
 {
-    const path_arc& p = path_arcs.at(path_ix);
+    std::stringstream ss;
+    write_seq(ss, p);
+    return ss.str();
+}
 
-    // unless we are the start arc
-    if (p.pre_ix)
-    {
-        // write the route path leading up to path_ix
-        write_route(os, p.pre_ix);
+std::ostream&
+paths::write_route(std::ostream& os, const path_arc& p) const
+{
+    const std::uint64_t v = p.src_v();
+    const seg& s = g.get_seg(graph::vtx_seg(v));
 
-        // retrieve the vertex (metro line) and where we got on and off
-        std::uint64_t v = graph::get_v(p.p_arc->v_lv);
-        std::uint64_t e = graph::get_lv(p.p_arc->v_lv);
-        std::uint64_t b = graph::get_lv(path_arcs.at(p.pre_ix).p_arc->w_lw);
-        const seg& s = g.get_seg(graph::vtx_seg(v));
+    if (p.pre_ix) { // unless we are the start arc
 
-        // write separator if we are not the first route element
-        if (path_arcs.at(p.pre_ix).pre_ix != 0)
-            os << ' ';
+            // recurse into the pre-path (const to inline)
 
-        // write segment name and orientation
+        const path_arc& pp = path_arcs.at(p.pre_ix);
+        write_route(os, pp);
+
+            // append the seg name and ori of final ride
+
+        if (pp.pre_ix) os << ' ';
         os << s.name << (graph::is_pos(v) ? '+' : '-');
 
-        // unless the whole segment is traversed, write the ride
+            // append section unless v was traversed all the way
+
+        const std::uint64_t b = pp.dst_lv(), e = p.src_lv();
+
         if (b != 0 || e != s.len)
             os  << ':' << (graph::is_pos(v) ? b : s.len-e)
                 << ':' << (graph::is_pos(v) ? e : s.len-b);
     }
 
     return os;
+}
+
+std::string
+paths::route_string(const path_arc& p) const
+{
+    std::stringstream ss;
+    write_route(ss, p);
+    return ss.str();
 }
 
 

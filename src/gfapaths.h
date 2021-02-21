@@ -19,6 +19,7 @@
 #define gfapaths_h_INCLUDED
 
 #include <vector>
+#include <string>
 #include "gfagraph.h"
 
 namespace gfa {
@@ -46,19 +47,29 @@ namespace gfa {
  *
  * When we later run Dijkstra's algorithm to find the shortest path, the
  * vertices are the w_lw (ends) of the arcs, and the path to a vertex
- * can be updated to a shorter path by simply changing the back pointer.
+ * can be updated to a shorter path by changing its back pointer.
  */
 
 struct path_arc {
     std::size_t pre_ix;     // index of preceding path in paths or 0
-    const arc* p_arc;       // pointer to the arc extending that path
+    const arc* p_arc;       // pointer to the arc its that path
+
+        // convenience selectors of the src (v) and dst (w) fields
+
+    inline std::uint64_t src_v() const { return p_arc->v_lv >> 32; }
+    inline std::uint64_t src_lv() const { return p_arc->v_lv & 0xFFFFFFFFL; }
+    inline std::uint64_t dst_v() const { return p_arc->w_lw >> 32; }
+    inline std::uint64_t dst_lv() const { return p_arc->w_lw & 0xFFFFFFFFL; }
 };
 
 /* The paths struct holds any number of paths defined over a graph.
  *
- * It core operation is extend(path_ix, p_arc), which adds a path_arc
- * that extends an existing path with an arc, producing a new path.
- * To start a new path, extend the "null" path identified by path_ix 0.
+ * Its core operation is extend(path_ix, p_arc), which adds a path_arc
+ * that extends the existing path at path_ix with the arc pointed at by
+ * p_arc, producing a new path.
+ *
+ * The "null" path at path_ix 0 signifies the start of a path.  Therefore
+ * to create a new path starting with some arc* pa use extend(0, pa).
  */
 struct paths {
 
@@ -72,6 +83,10 @@ struct paths {
 
     // creates new path that extends path_ix with the arc at p_arc
     inline void extend(std::size_t path_ix, const arc *p_arc) {
+#ifndef NDEBUG
+        if (path_ix && p_arc->v() != path_arcs.at(path_ix).p_arc->w() )
+            throw "Invalid path extension";
+#endif
         path_arcs.push_back( { path_ix, p_arc } );
     }
 
@@ -80,19 +95,21 @@ struct paths {
         extend(path_ix, reinterpret_cast<const arc*>(&*it));
     }
 
-    // returns the length of the 'ride' from previous hop to current hop
+    // returns the length of the 'ride' from previous arc to current arc
     inline std::size_t ride_len(const path_arc& p) const {
-        return p.pre_ix == 0 ? 0 : p.p_arc->v_lv - path_arcs.at(p.pre_ix).p_arc->w_lw;
+        return p.pre_ix ? p.p_arc->v_lv - path_arcs.at(p.pre_ix).p_arc->w_lw : 0;
     }
 
     // return the length of the path
     std::size_t length(const path_arc& p) const;
 
-    // write the path route for path path_ix to an ostream
-    std::ostream& write_route(std::ostream& os, std::size_t path_ix) const;
+    // write the path route for p to an ostream or string
+    std::ostream& write_route(std::ostream& os, const path_arc& p) const;
+    std::string route_string(const path_arc& p) const;
 
-    // write the path sequence with id path_ix to an ostream
-    std::ostream& write_seq(std::ostream& os, std::size_t path_ix) const;
+    // write the path sequence for p to an ostream
+    std::ostream& write_seq(std::ostream& os, const path_arc& p) const;
+    std::string seq_string(const path_arc& p) const;
 };
 
 

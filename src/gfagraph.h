@@ -134,12 +134,16 @@ struct seg {
     }
 };
 
-struct vtx {
-};
-
 struct arc {
     std::uint64_t v_lv;     // vtx_ix<<32|lv packed for sorting
     std::uint64_t w_lw;     // vtx_ix<<32|lw
+
+        // convenience selectors
+
+    inline std::uint64_t v() const { return v_lv>>32; }
+    inline std::uint64_t lv() const { return v_lv & 0xFFFFFFFFL; }
+    inline std::uint64_t w() const { return w_lw>>32; }
+    inline std::uint64_t lw() const { return w_lw & 0xFFFFFFFFL; }
 };
 
 struct graph {
@@ -182,8 +186,9 @@ struct graph {
         // convenience functions on v_lv 
 
     inline static std::uint64_t v_lv(std::uint64_t v, std::uint64_t lv) { return v<<32|lv; }
-    inline static std::uint64_t get_v(std::uint64_t v_lv) { return v_lv>>32; }
-    inline static std::uint64_t get_lv(std::uint64_t v_lv) { return v_lv & 0xFFFFFFFFL; }
+    inline static std::uint64_t vlv_v(std::uint64_t v_lv) { return v_lv>>32; }
+    inline static std::uint64_t vlv_lv(std::uint64_t v_lv) { return v_lv & 0xFFFFFFFFL; }
+    inline static std::uint64_t vlv_seg(std::uint64_t v_lv) { return v_lv>>33; }
 
         // arc storage and lookup
 

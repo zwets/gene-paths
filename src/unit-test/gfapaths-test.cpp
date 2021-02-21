@@ -32,30 +32,29 @@ static seg SEG3 = { 5, "s3", "CATTA" };
 static seg SEG4 = { 8, "s4", "CTATAATT" };
 
 static graph make_graph() {
-    graph gfa;
-    gfa.segs.reserve(5);
-    gfa.add_seg(SEG1);
-    gfa.add_seg(SEG2);
-    gfa.add_seg(SEG3);
-    gfa.add_seg(SEG4);
-    gfa.arcs.reserve(4*8+1);
-    gfa.add_edge("s1+", 1, 4, "s2-", 5, 9); // s1+ .[--) s2- (---].....     and s2+ .....[---) s1- (--].
-    gfa.add_edge("s2-", 0, 0, "s3+", 0, 0); // s2- .........) s3+ (.....    and s3- .....) s2+ (.........
-    gfa.add_edge("s2-", 0, 3, "s4+", 0, 3); // s2- ......[..) s4+ (..]..... and s4- .....[..) s2+ (..]......
-    gfa.add_edge("s3+", 4, 5, "s1+", 0, 1); // s3+ ....[) s1+ (]...         and s1- ...[) s3- (]...
-    return gfa;
+    graph g;
+    g.segs.reserve(5);
+    g.add_seg(SEG1);
+    g.add_seg(SEG2);
+    g.add_seg(SEG3);
+    g.add_seg(SEG4);
+    g.arcs.reserve(4*8+1);
+    g.add_edge("s1+", 1, 4, "s2-", 5, 9); // s1+ .[--) s2- (---].....     and s2+ .....[---) s1- (--].
+    g.add_edge("s2-", 0, 0, "s3+", 0, 0); // s2- .........) s3+ (.....    and s3- .....) s2+ (.........
+    g.add_edge("s2-", 0, 3, "s4+", 0, 3); // s2- ......[..) s4+ (..]..... and s4- .....[..) s2+ (..]......
+    g.add_edge("s3+", 4, 5, "s1+", 0, 1); // s3+ ....[) s1+ (]...         and s1- ...[) s3- (]...
+    return g;
 }
 
 static arc* add_start(graph& g, std::string ref) {
     target s = target::parse(ref);
     s.add_seg_to_graph(g, "START");
-    return s.add_arc_to_graph(g, false);
+    return s.add_arc_to_graph(g, false);  // points from START seg (5) to ref
 }
 
 TEST(gfapaths_test, empty_path) {
     graph g = make_graph();
     ASSERT_EQ(g.get_seg("s1").len, 4);
-    arc  *a = add_start(g, "s1+:0");
     paths p = paths(g);
     ASSERT_EQ(p.path_arcs.size(), 1);
     ASSERT_EQ(p.path_arcs.at(0).pre_ix, 0);
@@ -95,27 +94,31 @@ TEST(gfapaths_test, write_empty) {
     ASSERT_EQ(p.length(p.path_arcs.at(p_ix)), 0);
     ASSERT_EQ(get_route(p, p_ix), "");
     ASSERT_EQ(get_seq(p, p_ix), "");
+    p_ix = 1;
+    ASSERT_EQ(p.ride_len(p.path_arcs.at(p_ix)), 0);
+    ASSERT_EQ(p.length(p.path_arcs.at(p_ix)), 0);
+    ASSERT_EQ(get_route(p, p_ix), "");
+    ASSERT_EQ(get_seq(p, p_ix), "");
 }
 
 TEST(gfapaths_test, write_1) {
     graph g = make_graph();
     gfa::arc* a = add_start(g, "s3+:2"); // s3+ CA|TTA
     paths p = paths(g);
-    p.extend(0, a);
 
     std::vector<arc>::const_iterator arc_it = g.arcs_from_v_lv(graph::v_lv(graph::seg_vtx_p(2), 2)).first;
     ASSERT_EQ(arc_it->v_lv, 2L<<33|4);  // s3+ CATT|A
     ASSERT_EQ(arc_it->w_lw, 0);         // s1+ |ACGT
 
-    std::size_t p_ix = 1;
-    p.extend(p_ix, arc_it);
+    p.extend(0, a);
+    p.extend(1, arc_it);
     ASSERT_EQ(p.path_arcs.size(), 3);
-    ASSERT_EQ(p.path_arcs.at(2).pre_ix, p_ix);
+    ASSERT_EQ(p.path_arcs.at(2).pre_ix, 1);
     ASSERT_EQ(p.path_arcs.at(2).p_arc, &*arc_it);
-    ASSERT_EQ(p.ride_len(p.path_arcs.at(p_ix+1)), 2);
-    ASSERT_EQ(p.length(p.path_arcs.at(p_ix+1)), 2);
-    ASSERT_EQ(get_route(p, p_ix+1), "s3+:2:4");
-    ASSERT_EQ(get_seq(p, p_ix+1), "TT");
+    ASSERT_EQ(p.ride_len(p.path_arcs.at(2)), 2);
+    ASSERT_EQ(p.length(p.path_arcs.at(2)), 2);
+    ASSERT_EQ(get_route(p, 2), "s3+:2:4");
+    ASSERT_EQ(get_seq(p, 2), "TT");
 }
 
 TEST(gfapaths_test, write_2) {
@@ -123,6 +126,7 @@ TEST(gfapaths_test, write_2) {
     gfa::arc* a = add_start(g, "s3+:1"); // s3+ C|ATTA
     paths p = paths(g);
     std::size_t p_ix = 0;
+    p.extend(p_ix++, a);
 
     std::vector<arc>::const_iterator arc_it = g.arcs_from_v_lv(graph::v_lv(graph::seg_vtx_p(g.get_seg_ix("s3")),1)).first;
     ASSERT_EQ(arc_it->v_lv, 2L<<33|4);   // s3+:4 C|ATT|A

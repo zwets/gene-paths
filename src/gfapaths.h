@@ -27,13 +27,13 @@ namespace gfa {
  *
  * We define a path recursively as the "null" path or a path followed by
  * an arc.  An arc, as defined in gfagraph, holds a source (v_lv) and
- * destination location (w_lv).  Both contain a vertex identifier (v, w),
- * and a distance from the start of the vertex (lv, lw).
+ * destination location (w_lv).  Locations consist of a vertex id (v, w),
+ * and an offset from the start of the vertex (lv, lw).
  *
  * A way to think about paths is to view a gfa::graph as a metro network,
  * where the segments are lines (that travel in one direction, and where
  * you can get off at any point), and each arc is a station where you can
- * hop onto another line.
+ * switch onto another line.
  *
  * A path then is a sequence of rides (on a segment) and hops (between
  * segments).  We do not store the rides, only the hops.  The rides are
@@ -41,35 +41,34 @@ namespace gfa {
  *
  * This recursive definition of paths allows for very concise storage:
  * we keep an array of 'path_arc' objects, each representing a new path
- * by having a pointer to an existing path, and a pointer to an arc that
- * that extends the path to be a new path.
+ * by pointing back to an existing path, and adding an arc that extends
+ * the path.
+ *
+ * When we later run Dijkstra's algorithm to find the shortest path, the
+ * vertices are the w_lw (ends) of the arcs, and the path to a vertex
+ * can be updated to a shorter path by simply changing the back pointer.
  */
 
 struct path_arc {
     std::size_t pre_ix;     // index of preceding path in paths or 0
-    const arc* p_arc;       // points to the arc added to make this path
+    const arc* p_arc;       // pointer to the arc extending that path
 };
 
 /* The paths struct holds any number of paths defined over a graph.
  *
- * To start a new set of paths from some location (position on a vertex),
- * call start_path(vtx, pos).  To create a path that extends an existing
- * path, call extend(path_ix, arc).
+ * It core operation is extend(path_ix, p_arc), which adds a path_arc
+ * that extends an existing path with an arc, producing a new path.
+ * To start a new path, extend the "null" path identified by path_ix 0.
  */
 struct paths {
 
     const graph& g;
-    std::vector<arc> path_starts;
     std::vector<path_arc> path_arcs;
 
-    paths(const graph& gr, std::size_t max)
-        : g(gr) { 
-        path_starts.reserve(max);
+    paths(const graph& gr)
+        : g(gr) {
         path_arcs.push_back( {0,0} /* the 'null' path_arc at path_ix 0 */ );
     }
-
-    // starts a path at v_lv (vtx<<32|pos)
-    std::size_t start_path(std::uint64_t v_lv);
 
     // creates new path that extends path_ix with the arc at p_arc
     inline void extend(std::size_t path_ix, const arc *p_arc) {
@@ -81,7 +80,7 @@ struct paths {
         extend(path_ix, reinterpret_cast<const arc*>(&*it));
     }
 
-    // returns the length of the ride from previous hop to current hop
+    // returns the length of the 'ride' from previous hop to current hop
     inline std::size_t ride_len(const path_arc& p) const {
         return p.pre_ix == 0 ? 0 : p.p_arc->v_lv - path_arcs.at(p.pre_ix).p_arc->w_lw;
     }

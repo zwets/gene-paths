@@ -173,7 +173,7 @@ graph::add_edge(const std::string& sref, std::uint32_t sbeg, std::uint32_t send,
         // add them to the arcs array
 
     for (arc a : as) {
-        arcs.emplace(std::upper_bound(arcs.cbegin(), arcs.cend(), a, arc_less_u), a);
+        add_arc(a);
     }
 
         // if non-zero overlap add the arc at the end of the overlap
@@ -189,9 +189,15 @@ graph::add_edge(const std::string& sref, std::uint32_t sbeg, std::uint32_t send,
         };
 
         for (arc a : as2) {
-            arcs.emplace(std::upper_bound(arcs.cbegin(), arcs.cend(), a, arc_less_u), a);
+            add_arc(a);
         }
     }
+}
+
+std::vector<arc>::iterator
+graph::add_arc(const arc& a)
+{
+    return arcs.insert(std::upper_bound(arcs.cbegin(), arcs.cend(), a, arc_less_u), a);
 }
 
 std::pair<std::vector<arc>::const_iterator, std::vector<arc>::const_iterator>

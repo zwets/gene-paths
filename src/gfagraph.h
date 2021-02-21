@@ -151,6 +151,8 @@ struct graph {
     void add_edge(const std::string& sref, std::uint32_t sbeg, std::uint32_t send,
                   const std::string& dref, std::uint32_t dbeg, std::uint32_t dend);
 
+    std::vector<arc>::iterator add_arc(const arc&);
+
         // segment storage and lookup
 
     std::vector<seg> segs;

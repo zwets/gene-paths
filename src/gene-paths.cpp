@@ -22,11 +22,11 @@
 #include <fstream>
 #include <sstream>
 #include <string>
-#include <regex>
 #include <cstring>
 #include <cstdlib>
 #include "parsegfa.h"
 #include "gfagraph.h"
+#include "targets.h"
 #include "utils.h"
 
 
@@ -70,77 +70,6 @@ static void usage_exit()
     std::exit(1);
 }
 
-// parses the 
-static void parse_tgt_ref(std::string s, std::string* seg, bool* neg, std::uint64_t* beg, std::uint64_t* end)
-{
-    std::regex re("([^[:space:]]+)(\\+|-)(:([[:digit:]]+)(:([[:digit:]]+))?)?");
-    std::smatch m;
-    std::string n;
-    
-    if (!std::regex_match(s, m, re))
-        raise_error("invalid target syntax (see --help): %s", s.c_str());
-
-    *seg = m[1].str();
-    *neg = m[2].str().at(0) == '-';
-    if (!(n = m[4].str()).empty())
-        *beg = std::stoul(n);
-    if (!(n = m[6].str()).empty())
-        *end = std::stoul(n);
-
-    verbose_emit("parsed target: %s%c:%lu:%ld", seg->c_str(), *neg ? '-' : '+', *beg, *end);
-}
-
-static std::size_t add_target(gfa::graph& g, std::string ref, std::string name, int dir /* -1 from, 0 both, 1 to */)
-{
-    std::string ctg;
-    bool neg = false;
-    std::uint64_t beg = std::uint64_t(-1);
-    std::uint64_t end = std::uint64_t(-1);
-
-        // add segment to the graph
-
-    parse_tgt_ref(ref, &ctg, &neg, &beg, &end);
-
-    std::size_t ref_seg_ix = g.find_seg_ix(ctg);
-    if (ref_seg_ix == std::uint64_t(-1))
-        raise_error("contig not in graph: %s", ctg.c_str());
-
-    const gfa::seg& ref_seg = g.get_seg(ref_seg_ix);
-    if (beg == std::uint64_t(-1))
-        { beg = 0; end = ref_seg.len; }
-    else if (beg > ref_seg.len)
-        raise_error("start pos %lu exceeds segment length %lu for target: %s", beg, ref_seg.len, ref.c_str());
-    else if (end == std::uint64_t(-1))
-        end = beg;
-    else if (beg > end)
-        raise_error("begin position beyond end position on target: %s", ref.c_str());
-
-    std::stringstream ss;
-    ref_seg.write_seq(ss, neg, beg, end);
-
-    g.add_seg( { end - beg, name, ss.str() });
-    std::size_t seg_ix = g.get_seg_ix(name);
-
-    verbose_emit("added segment %lu: %s", seg_ix, name.c_str());
-
-        // add arcs to the graph
-
-    if (dir != 1) { // arcs when FROM or BOTH
-        // TODO
-    }
-
-    if (dir != -1) { // arcs when TO or BOTH
-        // TODO
-    }
-
-    return seg_ix;
-}
-
-static void add_targets(gfa::graph& g, std::string from_ref, std::string to_ref, bool undirected)
-{
-    std::size_t seg_ix0 = add_target(g, from_ref, "__TGT0__", undirected ? 0 : -1);
-    std::size_t seg_ix1 = add_target(g, to_ref, "__TGT1__", undirected ? 0 : 1);
-}
 
 int main (int /*argc*/, char *argv[])
 {
@@ -148,8 +77,6 @@ int main (int /*argc*/, char *argv[])
 
     std::string gfa_fname;
     std::string fna_fname;
-    std::string from_tgt;
-    std::string to_tgt;
     bool undirected = false;
 
         // parse options
@@ -184,16 +111,18 @@ int main (int /*argc*/, char *argv[])
         raise_error("failed to open file: %s", gfa_fname.c_str());
 
     if (!*argv) usage_exit();
-    from_tgt = *argv++;
+    std::string from_ref = *argv++;
+    gfa::target from_tgt = gfa::target::parse(from_ref);
 
     if (!*argv) usage_exit();
-    to_tgt = *argv++;
+    std::string to_ref = *argv++;
+    gfa::target to_tgt = gfa::target::parse(to_ref);
 
     if (*argv) usage_exit();
 
         // read GFA (and FASTA) into graph
 
-    gfa::graph graph;
+    gfa::graph g;
 
     verbose_emit("reading GFA file: %s", gfa_fname.c_str());
     if (!fna_fname.empty()) {
@@ -203,15 +132,23 @@ int main (int /*argc*/, char *argv[])
             raise_error("failed to open file: %s", fna_fname.c_str());
         verbose_emit("reading FASTA from file: %s", fna_fname.c_str());
 
-        graph = parse_gfa(gfa_file, fna_file, 2, 2*4);  // reserve 2 segments and 8 arcs for start and end
+        g = parse_gfa(gfa_file, fna_file, 2, 2*2);  // reserve 2 segs and 4 arcs
     }
     else {
-        graph = parse_gfa(gfa_file, 2, 2*4);            // reserve 2 segments and 8 arcs for start and end
+        g = parse_gfa(gfa_file, 2, 2*2);            // reserve 2 segs and 4 arcs
     }
 
-        // add targets to the graph
+        // add the targets to the graph
 
-    add_targets(graph, from_tgt, to_tgt, undirected);
+    // the FROM target's incoming arc is the path start
+    from_tgt.add_seg_to_graph(g, "_START");
+    gfa::arc* p_arc_start = from_tgt.add_arc_to_graph(g, true);
+    from_tgt.add_arc_to_graph(g, false);
+
+    // the TO target's outgoing arc is the path end
+    to_tgt.add_seg_to_graph(g, "_END");
+    to_tgt.add_arc_to_graph(g, true); 
+    gfa::arc* p_arc_end = to_tgt.add_arc_to_graph(g, false);
 
         // call dijkstra
 

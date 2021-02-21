@@ -28,26 +28,6 @@ using gene_paths::raise_error;
 using gene_paths::verbose_emit;
 
 std::size_t
-paths::start_path(std::uint64_t v_lv)
-{
-    // The array path_starts is fixed at construction so we can store
-    // pointers to the arcs in it.  Growing it would invalidate these.
-    // Not ideal but works for now, and can be optimised later.
-    if (path_starts.size() == path_starts.capacity())
-        raise_error("sorry, start_path array exhausted");
-
-    // store a 'pseudo arc' pointing at the start location in path_starts
-    path_starts.push_back({ v_lv, v_lv });
-
-    // add the first path_arc of the path by extending the null path with
-    // the pseudo arc that point at the start location
-    extend(0, path_starts.cend() - 1);
-
-    // Return the index of the new path
-    return path_arcs.size() - 1;
-}
-
-std::size_t
 paths::length(const path_arc& p) const
 {
     return p.pre_ix ? length(path_arcs.at(p.pre_ix)) + ride_len(p) : 0;

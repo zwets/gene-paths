@@ -50,7 +50,7 @@ target::parse(const std::string& s)
     n = m[6].str();
     tgt.end = n.empty() ? std::uint64_t(-1) : std::stoul(n);
 
-    verbose_emit("parsed target: %s%c:%lu:%ld", tgt.ctg.c_str(), tgt.neg ? '-' : '+', tgt.beg, tgt.end);
+    verbose_emit("parsed target: %s%c:%ld:%ld", tgt.ctg.c_str(), tgt.neg ? '-' : '+', tgt.beg, tgt.end);
     return tgt;
 }
 
@@ -89,7 +89,7 @@ arc*
 target::add_arc_to_graph(graph& g, bool to_tgt) const
 {
     if (g.arcs.size() == g.arcs.capacity())
-        raise_error("arcs vector exhausted (programmer error)");
+        raise_error("programmer error: arcs vector exhausted (cap %lu)", g.arcs.size());
 
     std::size_t tgt_ix = g.get_seg_ix(name);
     std::size_t ref_ix = g.get_seg_ix(ctg);
@@ -110,6 +110,7 @@ target::add_arc_to_graph(graph& g, bool to_tgt) const
         lw = neg ? ref_seg.len - beg : end;
     }
 
+    verbose_emit("added arc %lu: %lu_%lu to %lu_%lu", g.arcs.size(), v, lv, w, lw);
     return reinterpret_cast<arc*>(&*g.add_arc({ graph::v_lv(v, lv), graph::v_lv(w, lw) }));
 }
 

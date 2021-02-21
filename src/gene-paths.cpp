@@ -26,6 +26,7 @@
 #include <cstdlib>
 #include "parsegfa.h"
 #include "gfagraph.h"
+#include "dijkstra.h"
 #include "targets.h"
 #include "utils.h"
 
@@ -141,21 +142,36 @@ int main (int /*argc*/, char *argv[])
         // add the targets to the graph
 
     // the FROM target's incoming arc is the path start
-    from_tgt.add_seg_to_graph(g, "_START");
+    from_tgt.add_seg_to_graph(g, from_ref);
     gfa::arc* p_arc_start = from_tgt.add_arc_to_graph(g, true);
     from_tgt.add_arc_to_graph(g, false);
 
     // the TO target's outgoing arc is the path end
-    to_tgt.add_seg_to_graph(g, "_END");
+    to_tgt.add_seg_to_graph(g, to_ref);
     to_tgt.add_arc_to_graph(g, true); 
     gfa::arc* p_arc_end = to_tgt.add_arc_to_graph(g, false);
 
         // call dijkstra
 
-    if (!get_verbose())
-        std::cerr << "nothing happening, try --verbose" << std::endl;
+    gfa::dijkstra dijkstra(g);
+    dijkstra.shortest_path(p_arc_start, p_arc_end);
+    // and:
+    // dijkstra.shortest_path(reverse?)
+    // or:
+    // dijkstra.shortest_path(p_arc_start, p_arc_end);
 
-    return 0;
+    if (dijkstra.found) {
+        std::cout << ">PATH ";
+        dijkstra.write_route(std::cout);
+        std::cout << std::endl;
+        dijkstra.write_sequence(std::cout);
+        std::cout << std::endl;
+    }
+    else {
+        std::cerr << "No path was found\n";
+    }
+
+    return !dijkstra.found;
 }
 
 // vim: sts=4:sw=4:et:si:ai

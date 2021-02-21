@@ -19,12 +19,37 @@
 #define dijkstra_h_INCLUDED
 
 #include <vector>
+#include "gfagraph.h"
 #include "gfapaths.h"
 
 namespace gfa {
 
-// Return the path_ix of the shortest path between v_lv0 and v_lv1
-std::size_t shortest_path(paths&, std::uint64_t v_lv0, std::uint64_t v_lv1);
+struct dijkstra
+{
+    const graph& g;
+    paths ps;
+    std::size_t found;
+
+    dijkstra(const graph& gr)
+        : g(gr), ps(g), found(0) { }
+
+    void all_paths(const arc* start);
+    void shortest_path(const arc* start, const arc* end);
+
+        // convenience retrieval of route and sequence for the found path
+
+    std::string route(std::size_t path_ix = std::size_t(-1)) const
+        { return ps.route(ps.path_arcs.at(path_ix == std::size_t(-1) ? found : path_ix)); }
+
+    std::ostream& write_route(std::ostream& os, std::size_t path_ix = std::size_t(-1)) const
+        { return ps.write_route(os, ps.path_arcs.at(path_ix == std::size_t(-1) ? found : path_ix)); }
+
+    std::string sequence(std::size_t path_ix = std::size_t(-1)) const
+        { return ps.sequence(ps.path_arcs.at(path_ix == std::size_t(-1) ? found : path_ix)); }
+
+    std::ostream& write_sequence(std::ostream& os, std::size_t path_ix = std::size_t(-1)) const
+        { return ps.write_seq(os, ps.path_arcs.at(path_ix == std::size_t(-1) ? found : path_ix)); }
+};
 
 } // namespace gfa
 

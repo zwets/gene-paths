@@ -105,11 +105,11 @@ struct paths {
 
     // write the path route for p to an ostream or string
     std::ostream& write_route(std::ostream& os, const path_arc& p) const;
-    std::string route_string(const path_arc& p) const;
+    std::string route(const path_arc& p) const;
 
     // write the path sequence for p to an ostream
     std::ostream& write_seq(std::ostream& os, const path_arc& p) const;
-    std::string seq_string(const path_arc& p) const;
+    std::string sequence(const path_arc& p) const;
 };
 
 

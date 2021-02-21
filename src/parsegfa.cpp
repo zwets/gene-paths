@@ -63,10 +63,7 @@ gfak_to_graph(gfak::GFAKluge& gfak, gfa::graph& graph, int reserve_segs, int res
         }
     }
 
-    verbose_emit("actual arc count %lu, packing for %lu", 
-            graph.arcs.size(), graph.arcs.size() + reserve_arcs);
-
-    graph.arcs.resize(graph.arcs.size() + reserve_arcs);
+    verbose_emit("actual arc count %lu", graph.arcs.size());
 }
 
 static void

@@ -83,8 +83,8 @@ TEST(gfapaths_test, write_empty) {
     ASSERT_EQ(pa.p_arc, a);
     ASSERT_EQ(p.ride_len(pa), 0);
     ASSERT_EQ(p.length(pa), 0);
-    ASSERT_EQ(p.route_string(pa), "");
-    ASSERT_EQ(p.seq_string(pa), "");
+    ASSERT_EQ(p.route(pa), "");
+    ASSERT_EQ(p.sequence(pa), "");
 }
 
 TEST(gfapaths_test, write_1) {
@@ -105,8 +105,8 @@ TEST(gfapaths_test, write_1) {
     ASSERT_EQ(pa.p_arc, &*arc_it);
     ASSERT_EQ(p.ride_len(pa), 2);
     ASSERT_EQ(p.length(pa), 2);
-    ASSERT_EQ(p.route_string(pa), "s3+:2:4");
-    ASSERT_EQ(p.seq_string(pa), "TT");
+    ASSERT_EQ(p.route(pa), "s3+:2:4");
+    ASSERT_EQ(p.sequence(pa), "TT");
 }
 
 TEST(gfapaths_test, write_2) {
@@ -128,8 +128,8 @@ TEST(gfapaths_test, write_2) {
     ASSERT_EQ(pa->p_arc, &*arc_it);
     ASSERT_EQ(p.ride_len(*pa), 3);
     ASSERT_EQ(p.length(*pa), 3);
-    ASSERT_EQ(p.route_string(*pa), "s3+:1:4");
-    ASSERT_EQ(p.seq_string(*pa), "ATT");
+    ASSERT_EQ(p.route(*pa), "s3+:1:4");
+    ASSERT_EQ(p.sequence(*pa), "ATT");
 
     // find first arc away from 1+, is return arc to where we came from
     arc_it = g.arcs_from_v_lv(arc_it->w_lw).first;
@@ -146,8 +146,8 @@ TEST(gfapaths_test, write_2) {
     pa = &p.path_arcs.at(3);
     ASSERT_EQ(p.ride_len(*pa), 1);
     ASSERT_EQ(p.length(*pa), 4);
-    ASSERT_EQ(p.route_string(*pa), "s3+:1:4 s1+:0:1");
-    ASSERT_EQ(p.seq_string(*pa), "ATTA");
+    ASSERT_EQ(p.route(*pa), "s3+:1:4 s1+:0:1");
+    ASSERT_EQ(p.sequence(*pa), "ATTA");
 
     // find first arc away from 2- is return arc to where we came from
     arc_it = g.arcs_from_v_lv(arc_it->w_lw).first;
@@ -163,8 +163,8 @@ TEST(gfapaths_test, write_2) {
     pa = &p.path_arcs.at(4);
     ASSERT_EQ(p.ride_len(*pa), 6);
     ASSERT_EQ(p.length(*pa), 10);
-    ASSERT_EQ(p.route_string(*pa), "s3+:1:4 s1+:0:1 s2-:3:9");
-    ASSERT_EQ(p.seq_string(*pa), "ATTACGTATG");
+    ASSERT_EQ(p.route(*pa), "s3+:1:4 s1+:0:1 s2-:3:9");
+    ASSERT_EQ(p.sequence(*pa), "ATTACGTATG");
 
     // find first arc away from 4+, is return arc to where we came from
     arc_it = g.arcs_from_v_lv(arc_it->w_lw).first;
@@ -178,8 +178,8 @@ TEST(gfapaths_test, write_2) {
     pa = &p.path_arcs.at(5);
     ASSERT_EQ(p.ride_len(*pa), 3);
     ASSERT_EQ(p.length(*pa), 13);
-    ASSERT_EQ(p.route_string(*pa), "s3+:1:4 s1+:0:1 s2-:3:9 s4+:0:3");
-    ASSERT_EQ(p.seq_string(*pa), "ATTACGTATGCTA");
+    ASSERT_EQ(p.route(*pa), "s3+:1:4 s1+:0:1 s2-:3:9 s4+:0:3");
+    ASSERT_EQ(p.sequence(*pa), "ATTACGTATGCTA");
 }
 
 } // namespace

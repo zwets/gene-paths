@@ -23,10 +23,20 @@
 
 namespace gfa {
 
-std::size_t
-shortest_path(paths &ps, std::uint64_t from, std::uint64_t to)
+void
+dijkstra::all_paths(const arc* start)
 {
-    return 0;
+    ps.path_arcs.clear();
+    ps.extend(0, start);
+    found = 1;
+}
+
+void
+dijkstra::shortest_path(const arc* start, const arc* end)
+{
+    ps.path_arcs.clear();
+    ps.extend(0, start);
+    found = start == end;
 }
 
 

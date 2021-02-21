@@ -66,7 +66,7 @@ paths::write_seq(std::ostream& os, const path_arc& p) const
 }
 
 std::string
-paths::seq_string(const path_arc& p) const
+paths::sequence(const path_arc& p) const
 {
     std::stringstream ss;
     write_seq(ss, p);
@@ -76,9 +76,6 @@ paths::seq_string(const path_arc& p) const
 std::ostream&
 paths::write_route(std::ostream& os, const path_arc& p) const
 {
-    const std::uint64_t v = p.src_v();
-    const seg& s = g.get_seg(graph::vtx_seg(v));
-
     if (p.pre_ix) { // unless we are the start arc
 
             // recurse into the pre-path (const to inline)
@@ -87,6 +84,9 @@ paths::write_route(std::ostream& os, const path_arc& p) const
         write_route(os, pp);
 
             // append the seg name and ori of final ride
+
+        const std::uint64_t v = p.src_v();
+        const seg& s = g.get_seg(graph::vtx_seg(v));
 
         if (pp.pre_ix) os << ' ';
         os << s.name << (graph::is_pos(v) ? '+' : '-');
@@ -104,7 +104,7 @@ paths::write_route(std::ostream& os, const path_arc& p) const
 }
 
 std::string
-paths::route_string(const path_arc& p) const
+paths::route(const path_arc& p) const
 {
     std::stringstream ss;
     write_route(ss, p);

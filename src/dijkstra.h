@@ -19,6 +19,7 @@
 #define dijkstra_h_INCLUDED
 
 #include <vector>
+#include <map>
 #include "gfagraph.h"
 #include "gfapaths.h"
 
@@ -31,7 +32,7 @@ struct dijkstra
     std::size_t found;
 
     dijkstra(const graph& gr)
-        : g(gr), ps(g), found(0) { }
+        : g(gr), ps(g), found(0) { restart(); }
 
     void all_paths(const arc* start);
     void shortest_path(const arc* start, const arc* end);
@@ -49,6 +50,24 @@ struct dijkstra
 
     std::ostream& write_sequence(std::ostream& os, std::size_t path_ix = std::size_t(-1)) const
         { return ps.write_seq(os, ps.path_arcs.at(path_ix == std::size_t(-1) ? found : path_ix)); }
+
+        // implementation detail - private unless testing
+
+#ifdef NDEBUG
+    private:
+#endif
+        void restart(const arc* = 0);
+
+        struct dnode {
+            std::size_t path_ix;
+            std::size_t len;
+        };
+        std::map<std::uint64_t, dnode> ds;  // map from every w_lw to current path or 0
+        void setup_ds();
+
+        std::multimap<std::size_t, std::map<std::uint64_t,dnode>::iterator> ls;
+
+        dnode& pop_visit();
 };
 
 } // namespace gfa

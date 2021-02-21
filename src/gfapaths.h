@@ -81,6 +81,9 @@ struct paths {
         path_arcs.push_back( {0,0} /* the 'null' path_arc at path_ix 0 */ );
     }
 
+    // resets to empty
+    inline void clear() { path_arcs.clear(); path_arcs.push_back({0,0}); }
+
     // creates new path that extends path_ix with the arc at p_arc
     inline void extend(std::size_t path_ix, const arc *p_arc) {
 #ifndef NDEBUG

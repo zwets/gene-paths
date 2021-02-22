@@ -60,6 +60,11 @@ struct path_arc {
     inline std::uint64_t src_lv() const { return p_arc->v_lv & 0xFFFFFFFFL; }
     inline std::uint64_t dst_v() const { return p_arc->w_lw >> 32; }
     inline std::uint64_t dst_lv() const { return p_arc->w_lw & 0xFFFFFFFFL; }
+
+        // convenience aliases for the lengthy this->p_arc->v_lw
+
+    inline std::uint64_t v_lv() const { return p_arc->v_lv; }
+    inline std::uint64_t w_lw() const { return p_arc->w_lw; }
 };
 
 /* The paths struct holds any number of paths defined over a graph.
@@ -84,18 +89,23 @@ struct paths {
     // resets to empty
     inline void clear() { path_arcs.clear(); path_arcs.push_back({0,0}); }
 
+    // selector for the path_arc at p_ix, just forwards
+    inline const path_arc& at(std::size_t ix) const { return path_arcs.at(ix); }
+    inline path_arc& at(std::size_t ix) { return path_arcs.at(ix); }
+
     // creates new path that extends path_ix with the arc at p_arc
-    inline void extend(std::size_t path_ix, const arc *p_arc) {
+    inline std::size_t extend(std::size_t path_ix, const arc *p_arc) {
 #ifndef NDEBUG
         if (path_ix && p_arc->v() != path_arcs.at(path_ix).p_arc->w() )
             throw "Invalid path extension";
 #endif
         path_arcs.push_back( { path_ix, p_arc } );
+        return path_arcs.size() - 1;
     }
 
     // creates new path that extends path_ix with the arc at it
-    inline void extend(std::size_t path_ix, std::vector<arc>::const_iterator it) {
-        extend(path_ix, reinterpret_cast<const arc*>(&*it));
+    inline std::size_t extend(std::size_t path_ix, std::vector<arc>::const_iterator it) {
+        return extend(path_ix, reinterpret_cast<const arc*>(&*it));
     }
 
     // returns the length of the 'ride' from previous arc to current arc

@@ -30,7 +30,7 @@ static seg SEG2 = { 4, "s2", "TAGT" };
 static std::string FROM = "s1+:0:1";
 static std::string TO = "s2+:2:3";
 
-static graph make_graph() {
+static graph simple_graph() {
     graph g;
     g.segs.reserve(4);
     g.add_seg(SEG1);
@@ -57,13 +57,13 @@ static std::pair<arc*, arc*> add_targets(graph& g) {
 }
 
 TEST(dijkstra_test, make_graph) {
-    graph g = make_graph();
+    graph g = simple_graph();
     ASSERT_EQ(g.segs.size(), 2);
     ASSERT_EQ(g.arcs.size(), 8);
 }
 
 TEST(dijkstra_test, add_targets) {
-    graph g = make_graph();
+    graph g = simple_graph();
     std::pair<arc*, arc*> t = add_targets(g);
     ASSERT_EQ(g.segs.size(), 4);
     ASSERT_EQ(g.arcs.size(), 12);
@@ -74,39 +74,48 @@ TEST(dijkstra_test, add_targets) {
 }
 
 TEST(dijkstra_test, dijkstra_con) {
-    graph g = make_graph();
+    graph g = simple_graph();
     add_targets(g);
 
     dijkstra dk(g);
     ASSERT_EQ(dk.ps.path_arcs.size(), 1);
     ASSERT_EQ(dk.ds.size(), 12);
-    ASSERT_EQ(dk.ls.size(), 0);
+    ASSERT_EQ(dk.vs.size(), 0);
     ASSERT_FALSE(dk.found);
 }
 
 TEST(dijkstra_test, dijkstra_restart) {
-    graph g = make_graph();
+    graph g = simple_graph();
     std::pair<arc*, arc*> t = add_targets(g);
 
     dijkstra dk(g);
     dk.restart(t.first);
     ASSERT_EQ(dk.ps.path_arcs.size(), 2);
     ASSERT_EQ(dk.ds.size(), 12);
-    ASSERT_EQ(dk.ls.size(), 1);
+    ASSERT_EQ(dk.vs.size(), 1);
     ASSERT_FALSE(dk.found);
 }
 
 TEST(dijkstra_test, pop_visit) {
-    graph g = make_graph();
+    graph g = simple_graph();
     std::pair<arc*, arc*> t = add_targets(g);
     dijkstra dk(g);
     dk.restart(t.first);
 
     dijkstra::dnode& d = dk.pop_visit();
-    ASSERT_EQ(dk.ls.size(), 0);
+    ASSERT_EQ(dk.vs.size(), 0);
     ASSERT_EQ(d.len, 0);
-    ASSERT_EQ(d.path_ix, 1);
+    ASSERT_EQ(d.p_ref, 1);
+    ASSERT_FALSE(d.is_visited());
 }
+
+TEST(dijkstra_test, all_paths) {
+    graph g = simple_graph();
+    std::pair<arc*, arc*> t = add_targets(g);
+    dijkstra dk(g);
+    dk.all_paths(t.first);
+}
+
 
 } // namespace
   // vim: sts=4:sw=4:ai:si:et

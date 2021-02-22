@@ -20,10 +20,15 @@
 
 #include <vector>
 #include <map>
+#include <set>
+#include <functional>
 #include "gfagraph.h"
 #include "gfapaths.h"
 
 namespace gfa {
+
+
+// dijkstra - structure to perform shortest path searches on a graph
 
 struct dijkstra
 {
@@ -54,21 +59,41 @@ struct dijkstra
         // implementation detail - private unless testing
 
 #ifdef NDEBUG
-    private:
+    private:    // implementation detail, in production have private
 #endif
-        void restart(const arc* = 0);
+        // clears all data structures for another search
+        void restart(const arc* start = 0);
+
+        // dnode, dmap_t, diter_t - support data structures
 
         struct dnode {
-            std::size_t path_ix;
             std::size_t len;
+            std::uint64_t p_ref;  // high bit marks visited, rest is p_ix into ps
+
+            inline std::uint64_t p_ix() const { return p_ref & 0x7FFFFFFFFFFFFFFFL; }
+            inline bool is_visited() const { return p_ref>>63; }
+            inline void mark_visited() { p_ref |= 0x8000000000000000L; }
         };
-        std::map<std::uint64_t, dnode> ds;  // map from every w_lw to current path or 0
-        void setup_ds();
 
-        std::multimap<std::size_t, std::map<std::uint64_t,dnode>::iterator> ls;
+        typedef std::map<std::uint64_t, dnode> dmap_t;
 
+        // destination map indexed on w_lw (destination)
+        dmap_t ds;
+
+        // comparator for keeping the vs set ordered on length (and destination second)
+        struct nearest_dnode { // for keeping the vs
+            bool operator()(dmap_t::iterator const& i1, dmap_t::iterator const& i2) const noexcept {
+                return i1->second.len < i2->second.len || (i1->second.len == i2->second.len && i1->first < i2->first);
+            }
+        };
+
+        // visitables list sorted on shortest path
+        std::set<dmap_t::iterator, nearest_dnode> vs;
+
+        // pops nearest visitable off the vs
         dnode& pop_visit();
 };
+
 
 } // namespace gfa
 

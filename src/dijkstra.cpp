@@ -23,49 +23,68 @@
 
 namespace gfa {
 
+using gene_paths::raise_error;
+using gene_paths::verbose_emit;
+
+
 void
 dijkstra::restart(const arc* start)
 {
+    // clear the paths, dnodes, and visitables
+
     ps.clear();
-    ls.clear();
-    found = 0;
-    setup_ds();
-
-    if (start) {
-        ps.extend(0, start);
-        auto d_it = ds.find(start->w_lw);
-        if (d_it == ds.end())
-            gene_paths::raise_error("start arc not found in graph");
-        d_it->second = { 1, 0 };
-        ls.insert({ 0, d_it });
-    }
-}
-
-void
-dijkstra::setup_ds()
-{
     ds.clear();
-    std::pair<std::uint64_t, dnode> val = { 0, { 0, std::size_t(-1) } };
-    for (auto it = g.arcs.cbegin(); it != g.arcs.cend(); ++it) {
+    vs.clear();
+    found = 0;
+
+    // set up ds to have all w_lw (destinations), initialising them
+    // with infinite length and a null path reference.
+
+    std::pair<std::uint64_t, dnode> val = { 0, { std::size_t(-1), 0 } };
+
+    for (auto it = g.arcs.cbegin(); it != g.arcs.cend(); ++it)
+    {
         val.first = it->w_lw;
         ds.insert(val);
     }
+
+    // if we have a start arc, add it to visitables
+    if (start) {
+
+        // add start arc to path_arcs in ps, it will have p_ix 1
+        std::size_t p_ix = ps.extend(0, start);
+
+        // look up the start arc destination in ds
+        dmap_t::iterator d_it = ds.find(start->w_lw);
+        if (d_it == ds.end())
+            raise_error("start arc not found in graph");
+
+        // update its dnode to have len 0 and p_ix 1
+        d_it->second = { 0, p_ix };
+
+        // add a visitable for the start arc
+        vs.insert(d_it);
+    }
 }
+
 
 dijkstra::dnode&
 dijkstra::pop_visit()
 {
-    auto top = ls.begin();
-    dnode& d = top->second->second;
+    dmap_t::iterator top = *vs.begin();
+    dnode& d = top->second;
 #ifndef NDEBUG
-    if (top->first != d.len)
-        gene_paths::raise_error("dijkstra: inconsistent len (programmer error)");
-    if (top->second->first != ps.path_arcs.at(d.path_ix).p_arc->w_lw)
-        gene_paths::raise_error("dijkstra: inconsistent w_lw (programmer error)");
+    if (d.is_visited())
+        raise_error("dijkstra: visitable dnode already visited (programmer error)");
+    if (!d.p_ref)
+        raise_error("dijkstra: visitable dnode without a p_ref (programmer error)");
+    if (top->first != ps.path_arcs.at(d.p_ref).p_arc->w_lw)
+        raise_error("dijkstra: visitable dnode indexed at wrong w_lw (programmer error)");
 #endif
-    ls.erase(top);
+    vs.erase(top);
     return d;
 }
+
 
 void
 dijkstra::all_paths(const arc* start)
@@ -73,18 +92,88 @@ dijkstra::all_paths(const arc* start)
     restart(start);
     found = 1;
 
-    while (!ls.empty()) {
-        dnode& dn = pop_visit();
-        // TODO more
+    while (!vs.empty()) {
+
+        // pick the next node to visit
+        dnode& vn = pop_visit();    // has .len and .p_ref
+
+        // retrieve the path index, path arc and len to arrive at vn
+        std::size_t cur_pix = vn.p_ref;
+        std::size_t cur_len = vn.len;
+        const path_arc& pa = ps.at(cur_pix);
+#ifndef NDEBUG
+        verbose_emit("start visit of p_ref %lu at %lu", cur_pix, cur_len);
+#endif
+        // the dest (w_lw) of that arc is the new start (v_lv)
+        std::uint64_t v_lv = pa.p_arc->w_lw;
+
+        // get all arcs leaving from vn's vertex at lv or later
+        const auto iters = g.arcs_from_v_lv(v_lv);
+
+        // look at the arcs to each tentative destination in turn
+        for (auto a_it = iters.first; a_it != iters.second; ++a_it) {
+
+            // ignore any arc that would take us right back
+            if (a_it->w_lw == pa.p_arc->v_lv)
+                continue;
+
+            // Note how we iterate over outbound arcs, where added length
+            // lies on vn's contig, and then a (zero-length) jump is made:
+            //
+            //            w: --1------2---o---->
+            //                 |     /
+            //    v: ---x======1----2------>
+            //
+            // We are at vn=x (the w_lw of vn's arc) and iterate the arcs
+            // downstream on v (v1-w1 and v2-w2).  We compute the length of
+            // the '===' segments as the added distance.
+
+            // compute distance to the departing arc
+            std::uint64_t add_len = a_it->v_lv - v_lv;
+
+            // locate the dnode for the tentative destination, which will
+            // have the shortest path found to it so far (INF if not seen)
+            const dmap_t::iterator d_it = ds.find(a_it->w_lw);
+            dnode& dn = d_it->second;
+
+            // if the new path is shorter, update the tentative dest
+            if (cur_len + add_len < dn.len) {
+#ifndef NDEBUG
+                if (dn.is_visited())
+                    raise_error("dijkstra: visited node found with shorter path (programmer error)");
+#endif
+                // if we haven't seen this destination yet
+                if (!dn.p_ref) {
+                    // add a path_arc from us to it to ps
+                    dn.p_ref = ps.extend(cur_pix, &*a_it);
+#ifndef NDEBUG
+                    verbose_emit("- extended with new p_ref %lu (+%lu)", dn.p_ref, add_len);
+#endif
+                }
+                else {
+                    // remove old record from the visitables list
+                    vs.erase(d_it);
+                    // repoint its pre-path to the vn, and set new arc
+                    // note: it can't be the pre_ix of anything yet
+                    path_arc& d_pa = ps.at(dn.p_ref);
+                    d_pa.pre_ix = cur_pix;
+                    d_pa.p_arc = &*a_it;
+#ifndef NDEBUG
+                    verbose_emit("- updated existing p_ref %lu (-%lu)", dn.p_ref, dn.len - (cur_len + add_len));
+#endif
+                }
+
+                // update the dnode with the new shortest length
+                dn.len = cur_len + add_len;
+
+                // and (re)add it to the visitables
+                vs.insert(d_it);
+            }
+        } // iterate over tentatives
+
+        // mark the popped vn as visited (TODO: or at end?)
+        vn.mark_visited();
     }
-    // put start in the tentative nodes with len 0
-    // while there are tentative nodes
-    //  pick the one with the shortest path
-    //    for each of its tentative destinations
-    //      if it was visited, next
-    //      else if it is tentative
-    //        and this has a shorter path, update that
-    //    mark this node as visited
 }
 
 void
@@ -93,10 +182,9 @@ dijkstra::shortest_path(const arc* start, const arc* end)
     restart(start);
     found = start == end ? 1 : 0;
 
-    while (!found && !ls.empty()) {
+    while (!found && !vs.empty()) {
         dnode& dn = pop_visit();
         // TODO more
-        break;
     }
 }
 

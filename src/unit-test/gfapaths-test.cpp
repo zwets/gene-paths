@@ -65,20 +65,20 @@ TEST(gfapaths_test, path_1) {
     graph g = make_graph();
     arc  *a = add_start(g, "s1+:0");
     paths p = paths(g);
-    p.extend(0, a);
+    std::size_t i = p.extend(0, a);
     ASSERT_EQ(p.path_arcs.size(), 2);
-    ASSERT_EQ(p.path_arcs.at(1).pre_ix, 0);
-    ASSERT_EQ(p.path_arcs.at(1).p_arc, a);
+    ASSERT_EQ(p.path_arcs.at(i).pre_ix, 0);
+    ASSERT_EQ(p.path_arcs.at(i).p_arc, a);
 }
 
 TEST(gfapaths_test, write_empty) {
     graph g = make_graph();
     arc  *a = add_start(g, "s1+:0");
     paths p(g);
-    p.extend(0, a);
+    std::size_t i = p.extend(0, a);
     ASSERT_EQ(p.path_arcs.size(), 2);
 
-    const path_arc& pa = p.path_arcs.at(1);
+    const path_arc& pa = p.path_arcs.at(i);
     ASSERT_EQ(pa.pre_ix, 0);
     ASSERT_EQ(pa.p_arc, a);
     ASSERT_EQ(p.ride_len(pa), 0);
@@ -91,16 +91,16 @@ TEST(gfapaths_test, write_1) {
     graph g = make_graph();
     arc* a = add_start(g, "s3+:2"); // s3+ CA|TTA
     paths p(g);
-    p.extend(0, a);
+    std::size_t i = p.extend(0, a);
 
     std::vector<arc>::const_iterator arc_it = g.arcs_from_v_lv(graph::v_lv(graph::seg_vtx_p(2), 2)).first;
     ASSERT_EQ(arc_it->v_lv, 2L<<33|4);  // s3+ CATT|A
     ASSERT_EQ(arc_it->w_lw, 0);         // s1+ |ACGT
 
-    p.extend(1, arc_it);
+    i = p.extend(1, arc_it);
     ASSERT_EQ(p.path_arcs.size(), 3);
 
-    const path_arc& pa = p.path_arcs.at(2);
+    const path_arc& pa = p.path_arcs.at(i);
     ASSERT_EQ(pa.pre_ix, 1);
     ASSERT_EQ(pa.p_arc, &*arc_it);
     ASSERT_EQ(p.ride_len(pa), 2);
@@ -113,16 +113,16 @@ TEST(gfapaths_test, write_2) {
     graph g = make_graph();
     arc* a = add_start(g, "s3+:1"); // s3+ C|ATTA
     paths p = paths(g);
-    p.extend(0, a);
+    std::size_t i = p.extend(0, a);
 
     std::vector<arc>::const_iterator arc_it = g.arcs_from_v_lv(graph::v_lv(graph::seg_vtx_p(g.get_seg_ix("s3")),1)).first;
     ASSERT_EQ(arc_it->v_lv, 2L<<33|4);   // s3+:4 C|ATT|A
     ASSERT_EQ(arc_it->w_lw, 0);          // s1+:0 |A|CGT
 
     // add arc onto s1+ [A]CGT, so we have C|ATT|A
-    p.extend(1, arc_it);
+    i = p.extend(i, arc_it);
 
-    const path_arc* pa = &p.path_arcs.at(2);
+    const path_arc* pa = &p.path_arcs.at(i);
 
     ASSERT_EQ(pa->pre_ix, 1);
     ASSERT_EQ(pa->p_arc, &*arc_it);
@@ -142,8 +142,8 @@ TEST(gfapaths_test, write_2) {
     ASSERT_EQ(arc_it->w_lw, 3L<<32|0);   // s2-:0
 
     // add that so we have C|ATT|A| with CGTATGCTA coming
-    p.extend(2, arc_it);
-    pa = &p.path_arcs.at(3);
+    i = p.extend(i, arc_it);
+    pa = &p.path_arcs.at(i);
     ASSERT_EQ(p.ride_len(*pa), 1);
     ASSERT_EQ(p.length(*pa), 4);
     ASSERT_EQ(p.route(*pa), "s3+:1:4 s1+:0:1");
@@ -159,8 +159,8 @@ TEST(gfapaths_test, write_2) {
     ASSERT_EQ(arc_it->w_lw, 6L<<32|0);   // s4+:0
 
     // add arc to s1+ A[CGT] and we have C|ATT|A|CGTATG|CTA
-    p.extend(3, arc_it);
-    pa = &p.path_arcs.at(4);
+    i = p.extend(i, arc_it);
+    pa = &p.path_arcs.at(i);
     ASSERT_EQ(p.ride_len(*pa), 6);
     ASSERT_EQ(p.length(*pa), 10);
     ASSERT_EQ(p.route(*pa), "s3+:1:4 s1+:0:1 s2-:3:9");
@@ -174,8 +174,8 @@ TEST(gfapaths_test, write_2) {
     ASSERT_EQ(arc_it->w_lw, 3L<<32|9);   // s2-:9
 
     // we take it and have |ATT|A|CGTATG|CTA|
-    p.extend(4, arc_it);
-    pa = &p.path_arcs.at(5);
+    i = p.extend(i, arc_it);
+    pa = &p.path_arcs.at(i);
     ASSERT_EQ(p.ride_len(*pa), 3);
     ASSERT_EQ(p.length(*pa), 13);
     ASSERT_EQ(p.route(*pa), "s3+:1:4 s1+:0:1 s2-:3:9 s4+:0:3");

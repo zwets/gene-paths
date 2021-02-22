@@ -20,6 +20,7 @@
 #include <string>
 #include "dijkstra.h"
 #include "targets.h"
+#include "utils.h"
 
 using namespace gfa;
 
@@ -114,6 +115,15 @@ TEST(dijkstra_test, all_paths) {
     std::pair<arc*, arc*> t = add_targets(g);
     dijkstra dk(g);
     dk.all_paths(t.first);
+}
+
+TEST(dijkstra_test, shortest_path) {
+    graph g = simple_graph();
+    std::pair<arc*, arc*> t = add_targets(g);
+    dijkstra dk(g);
+    ASSERT_TRUE(dk.shortest_path(t.first, t.second));
+    ASSERT_EQ(dk.route(), "s1+:0:1+ s1+:1:2 s2+:0:2 s2+:2:3+");
+    ASSERT_EQ(dk.sequence(), "CATAG");
 }
 
 

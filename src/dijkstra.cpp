@@ -26,7 +26,6 @@ namespace gfa {
 using gene_paths::raise_error;
 using gene_paths::verbose_emit;
 
-
 void
 dijkstra::restart(const arc* start)
 {
@@ -86,13 +85,13 @@ dijkstra::pop_visit()
 }
 
 
-void
-dijkstra::all_paths(const arc* start)
+bool
+dijkstra::find_paths(const arc* start, const arc* end)
 {
     restart(start);
-    found = 1;
+    found = 0;
 
-    while (!vs.empty()) {
+    while (!found && !vs.empty()) {
 
         // pick the next node to visit
         dnode& vn = pop_visit();    // has .len and .p_ref
@@ -100,12 +99,12 @@ dijkstra::all_paths(const arc* start)
         // retrieve the path index, path arc and len to arrive at vn
         std::size_t cur_pix = vn.p_ref;
         std::size_t cur_len = vn.len;
-        const path_arc& pa = ps.at(cur_pix);
+        const path_arc& cur_pa = ps.at(cur_pix);
 #ifndef NDEBUG
         verbose_emit("start visit of p_ref %lu at %lu", cur_pix, cur_len);
 #endif
         // the dest (w_lw) of that arc is the new start (v_lv)
-        std::uint64_t v_lv = pa.p_arc->w_lw;
+        std::uint64_t v_lv = cur_pa.p_arc->w_lw;
 
         // get all arcs leaving from vn's vertex at lv or later
         const auto iters = g.arcs_from_v_lv(v_lv);
@@ -114,7 +113,7 @@ dijkstra::all_paths(const arc* start)
         for (auto a_it = iters.first; a_it != iters.second; ++a_it) {
 
             // ignore any arc that would take us right back
-            if (a_it->w_lw == pa.p_arc->v_lv)
+            if (a_it->w_lw == cur_pa.p_arc->v_lv)
                 continue;
 
             // Note how we iterate over outbound arcs, where added length
@@ -168,24 +167,26 @@ dijkstra::all_paths(const arc* start)
 
                 // and (re)add it to the visitables
                 vs.insert(d_it);
-            }
-        } // iterate over tentatives
 
-        // mark the popped vn as visited (TODO: or at end?)
+            } // end if shorter path
+
+        } // end iterate over tentatives
+
+        // the vn is now visited and the shortest path to its arc
         vn.mark_visited();
-    }
-}
 
-void
-dijkstra::shortest_path(const arc* start, const arc* end)
-{
-    restart(start);
-    found = start == end ? 1 : 0;
+        // check if we are done, i.e. the vn took the end arc
+        if (end && cur_pa.p_arc == end) {
+            found = vn.p_ix();
+            verbose_emit("shortest path of length %lu found (index %lu)", vn.len, found);
+        }
 
-    while (!found && !vs.empty()) {
-        dnode& dn = pop_visit();
-        // TODO more
-    }
+    } // end while !found and !vs.empty()
+
+    verbose_emit("done exploring %lu (potential) paths", ps.path_arcs.size());
+
+    // return true if we found path or not end was specified (find all)
+    return !end || found;
 }
 
 

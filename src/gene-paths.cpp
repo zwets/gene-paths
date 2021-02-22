@@ -154,15 +154,11 @@ int main (int /*argc*/, char *argv[])
         // call dijkstra
 
     gfa::dijkstra dijkstra(g);
-    dijkstra.shortest_path(p_arc_start, p_arc_end);
-    // and:
-    // dijkstra.shortest_path(reverse?)
-    // or:
-    // dijkstra.shortest_path(p_arc_start, p_arc_end);
-
-    if (dijkstra.found) {
+    if (dijkstra.shortest_path(p_arc_start, p_arc_end))
+    {
         std::cout << ">PATH ";
         dijkstra.write_route(std::cout);
+        std::cout << " (length " << dijkstra.length() << ")";
         std::cout << std::endl;
         dijkstra.write_sequence(std::cout);
         std::cout << std::endl;

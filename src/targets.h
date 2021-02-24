@@ -24,25 +24,64 @@
 namespace gfa {
 
 
-// target - helper structure capturing a target on a graph
+// target - helper structure to capture start and end targets on a graph
+//
+// In order to find a path between the start and end regions, we add them
+// as segments to the graph, but with arcs such that they are traversed
+// only at the start and end of the path:
+//
+//      FROM seg     i------o           TO seg     i------x
+//       arc s_o            v          arc e_i     ^
+//        contig  ---b======e--->       contig  ---b======e--->
+//
+// The s_o (start-out) arc goes from the end of the FROM segment to the
+// end of the target region on the contig.  Thus if we start the path at
+// i, we first cover the target and then leave it (for good) over s_o.
+//
+// The e_i (end-in) arc is trickier.  We need to get to x (rather than i)
+// so need an arc at x.  The solution is this:
+//
+//       "S" seg     S                 "E" seg            E
+//       arc s_i     v                 arc e_o            ^
+//      FROM seg     i------o           TO seg     i------x
+//       arc s_o            v          arc e_i     ^
+//        contig  ---b======e--->       contig  ---b======e--->
+//
+// We add two dummy zero-length segments that are the "terminals" for the
+// the path search.  The path starts with arc s_i and ends with e_o.
+// In fact we optimise and do with a single dummy of length 1, with s_i
+// leaving it at 0, and e_o arriving at 1 (they can't find each other).
 //
 struct target
 {
-    std::string name;   // name of target seg in graph
-    std::string ctg;    // name of referent contig in graph
-    bool neg;           // true iff target is on neg vertex
-    std::uint64_t beg;  // begin of target on contig
-    std::uint64_t end;  // end of target on contig
+    enum role_t { NONE, START, END };
 
-    // parses a "CONTIG[+-][:BEG[:END]]" referent into target
-    static target parse(const std::string&);
+    // construct a target on graph g
+    target(graph& gr)
+        : g(gr), ter_arc(NO_ARC), ctg_arc(NO_ARC) { }
 
-    // add target segment to g with name n, returning its seg_ix
-    std::size_t add_seg_to_graph(graph& g, std::string n);
+    // set the target at ref and give it START or END role
+    // the ref must have format "CONTIG[+-][:BEG[:END]]"
+    void set(const std::string&, role_t);
 
-    // add arc from ctg to target (default) or vice versa
-    // returns pointer to the inserted arc (for path start/end)
-    arc* add_arc_to_graph(graph& g, bool to_tgt=true) const;
+    // get the arc that is start/end of the path (depending on role)
+    arc get_arc() const { return ter_arc; }
+
+    // get pointer to the arc in graph.arcs (convenience method)
+    // NOTE: this invalidates as soon as you add other arcs/targets
+    inline const arc* p_arc() const {
+        return reinterpret_cast<const arc*>(
+                &*(g.arcs_from_v_lv(get_arc().v_lv).first));
+    }
+
+#ifdef NDEBUG
+    private:   // implementation detail private except when debug/test
+#endif
+        static constexpr arc NO_ARC = { std::uint64_t(-1), std::uint64_t(-1) };
+
+        graph& g;           // the graph on which target (will) sit
+        arc ter_arc;        // the arc between terminal and target
+        arc ctg_arc;        // the arc between target and contig
 };
 
 

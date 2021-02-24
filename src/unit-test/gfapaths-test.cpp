@@ -46,11 +46,11 @@ static graph make_graph() {
     return g;
 }
 
-static arc* add_start(graph& g, std::string ref) {
-    target s = target::parse(ref);
+static const arc* add_start(graph& g, std::string ref) {
+    target t(g);
+    t.set(ref, target::role_t::START);
     //s.add_seg_to_graph(g, "START");
-    s.add_seg_to_graph(g, ref);
-    return s.add_arc_to_graph(g, false);  // points from START seg (5) to ref
+    return t.p_arc();  // points from START seg (5) to ref
 }
 
 TEST(gfapaths_test, empty_path) {
@@ -63,7 +63,7 @@ TEST(gfapaths_test, empty_path) {
 
 TEST(gfapaths_test, path_1) {
     graph g = make_graph();
-    arc  *a = add_start(g, "s1+:0");
+    const arc  *a = add_start(g, "s1+:0");
     paths p = paths(g);
     std::size_t i = p.extend(0, a);
     ASSERT_EQ(p.path_arcs.size(), 2);
@@ -73,7 +73,7 @@ TEST(gfapaths_test, path_1) {
 
 TEST(gfapaths_test, write_empty) {
     graph g = make_graph();
-    arc  *a = add_start(g, "s1+:0");
+    const arc  *a = add_start(g, "s1+:0");
     paths p(g);
     std::size_t i = p.extend(0, a);
     ASSERT_EQ(p.path_arcs.size(), 2);
@@ -89,7 +89,7 @@ TEST(gfapaths_test, write_empty) {
 
 TEST(gfapaths_test, write_1) {
     graph g = make_graph();
-    arc* a = add_start(g, "s3+:2"); // s3+ CA|TTA
+    const arc* a = add_start(g, "s3+:2"); // s3+ CA|TTA
     paths p(g);
     std::size_t i = p.extend(0, a);
 
@@ -111,7 +111,7 @@ TEST(gfapaths_test, write_1) {
 
 TEST(gfapaths_test, write_2) {
     graph g = make_graph();
-    arc* a = add_start(g, "s3+:1"); // s3+ C|ATTA
+    const arc* a = add_start(g, "s3+:1"); // s3+ C|ATTA
     paths p = paths(g);
     std::size_t i = p.extend(0, a);
 

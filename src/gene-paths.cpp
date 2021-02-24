@@ -41,7 +41,7 @@ static const std::string USAGE(
 "  graph in GFA_FILE.\n"
 "\n"
 "  FROM and TO are specified as SEG[+-][:BEG[:END]]], where SEG is the\n"
-"  segment identifier, + or - the STRAND, and BEG and END the start and\n"
+"  contig identifier, + or - the STRAND, and BEG and END the start and\n"
 "  end positions of the target region on SEG.\n"
 "\n"
 "  When END is omitted, BEG specifies a zero-length position.  When BEG\n"
@@ -49,20 +49,20 @@ static const std::string USAGE(
 "\n"
 "  OPTIONS\n"
 "   -f, --fasta FILE  read sequences for GFA_FILE from FILE\n"
-"   -u, --undirected  also search for TO upstream of FROM\n"
-"   -v, --verbose     write detailed information to stderr\n"
+"   -b, --both-dirs   search for FROM both up- and downstream of TO\n"
+"   -v, --verbose     write detailed informationo stderr\n"
 "   -h, --help        output this information and exit\n"
 "\n"
-"  The default is to search for a path that has FROM upstream of TO.\n"
-"  Option -u/--undirected searches in both directions.\n"
+"  The default is to search for a path going downstream from FROM.  Use\n"
+"  option -b/--both to also search for a path that has TO upstream.\n"
 "\n"
 "  STRAND and POSITION are interpreted as in GFA2:\n"
-"  - We call the sequence data in GFA_FILE (or FASTA FILE when external)\n"
-"    the + strand.  The - strand is its reverse complement.\n"
+"  - We call the sequence data in GFA_FILE (or FASTA FILE) the + strand.\n"
+"    The - strand is its reverse complement.\n"
 "  - Positions are inbetween bases, starting at 0 left of the sequence,\n"
 "    and ending at L at its right, where L is the sequence length.\n"
 "  - Positions are interpreted on the segment BEFORE it is oriented, so\n"
-"    e.g. C-:0:5 refers to the final 5 bases on C's reverse complement.\n"
+"    e.g. C-:0:5 refers to the FINAL 5 bases on C's reverse complement.\n"
 "\n");
 
 static void usage_exit()
@@ -78,7 +78,7 @@ int main (int /*argc*/, char *argv[])
 
     std::string gfa_fname;
     std::string fna_fname;
-    bool undirected = false;
+    bool both_dirs = false;
 
         // parse options
 
@@ -87,12 +87,12 @@ int main (int /*argc*/, char *argv[])
         if (!std::strcmp("-v", *argv) || !std::strcmp("--verbose", *argv)) {
             set_verbose(true);
         }
-        else if (!std::strcmp("-h", *argv) || !std::strcmp("--help", *argv)) {
+        else if (!std::strcmp("-h", *argv) || !std::strncmp("--help", *argv, 6)) {
             std::cout << USAGE;
             return 0;
         }
-        else if (!std::strcmp("-u", *argv) || !std::strcmp("--undirected", *argv)) {
-            undirected = true;
+        else if (!std::strcmp("-b", *argv) || !std::strncmp("--both", *argv, 6)) {
+            both_dirs = true;
         }
         else if ((!std::strcmp("-f", *argv) || !std::strcmp("--fasta", *argv)) && *++argv) {
             fna_fname = *argv;
@@ -113,11 +113,9 @@ int main (int /*argc*/, char *argv[])
 
     if (!*argv) usage_exit();
     std::string from_ref = *argv++;
-    gfa::target from_tgt = gfa::target::parse(from_ref);
 
     if (!*argv) usage_exit();
     std::string to_ref = *argv++;
-    gfa::target to_tgt = gfa::target::parse(to_ref);
 
     if (*argv) usage_exit();
 
@@ -133,41 +131,64 @@ int main (int /*argc*/, char *argv[])
             raise_error("failed to open file: %s", fna_fname.c_str());
         verbose_emit("reading FASTA from file: %s", fna_fname.c_str());
 
-        g = parse_gfa(gfa_file, fna_file, 2, 2*2);  // reserve 2 segs and 4 arcs
+        g = parse_gfa(gfa_file, fna_file, 4, 2*2);  // reserve 2 segs and 4 arcs
     }
     else {
         g = parse_gfa(gfa_file, 2, 2*2);            // reserve 2 segs and 4 arcs
     }
 
-        // add the targets to the graph
+        // add targets to the graph
 
-    // the FROM target's incoming arc is the path start
-    from_tgt.add_seg_to_graph(g, from_ref);
-    gfa::arc* p_arc_start = from_tgt.add_arc_to_graph(g, true);
-    from_tgt.add_arc_to_graph(g, false);
+    gfa::target from(g), to(g);
 
-    // the TO target's outgoing arc is the path end
-    to_tgt.add_seg_to_graph(g, to_ref);
-    to_tgt.add_arc_to_graph(g, true); 
-    gfa::arc* p_arc_end = to_tgt.add_arc_to_graph(g, false);
+    from.set(from_ref, gfa::target::START);
+    to.set(to_ref, gfa::target::END);
 
         // call dijkstra
 
     gfa::dijkstra dijkstra(g);
-    if (dijkstra.shortest_path(p_arc_start, p_arc_end))
+
+    verbose_emit("searching shortest path: %s -> %s", from_ref.c_str(), to_ref.c_str());
+
+    bool fwd = dijkstra.shortest_path(from.p_arc(), to.p_arc());
+    if (fwd)
     {
         std::cout << ">PATH ";
         dijkstra.write_route(std::cout);
         std::cout << " (length " << dijkstra.length() << ")";
         std::cout << std::endl;
+
         dijkstra.write_sequence(std::cout);
         std::cout << std::endl;
     }
-    else {
+
+        // if bidirectional, call again with from and to swapped
+
+    bool rev = false;
+    if (both_dirs) {
+
+        from.set(to_ref, gfa::target::START);
+        to.set(from_ref, gfa::target::END);
+
+        verbose_emit("searching inverse path: %s -> %s", to_ref.c_str(), from_ref.c_str());
+
+        rev = dijkstra.shortest_path(from.p_arc(), to.p_arc());
+        if (rev)
+        {
+            std::cout << ">PATH_REV ";
+            dijkstra.write_route(std::cout);
+            std::cout << " (length " << dijkstra.length() << ")";
+            std::cout << std::endl;
+            dijkstra.write_sequence(std::cout);
+            std::cout << std::endl;
+        }
+    }
+
+    if (!(fwd || rev)) {
         std::cerr << "No path was found\n";
     }
 
-    return !dijkstra.found;
+    return fwd || rev;
 }
 
 // vim: sts=4:sw=4:et:si:ai

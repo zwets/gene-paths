@@ -28,43 +28,51 @@ namespace gfa {
 using gene_paths::raise_error;
 using gene_paths::verbose_emit;
 
-target
-target::parse(const std::string& s)
+void
+target::set(const std::string& ref, role_t role)
 {
-    target tgt;
+        // parse the reference
 
     std::regex re("([^[:space:]]+)(\\+|-)(:([[:digit:]]+)(:([[:digit:]]+))?)?");
     std::smatch m;
 
-    if (!std::regex_match(s, m, re))
-        raise_error("invalid target syntax: %s", s.c_str());
+    if (!std::regex_match(ref, m, re))
+        raise_error("invalid target syntax: %s", ref.c_str());
 
-    tgt.ctg = m[1].str();
-    tgt.neg = m[2].str().at(0) == '-';
+    std::string ctg = m[1].str();
+    bool neg = m[2].str().at(0) == '-';
 
-    std::string n;
+    std::string _b = m[4].str();
+    std::size_t beg = _b.empty() ? std::uint64_t(-1) : std::stoul(_b);
 
-    n = m[4].str();
-    tgt.beg = n.empty() ? std::uint64_t(-1) : std::stoul(n);
+    std::string _e = m[6].str();
+    std::size_t end = _e.empty() ? std::uint64_t(-1) : std::stoul(_e);
 
-    n = m[6].str();
-    tgt.end = n.empty() ? std::uint64_t(-1) : std::stoul(n);
+    verbose_emit("parsed target: %s%c:%ld:%ld", ctg.c_str(), neg ? '-' : '+', beg, end);
 
-    verbose_emit("parsed target: %s%c:%ld:%ld", tgt.ctg.c_str(), tgt.neg ? '-' : '+', tgt.beg, tgt.end);
-    return tgt;
-}
+        // locate or create the terminal dummy
 
-std::size_t
-target::add_seg_to_graph(graph& g, std::string n)
-{
-    if (g.find_seg_ix(name) != std::uint64_t(-1))
-        raise_error("contig with target name already in graph: %s", name.c_str());
+    static const std::string T_NAME("__T__");
 
-    std::size_t ref_seg_ix = g.find_seg_ix(ctg);
-    if (ref_seg_ix == std::uint64_t(-1))
+    std::size_t ter_ix = g.find_seg_ix(T_NAME);
+
+    if (ter_ix == std::uint64_t(-1)) {
+        g.add_seg( { 1, T_NAME, "X" } );
+        ter_ix = g.get_seg_ix(T_NAME);
+
+        verbose_emit("added terminal segment %lu: %s", ter_ix, T_NAME.c_str());
+    }
+    else {
+        verbose_emit("terminal segment %lu: %s", ter_ix, T_NAME.c_str());
+    }
+
+        // locate the referenced contig in graph
+
+    std::size_t ref_ix = g.find_seg_ix(ctg);
+    if (ref_ix == std::uint64_t(-1))
         raise_error("contig not in graph: %s", ctg.c_str());
 
-    const seg& ref_seg = g.get_seg(ref_seg_ix);
+    const seg& ref_seg = g.get_seg(ref_ix);
     if (beg == std::uint64_t(-1))
         { beg = 0; end = ref_seg.len; }
     else if (beg > ref_seg.len)
@@ -74,44 +82,89 @@ target::add_seg_to_graph(graph& g, std::string n)
     else if (beg > end)
         raise_error("begin position beyond end position on target: %s", ctg.c_str());
 
+        // locate or create the target segment
+
     std::stringstream ss;
-    ref_seg.write_seq(ss, neg, beg, end);
+    ss << ctg << ':' << beg << ':' << end;
+    std::string seg_name = ss.str();
 
-    name = n;
-    g.add_seg({ end-beg, name, ss.str() });
-    std::size_t seg_ix = g.get_seg_ix(name);
+    std::uint64_t seg_ix = g.find_seg_ix(seg_name);
+    if (seg_ix == std::uint64_t(-1)) {
 
-    verbose_emit("added segment %lu: %s", seg_ix, name.c_str());
-    return seg_ix;
-}
+        std::stringstream ss;
+        ref_seg.write_seq(ss, false, beg, end);     // NOTE: we store the + segment
 
-arc*
-target::add_arc_to_graph(graph& g, bool to_tgt) const
-{
-    if (g.arcs.size() == g.arcs.capacity())
+        g.add_seg({ end-beg, seg_name, ss.str() });
+        seg_ix = g.get_seg_ix(seg_name);
+
+        verbose_emit("added target segment %lu: %s", seg_ix, seg_name.c_str());
+    }
+    else {
+        verbose_emit("found target segment %lu: %s", seg_ix, seg_name.c_str());
+    }
+
+        // remove existing arcs
+
+    if (ter_arc.v_lv != std::uint64_t(-1)) {
+        g.arcs.erase(g.arcs_from_v_lv(ter_arc.v_lv).first);
+    }
+
+    if (ctg_arc.v_lv != std::uint64_t(-1)) {
+        g.arcs.erase(g.arcs_from_v_lv(ctg_arc.v_lv).first);
+    }
+
+        // create the new ctg_arc
+
+    if (g.arcs.size() + 2 > g.arcs.capacity())
         raise_error("programmer error: arcs vector exhausted (cap %lu)", g.arcs.size());
-
-    std::size_t tgt_ix = g.get_seg_ix(name);
-    std::size_t ref_ix = g.get_seg_ix(ctg);
-    const seg& ref_seg = g.get_seg(ref_ix);
 
     std::uint64_t v, w, lv, lw;
 
-    if (to_tgt) { // from referenced contig to target
-        v = neg ? graph::seg_vtx_n(ref_ix) : graph::seg_vtx_p(ref_ix);
-        w = neg ? graph::seg_vtx_n(tgt_ix) : graph::seg_vtx_p(tgt_ix);
-        lv = neg ? ref_seg.len - end : beg;
-        lw = 0;
-    }
-    else { // from tgt to ctg
-        v = neg ? graph::seg_vtx_n(tgt_ix) : graph::seg_vtx_p(tgt_ix);
+    if (role == START) { // from seg_$ to ctg_end
+        v = neg ? graph::seg_vtx_n(seg_ix) : graph::seg_vtx_p(seg_ix);
         w = neg ? graph::seg_vtx_n(ref_ix) : graph::seg_vtx_p(ref_ix);
         lv = end - beg;
         lw = neg ? ref_seg.len - beg : end;
     }
+    else if (role == END) { // from ctg_beg to seg_0
+        v = neg ? graph::seg_vtx_n(ref_ix) : graph::seg_vtx_p(ref_ix);
+        w = neg ? graph::seg_vtx_n(seg_ix) : graph::seg_vtx_p(seg_ix);
+        lv = neg ? ref_seg.len - end : beg;
+        lw = 0;
+    }
+    else {
+        v = w = lv = lw = 0L; // silence "uninitialised variable" warning
+        raise_error("programmer error: target role not START or END");
+    }
 
-    verbose_emit("added arc %lu: %lu_%lu to %lu_%lu", g.arcs.size(), v, lv, w, lw);
-    return reinterpret_cast<arc*>(&*g.add_arc({ graph::v_lv(v, lv), graph::v_lv(w, lw) }));
+    ctg_arc = { graph::v_lv(v, lv), graph::v_lv(w, lw) };
+    g.add_arc(ctg_arc);
+
+    verbose_emit("added ctg arc %lu: %lu_%lu to %lu_%lu", g.arcs.size(), v, lv, w, lw);
+
+        // create the new ter_arc
+
+    if (role == START) { // from ter_0 to seg_0
+        v = graph::seg_vtx_p(ter_ix);
+        w = neg ? graph::seg_vtx_n(seg_ix) : graph::seg_vtx_p(seg_ix);
+        lv = 0;
+        lw = 0;
+    }
+    else if (role == END) { // from seg_$ to ter_1
+        v = neg ? graph::seg_vtx_n(seg_ix) : graph::seg_vtx_p(seg_ix);
+        w = graph::seg_vtx_p(ter_ix);
+        lv = end - beg;
+        lw = 1;
+    }
+    else {
+        v = w = lv = lw = 0L; // silence "uninitialised variable" warning
+        raise_error("programmer error: target role not START or END");
+    }
+
+    ter_arc = { graph::v_lv(v, lv), graph::v_lv(w, lw) };
+    g.add_arc(ter_arc);
+
+    verbose_emit("added terminal arc %lu: %lu_%lu to %lu_%lu", g.arcs.size(), v, lv, w, lw);
 }
 
 

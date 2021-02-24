@@ -41,20 +41,15 @@ static graph simple_graph() {
     return g;
 }
 
-static std::pair<arc*, arc*> add_targets(graph& g) {
+typedef std::pair<const arc*, const arc*> parc_pair;
+static parc_pair add_targets(graph& g) {
 
-    target t0 = target::parse(FROM);
-    target t1 = target::parse(TO);
+    target t0(g);
+    t0.set(FROM, target::role_t::START);
+    target t1(g);
+    t1.set(TO, target::role_t::END);
 
-    t0.add_seg_to_graph(g, FROM);
-    t0.add_arc_to_graph(g, false); // from tgt into ctg
-    arc* p_start = t0.add_arc_to_graph(g, true);  // from ctg to tgt
-
-    t1.add_seg_to_graph(g, TO);
-    t1.add_arc_to_graph(g, true); // from ctg into tgt
-    arc* p_end = t1.add_arc_to_graph(g, false);  // from tgt to ctg
-
-    return std::make_pair(p_start, p_end);
+    return std::make_pair(t0.p_arc(), t1.p_arc());
 }
 
 TEST(dijkstra_test, make_graph) {
@@ -65,7 +60,7 @@ TEST(dijkstra_test, make_graph) {
 
 TEST(dijkstra_test, add_targets) {
     graph g = simple_graph();
-    std::pair<arc*, arc*> t = add_targets(g);
+    parc_pair t = add_targets(g);
     ASSERT_EQ(g.segs.size(), 4);
     ASSERT_EQ(g.arcs.size(), 12);
     ASSERT_EQ(t.first->v_lv, 0L);
@@ -87,7 +82,7 @@ TEST(dijkstra_test, dijkstra_con) {
 
 TEST(dijkstra_test, dijkstra_restart) {
     graph g = simple_graph();
-    std::pair<arc*, arc*> t = add_targets(g);
+    parc_pair t = add_targets(g);
 
     dijkstra dk(g);
     dk.restart(t.first);
@@ -99,7 +94,7 @@ TEST(dijkstra_test, dijkstra_restart) {
 
 TEST(dijkstra_test, pop_visit) {
     graph g = simple_graph();
-    std::pair<arc*, arc*> t = add_targets(g);
+    parc_pair t = add_targets(g);
     dijkstra dk(g);
     dk.restart(t.first);
 
@@ -112,14 +107,14 @@ TEST(dijkstra_test, pop_visit) {
 
 TEST(dijkstra_test, all_paths) {
     graph g = simple_graph();
-    std::pair<arc*, arc*> t = add_targets(g);
+    parc_pair t = add_targets(g);
     dijkstra dk(g);
     dk.all_paths(t.first);
 }
 
 TEST(dijkstra_test, shortest_path) {
     graph g = simple_graph();
-    std::pair<arc*, arc*> t = add_targets(g);
+    parc_pair t = add_targets(g);
     dijkstra dk(g);
     ASSERT_TRUE(dk.shortest_path(t.first, t.second));
     ASSERT_EQ(dk.route(), "s1+:0:1+ s1+:1:2 s2+:0:2 s2+:2:3+");

@@ -24,10 +24,10 @@
 #include <string>
 #include <cstring>
 #include <cstdlib>
-#include "parsegfa.h"
-#include "gfagraph.h"
-#include "dijkstra.h"
+#include "graph.h"
+#include "parser.h"
 #include "targets.h"
+#include "dijkstra.h"
 #include "utils.h"
 
 
@@ -49,7 +49,7 @@ static const std::string USAGE(
 "\n"
 "  OPTIONS\n"
 "   -f, --fasta FILE  read sequences for GFA_FILE from FILE\n"
-"   -b, --both-dirs   search for FROM both up- and downstream of TO\n"
+"   -b, --both        search for FROM both up- and downstream of TO\n"
 "   -v, --verbose     write detailed informationo stderr\n"
 "   -h, --help        output this information and exit\n"
 "\n"
@@ -130,11 +130,12 @@ int main (int /*argc*/, char *argv[])
         if (!fna_file)
             raise_error("failed to open file: %s", fna_fname.c_str());
         verbose_emit("reading FASTA from file: %s", fna_fname.c_str());
-
-        g = parse_gfa(gfa_file, fna_file, 4, 2*2);  // reserve 2 segs and 4 arcs
+      
+        // reserve 3 segs and 4 arcs for FROM and TO (see paths.h)
+        g = gfa::parse(gfa_file, fna_file, 3, 4);
     }
     else {
-        g = parse_gfa(gfa_file, 2, 2*2);            // reserve 2 segs and 4 arcs
+        g = gfa::parse(gfa_file, 3, 4);
     }
 
         // add targets to the graph

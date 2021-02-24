@@ -1,4 +1,4 @@
-/* parsegfa.h
+/* parser.h
  *
  * Copyright (C) 2021  Marco van Zwetselaar <io@zwets.it>
  *
@@ -15,23 +15,23 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef parsegfa_h_INCLUDED
-#define parsegfa_h_INCLUDED
+#ifndef parser_h_INCLUDED
+#define parser_h_INCLUDED
 
 #include <iostream>
-#include "gfagraph.h"
+#include "graph.h"
 
-namespace gene_paths {
+namespace gfa {
 
 // parse a GFA file with embedded sequences into a gfa::graph
 // reserving extra room for spare_segs and spare_arcs
-extern gfa::graph parse_gfa(std::istream& gfa, int spare_segs = 0, int spare_arcs = 0);
+extern graph parse(std::istream& gfa, int spare_segs = 0, int spare_arcs = 0);
 
 // parse a GFA file with sequences in a FASTA file into a gfa::graph
 // reserving extra room for spare_segs and spare_arcs
-extern gfa::graph parse_gfa(std::istream& gfa, std::istream& fna, int spare_segs = 0, int spare_arcs = 0);
+extern graph parse(std::istream& gfa, std::istream& fna, int spare_segs = 0, int spare_arcs = 0);
 
-} // namespace gene_paths
+} // namespace gfa
 
-#endif // parsegfa_h_INCLUDED
+#endif // parser_h_INCLUDED
        // vim: sts=4:sw=4:ai:si:et

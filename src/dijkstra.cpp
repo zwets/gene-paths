@@ -18,7 +18,7 @@
 
 #include "dijkstra.h"
 
-#include "gfapaths.h"
+#include "paths.h"
 #include "utils.h"
 
 namespace gfa {

@@ -1,4 +1,4 @@
-/* gfapaths-test.cpp
+/* paths-test.cpp
  *
  * Copyright (C) 2021  Marco van Zwetselaar <io@zwets.it>
  *
@@ -18,7 +18,7 @@
 
 #include <gtest/gtest.h>
 #include <sstream>
-#include "gfapaths.h"
+#include "paths.h"
 #include "targets.h"
 #include "utils.h"
 
@@ -52,7 +52,7 @@ static const arc* add_start(graph& g, std::string ref) {
     return &*g.arcs_from_v_lv(t.get_arc().w_lw).first;
 }
 
-TEST(gfapaths_test, empty_path) {
+TEST(paths_test, empty_path) {
     graph g = make_graph();
     ASSERT_EQ(g.get_seg("s1").len, 4);
     paths p = paths(g);
@@ -60,7 +60,7 @@ TEST(gfapaths_test, empty_path) {
     ASSERT_EQ(p.path_arcs.at(0).pre_ix, 0);
 }
 
-TEST(gfapaths_test, path_1) {
+TEST(paths_test, path_1) {
     graph g = make_graph();
     const arc  *a = add_start(g, "s1+:0");
     paths p(g);
@@ -70,7 +70,7 @@ TEST(gfapaths_test, path_1) {
     ASSERT_EQ(p.path_arcs.at(i).p_arc, a);
 }
 
-TEST(gfapaths_test, write_empty) {
+TEST(paths_test, write_empty) {
     graph g = make_graph();
     const arc  *a = add_start(g, "s1+:0");
     paths p(g);
@@ -86,7 +86,7 @@ TEST(gfapaths_test, write_empty) {
     ASSERT_EQ(p.sequence(pa), "");
 }
 
-TEST(gfapaths_test, write_1) {
+TEST(paths_test, write_1) {
     graph g = make_graph();
     const arc* a = add_start(g, "s3+:2"); // s3+ CA|TTA
     paths p(g);
@@ -108,7 +108,7 @@ TEST(gfapaths_test, write_1) {
     ASSERT_EQ(p.sequence(pa), "TT");
 }
 
-TEST(gfapaths_test, write_2) {
+TEST(paths_test, write_2) {
     graph g = make_graph();
     const arc* a = add_start(g, "s3+:1"); // s3+ C|ATTA
     paths p = paths(g);

@@ -1,4 +1,4 @@
-/* gfapaths.h
+/* paths.h
  *
  * Copyright (C) 2021  Marco van Zwetselaar <io@zwets.it>
  *
@@ -15,12 +15,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef gfapaths_h_INCLUDED
-#define gfapaths_h_INCLUDED
+#ifndef paths_h_INCLUDED
+#define paths_h_INCLUDED
 
 #include <vector>
 #include <string>
-#include "gfagraph.h"
+#include "graph.h"
 
 #ifndef NDEBUG
 #include "utils.h"
@@ -32,7 +32,7 @@ namespace gfa {
 /* This unit defines the data structures to hold paths over a graph.
  *
  * We define a path recursively as the "null" path or a path followed by
- * an arc.  An arc, as defined in gfagraph, holds a source (v_lv) and
+ * an arc.  An arc, as defined in graph.h, holds a source (v_lv) and
  * destination location (w_lv).  Locations consist of a vertex id (v, w),
  * and an offset from the start of the vertex (lv, lw).
  *
@@ -128,5 +128,5 @@ struct paths {
 
 } // namespace gfa
 
-#endif // gfapaths_h_INCLUDED
+#endif // paths_h_INCLUDED
        // vim: sts=4:sw=4:ai:si:et

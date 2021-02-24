@@ -6,7 +6,7 @@ _Determine gene order and orientation in assemblies._
 ## Requirements
 
 * C++ compiler
-* BLAST+ suite (`blastn`, `makeblastdb`)
+* (not yet) BLAST+ suite (`blastn`, `makeblastdb`)
 
 
 ## Installation
@@ -16,10 +16,10 @@ _Determine gene order and orientation in assemblies._
 
 ## Usage
 
+> NOTE: gene-paths is evolving and still rough around the edges.
+
 * `gene-paths --help`
-* `gene-paths -g examples/assembly.gfa
-              -f examples assembly.fna
-              -q examples/query1.gfa`
+* `gene-paths assembly.gfa ctg1+ ctg2+
 
 
 ## Background
@@ -44,7 +44,7 @@ You may be surprised to learn that quite the opposite is true.
 
 Contigs in an assembly do not generally end because of a lack of data, i.e.
 because what comes next is not covered.  On the contrary, their ends are
-covered by reads, but these imply multiple possible continuations.
+often covered by reads, but these imply multiple possible continuations.
 
 In the assembly graph this could look like this:
 

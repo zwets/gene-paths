@@ -1,4 +1,4 @@
-/* utils-test.cpp
+/* parser-test.cpp
  * 
  * Copyright (C) 2021  Marco van Zwetselaar <io@zwets.it>
  *
@@ -19,25 +19,25 @@
 #include <gtest/gtest.h>
 #include <sstream>
 #include <fstream>
-#include "parsegfa.h"
-#include "gfagraph.h"
+#include "parser.h"
+#include "graph.h"
 #include "utils.h"
 
-using namespace gene_paths;
+using namespace gfa;
 
 namespace {
 
-TEST(parsegfa_test, read_gfa) {
+TEST(parser_test, read_gfa) {
 
     std::ifstream gfa_file("data/with_seqs.gfa");
     ASSERT_TRUE(gfa_file);
     
-    gfa::graph gfa = parse_gfa(gfa_file);
+    graph gfa = parse(gfa_file);
 
     ASSERT_EQ(gfa.segs.size(), 9);
 }
 
-TEST(parsegfa_test, read_gfa_and_fna) {
+TEST(parser_test, read_gfa_and_fna) {
 
     std::ifstream gfa_file("data/without_seqs.gfa");
     ASSERT_TRUE(gfa_file);
@@ -45,38 +45,38 @@ TEST(parsegfa_test, read_gfa_and_fna) {
     std::ifstream fna_file("data/seqs.fna");
     ASSERT_TRUE(fna_file);
 
-    gfa::graph gfa = parse_gfa(gfa_file, fna_file);
+    graph gfa = parse(gfa_file, fna_file);
 
     ASSERT_EQ(gfa.segs.size(), 9);
 }
 
-TEST(parsegfa_test, read_gfa_string) {
+TEST(parser_test, read_gfa_string) {
 
     std::istringstream s_gfa("H\tVN:Z:2.0\nS\t1\t4\t*\n");
     std::istringstream s_fna(">1\nACGT\n");
 
-    gfa::graph gfa = parse_gfa(s_gfa, s_fna);
+    graph gfa = parse(s_gfa, s_fna);
     ASSERT_EQ(gfa.segs.size(), 1);
 }
 
-TEST(parsegfa_test, read_gfa_mismatch_fna) {
+TEST(parser_test, read_gfa_mismatch_fna) {
 
     std::istringstream s_gfa("H\tVN:Z:2.0\nS\t1\t4\t*\n");
     std::istringstream s_fna(">1\nACG\n");
 
-    ASSERT_EXIT( parse_gfa(s_gfa, s_fna);,
+    ASSERT_EXIT( parse(s_gfa, s_fna);,
             testing::ExitedWithCode(1), 
             ": error: segment length in GFA \\(4\\) differs from FASTA \\(3\\) for seqid 1");
 }
 
-TEST(parsegfa_test, read_gfa_and_edge) {
+TEST(parser_test, read_gfa_and_edge) {
 
     std::istringstream s_gfa("H\tVN:Z:2.0\n"
         "S\ts1\t4\tACGT\n"
         "S\ts2\t9\tTAGCATACG\n"
         "E\t*\ts1+\ts2-\t1\t4$\t5\t9\t*\n");
 
-    gfa::graph gfa = parse_gfa(s_gfa);
+    graph gfa = parse(s_gfa);
     ASSERT_EQ(gfa.segs.size(), 2);
     ASSERT_EQ(gfa.arcs.size(), 8);
 

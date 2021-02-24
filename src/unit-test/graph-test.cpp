@@ -1,4 +1,4 @@
-/* utils-test.cpp
+/* graph-test.cpp
  * 
  * Copyright (C) 2021  Marco van Zwetselaar <io@zwets.it>
  *
@@ -17,19 +17,19 @@
  */
 
 #include <gtest/gtest.h>
-#include "gfagraph.h"
+#include "graph.h"
 
 using namespace gfa;
 
 namespace {
 
-TEST(gfagraph_test, empty_gfa) {
+TEST(graph_test, empty_gfa) {
     graph gfa;
     ASSERT_EQ(gfa.segs.size(), 0);
     ASSERT_EQ(gfa.arcs.size(), 0);
 }
 
-TEST(gfagraph_test, add_1_seg) {
+TEST(graph_test, add_1_seg) {
     graph gfa;
     seg s;
     s.len = 4;
@@ -41,7 +41,7 @@ TEST(gfagraph_test, add_1_seg) {
     ASSERT_EQ(gfa.seg_ixs[s.name], 0);
 }
 
-TEST(gfagraph_test, add_2_seg) {
+TEST(graph_test, add_2_seg) {
     graph gfa;
     seg s1; s1.len = 4; s1.data = "ACGT"; s1.name = "s1";
     gfa.add_seg(s1);
@@ -53,7 +53,7 @@ TEST(gfagraph_test, add_2_seg) {
     ASSERT_EQ(gfa.seg_ixs[s2.name], 1);
 }
 
-TEST(gfagraph_test, add_dup_seg) {
+TEST(graph_test, add_dup_seg) {
     graph gfa;
     seg s1; s1.len = 4; s1.data = "ACGT"; s1.name = "s1";
     gfa.add_seg(s1);
@@ -62,7 +62,7 @@ TEST(gfagraph_test, add_dup_seg) {
             ": error: duplicate segment name: s1");
 }
 
-TEST(gfagraph_test, add_len_wrong) {
+TEST(graph_test, add_len_wrong) {
     graph gfa;
     seg s1; s1.len = 4; s1.data = "ACG"; s1.name = "s1";
     ASSERT_EXIT( gfa.add_seg(s1);,
@@ -75,7 +75,7 @@ static seg SEG2 = { 9, "s2", "TAGCATACG" };
 static seg SEG3 = { 5, "s3", "CATTA" };
 static seg SEG4 = { 8, "s4", "GCGCAATT" };
 
-TEST(gfagraph_test, add_edge) {
+TEST(graph_test, add_edge) {
     graph gfa;
     gfa.add_seg(SEG1);                         // ACGT
     gfa.add_seg(SEG2);                         //  CGTATGCTA
@@ -113,7 +113,7 @@ TEST(gfagraph_test, add_edge) {
     ASSERT_EQ(gfa.arcs[7].w_lw, gfa.arcs[1].v_lv);
 }
 
-TEST(gfagraph_test, add_blunt_edge) {
+TEST(graph_test, add_blunt_edge) {
     graph gfa;
     gfa.add_seg(SEG1);                         //          ACGT
     gfa.add_seg(SEG2);                         // CGTATGCTA
@@ -134,7 +134,7 @@ TEST(gfagraph_test, add_blunt_edge) {
     ASSERT_EQ(gfa.arcs[3].w_lw, gfa.arcs[0].v_lv);
 }
 
-TEST(gfagraph_test, vtx_iter) {
+TEST(graph_test, vtx_iter) {
     graph gfa;
     gfa.add_seg(SEG1);
     gfa.add_seg(SEG2);

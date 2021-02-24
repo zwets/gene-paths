@@ -19,7 +19,7 @@
 #define targets_h_INCLUDED
 
 #include <string>
-#include "gfagraph.h"
+#include "graph.h"
 
 namespace gfa {
 

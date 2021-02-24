@@ -30,9 +30,9 @@ TARGET = run-all-tests
 
 USER_HEADERS = $(USER_DIR)/*.h
 
-USER_OBJS = dijkstra.o gfapaths.o targets.o gfagraph.o gfa2logic.o parsegfa.o utils.o
+USER_OBJS = dijkstra.o paths.o targets.o graph.o gfa2logic.o parser.o utils.o
 
-TEST_OBJS = utils-test.o parsegfa-test.o gfa2logic-test.o gfagraph-test.o targets-test.o gfapaths-test.o dijkstra-test.o 
+TEST_OBJS = utils-test.o parser-test.o gfa2logic-test.o graph-test.o targets-test.o paths-test.o dijkstra-test.o 
 
 # Build targets.
 

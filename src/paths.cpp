@@ -1,4 +1,4 @@
-/* gfapaths.cpp
+/* paths.cpp
  *
  * Copyright (C) 2021  Marco van Zwetselaar <io@zwets.it>
  *
@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "gfapaths.h"
+#include "paths.h"
 
 #include <vector>
 #include <sstream>

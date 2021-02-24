@@ -17,7 +17,7 @@
  */
 
 #include <gtest/gtest.h>
-#include "gfagraph.h"
+#include "graph.h"
 #include "targets.h"
 #include "utils.h"
 

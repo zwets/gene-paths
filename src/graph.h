@@ -1,4 +1,4 @@
-/* gfagraph.h
+/* graph.h
  *
  * Copyright (C) 2021  Marco van Zwetselaar <io@zwets.it>
  *
@@ -15,8 +15,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef gfagraph_h_INCLUDED
-#define gfagraph_h_INCLUDED
+#ifndef graph_h_INCLUDED
+#define graph_h_INCLUDED
 
 #include <string>
 #include <vector>
@@ -76,33 +76,33 @@ namespace gfa {
  * vtx_ix<<32|lv, so that the outbound arcs from every vertex vtx_ix are
  * contiguous and sorted on how "early" they leave the vertex.
  *
- * -- Note 1: Dovetailing is special case rv=0 && lw=0 (or lv=0 && rw=0)
+ * -- NOTE 1: Dovetailing is special case rv=0 && lw=0 (or lv=0 && rw=0)
  *
  * It would seem that in this case there is no point in storing w_0→v_lv
- * and v'_0→w'_rw, but note that adding these arcs adds a path to the
- * overlap on the other segment from some other edge Z linked to w_0:
+ * (and v'_0→w'_rw), but note that adding these arcs adds a path from w
+ * to v, which makes it reachable from some other edge z linked to w_0:
  *
  *   v: ------------->>>>>>>>>>>>
  *                w: ^===========---------------
  *        z: >>>>>>>>^
  *
- * -- Note 2: Non-overlap additionally has lv=$ && rw=$ (or rv=$ && lw=$)
+ * -- NOTE 2: Non-overlap additionally has lv=$ && rw=$ (or rv=$ && lw=$)
  *
  *      |<--- lv --->|
  *   v: --------------              (or v and w reversed)
  *                 w: ----------
  *                    |<- rw ->|
  *
- * Again, we do not eliminate w_0→v_lv or its complement v'_0→w'_rw, as
- * other arcs may continue (niche case ...) the path to other segments:
+ * Again, we do not eliminate w_0→v_lv or its complement v'_0→w'_rw, for
+ * the path it enables (however niche case) for other segments:
  *
  *                u: >>>>>>>>>>>>
  *   v: -------------^
  *                w: ^-------
  *
- * We can however leave out v_(lv+ov)→w_(lw+ow) and w_(lw+ow)→v_(lv+ov),
- * and their complements, as ov=ow=0 so they are equivalent to the first
- * arcs.
+ * We can however leave out v_(lv+ov)→w_(lw+ow) and w_(lw+ow)→v_(lv+ov)
+ * and their complements, because ov=ow=0 means these are equivalent to
+ * the first arcs.
  *
  * -- Note 3: Zero-overlap can theoretically happen in middle too
  *
@@ -124,11 +124,11 @@ struct seg {
     std::string data;
 
     // writes the sequence content in [beg,end) to os, optionally reverse complementing
-    // note that beg and end are forward positions as in GFA2, i.e. applied before rc
+    // note that beg and end are forward positions as in GFA2, i.e. applied before reversing
     std::ostream& write_seq(std::ostream& os, bool rc = false, std::uint32_t beg = 0, std::uint32_t end = std::uint32_t(-1)) const;
 
     // write the sequence content in [beg,end) on the pos or neg vertex of the segment
-    // where beg and end are interpreted on the vertex, i.e. from end when neg is true
+    // where beg and end are interpreted on the vertex, i.e. after reversing so from end when neg
     std::ostream& write_vtx(std::ostream& os, bool neg, std::uint32_t beg = 0, std::uint32_t end = std::uint32_t(-1)) const {
         return neg ? write_seq(os, true, end == std::uint32_t(-1) ? 0 : len-end, len-beg) : write_seq(os, false, beg, end);
     }
@@ -207,5 +207,5 @@ struct graph {
 
 } // namespace gfa
 
-#endif // gfagraph_h_INCLUDED
+#endif // graph_h_INCLUDED
        // vim: sts=4:sw=4:ai:si:et

@@ -21,8 +21,8 @@
 #include <vector>
 #include <map>
 #include <set>
-#include "gfagraph.h"
-#include "gfapaths.h"
+#include "graph.h"
+#include "paths.h"
 
 namespace gfa {
 

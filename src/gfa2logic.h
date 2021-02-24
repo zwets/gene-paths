@@ -68,7 +68,7 @@ struct edge {
     // validates consistency of the edge and its vertices
     inline void validate() const { v.validate(); w.validate(); }
 
-        // Return the lv and lw lengths as discussed in gfagraph.h,
+        // Return the lv and lw lengths as discussed in graph.h,
         // in the orientation of the segments.  lv2 and lw2 point
         // at the end of the overlap.  The ~i methods return the
         // parameters for the inverse orientation of the segment.

@@ -22,6 +22,11 @@
 #include <string>
 #include "gfagraph.h"
 
+#ifndef NDEBUG
+#include "utils.h"
+using gene_paths::raise_error;
+#endif // NDEBUG
+
 namespace gfa {
 
 /* This unit defines the data structures to hold paths over a graph.
@@ -97,15 +102,10 @@ struct paths {
     inline std::size_t extend(std::size_t path_ix, const arc *p_arc) {
 #ifndef NDEBUG
         if (path_ix && p_arc->v() != path_arcs.at(path_ix).p_arc->w() )
-            throw "Invalid path extension";
+            raise_error("programmer error: invalid path extension");
 #endif
-        path_arcs.push_back( { path_ix, p_arc } );
+        path_arcs.push_back({ path_ix, p_arc });
         return path_arcs.size() - 1;
-    }
-
-    // creates new path that extends path_ix with the arc at it
-    inline std::size_t extend(std::size_t path_ix, std::vector<arc>::const_iterator it) {
-        return extend(path_ix, reinterpret_cast<const arc*>(&*it));
     }
 
     // returns the length of the 'ride' from previous arc to current arc

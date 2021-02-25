@@ -95,9 +95,11 @@ paths::write_route(std::ostream& os, const path_arc& p) const
 
         const std::uint64_t b = pp.dst_lv(), e = p.src_lv();
 
-        if (b != 0 || e != s.len)
-            os  << ':' << (graph::is_pos(v) ? b : s.len-e)
-                << ':' << (graph::is_pos(v) ? e : s.len-b);
+        if (b != 0 || e != s.len) {
+            os << ':' << (graph::is_pos(v) ? b : s.len-e);
+            if (b != e)
+                os << ':' << (graph::is_pos(v) ? e : s.len-b);
+        }
 
             // append orientation of v
 

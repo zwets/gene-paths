@@ -83,13 +83,13 @@ paths::write_route(std::ostream& os, const path_arc& p) const
         const path_arc& pp = path_arcs.at(p.pre_ix);
         write_route(os, pp);
 
-            // append the seg name and ori of final ride
+            // append the seg name of final ride on v
 
         const std::uint64_t v = p.src_v();
         const seg& s = g.get_seg(graph::vtx_seg(v));
 
         if (pp.pre_ix) os << ' ';
-        os << s.name << (graph::is_pos(v) ? '+' : '-');
+        os << s.name;
 
             // append section unless v was traversed all the way
 
@@ -98,6 +98,10 @@ paths::write_route(std::ostream& os, const path_arc& p) const
         if (b != 0 || e != s.len)
             os  << ':' << (graph::is_pos(v) ? b : s.len-e)
                 << ':' << (graph::is_pos(v) ? e : s.len-b);
+
+            // append orientation of v
+
+        os << (graph::is_pos(v) ? '+' : '-');
     }
 
     return os;

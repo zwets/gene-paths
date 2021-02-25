@@ -34,7 +34,8 @@ dijkstra::restart(const arc* start)
     ps.clear();
     ds.clear();
     vs.clear();
-    found = 0;
+    found_pix = 0;
+    found_len = 0;
 
     // set up ds to have all w_lw (destinations), initialising them
     // with infinite length and a null path reference.
@@ -74,24 +75,72 @@ dijkstra::pop_visit()
     dnode& d = top->second;
 #ifndef NDEBUG
     if (d.is_visited())
-        raise_error("dijkstra: visitable dnode already visited (programmer error)");
+        raise_error("programmer error: dijkstra: visitable dnode already visited");
     if (!d.p_ref)
-        raise_error("dijkstra: visitable dnode without a p_ref (programmer error)");
+        raise_error("programmer error: dijkstra: visitable dnode without a p_ref");
     if (top->first != ps.path_arcs.at(d.p_ref).p_arc->w_lw)
-        raise_error("dijkstra: visitable dnode indexed at wrong w_lw (programmer error)");
+        raise_error("programmer error: dijkstra: visitable dnode indexed at wrong w_lw");
 #endif
     vs.erase(top);
     return d;
 }
 
 
+void
+dijkstra::furthest_path(const arc* start)
+{
+        // find all paths from start
+
+    find_paths(start);
+
+        // locate the longest using the ds array
+
+    std::size_t max_len = 0;
+    dmap_t::const_iterator max_it = ds.cbegin();
+
+    for (dmap_t::const_iterator it = ds.cbegin(); it != ds.cend(); ++it) {
+        if (it->second.is_visited() && it->second.len > max_len) {
+            max_len = it->second.len;
+            max_it = it;
+        }
+    }
+        // store its path_ix and length in the found fields
+
+    found_pix = max_it->second.p_ix();
+    found_len = max_len;
+    verbose_emit("found furthest path %lu with length %lu", found_pix, found_len);
+}
+
+
+/*
+
+void
+dijkstra::furthest_path()
+{
+    const arc* max_arc = &*g.arcs.cbegin();
+    size_t max_len = 0;
+
+    for (auto ait = g.arcs.cbegin(); ait != g.arcs.cend(); ++ait) {
+
+        furthest_path(&*ait);
+
+        if (found_len > max_len) { 
+            max_len = found_len;
+            max_arc = &*ait;
+        }
+    }
+
+    furthest_path(max_arc);
+}
+*/
+
+
 bool
 dijkstra::find_paths(const arc* start, const arc* end)
 {
     restart(start);
-    found = 0;
 
-    while (!found && !vs.empty()) {
+    while (!found_pix && !vs.empty()) {
 
         // pick the next node to visit
         dnode& vn = pop_visit();    // has .len and .p_ref
@@ -139,7 +188,7 @@ dijkstra::find_paths(const arc* start, const arc* end)
             if (cur_len + add_len < dn.len) {
 #ifndef NDEBUG
                 if (dn.is_visited())
-                    raise_error("dijkstra: visited node found with shorter path (programmer error)");
+                    raise_error("programmer error: dijkstra: visited node with shorter path found");
 #endif
                 // if we haven't seen this destination yet
                 if (!dn.p_ref) {
@@ -177,16 +226,17 @@ dijkstra::find_paths(const arc* start, const arc* end)
 
         // check if we are done, i.e. the vn took the end arc
         if (end && cur_pa.p_arc == end) {
-            found = vn.p_ix();
-            verbose_emit("shortest path of length %lu found (index %lu)", vn.len, found);
+            found_pix = vn.p_ix();
+            found_len = vn.len;
+            verbose_emit("shortest path found with length %lu (index %lu)", found_len, found_pix);
         }
 
     } // end while !found and !vs.empty()
 
     verbose_emit("done exploring %lu (potential) paths", ps.path_arcs.size());
 
-    // return true if we found path or not end was specified (find all)
-    return !end || found;
+    // return true if we found path or no end was specified (find all)
+    return !end || found_pix;
 }
 
 

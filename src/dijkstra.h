@@ -33,32 +33,49 @@ struct dijkstra
 {
     const graph& g;
     paths ps;
-    std::size_t found;  // holds the index into ps when path is found
+    std::size_t found_pix;  // holds the index into ps when path is found
+    std::size_t found_len;  // holds the length of the path that was found
 
     dijkstra(const graph& gr)
-        : g(gr), ps(g), found(0) { restart(); }
+        : g(gr), ps(g) { restart(); }
 
         // finder functions
 
-    inline void all_paths(const arc* start) { find_paths(start); }
+    // shortest path from start to end arc, false if no path, sets found to its index
     inline bool shortest_path(const arc* start, const arc* end) { return find_paths(start, end); }
 
-        // convenience retrieval of route, sequence and length of a/the found path
+    // find the shortest paths from start to every destination in the graph, put their indices in ps
+    inline void shortest_paths(const arc* start) { find_paths(start); }  // to every destination
 
-    std::size_t length(std::size_t path_ix = std::size_t(-1)) const
-        { return ps.length(ps.path_arcs.at(path_ix == std::size_t(-1) ? found : path_ix)); }
+    // find the shortest path to the destination arc that is furthest from start
+    // NOTE: we do not currently detect or flag circular paths
+    void furthest_path(const arc* start);
 
-    std::string route(std::size_t path_ix = std::size_t(-1)) const
-        { return ps.route(ps.path_arcs.at(path_ix == std::size_t(-1) ? found : path_ix)); }
+//  // find the shortest path between the two arcs that are furthest apart, by iterating
+//  // (NON-OPTIMISED!) over all possible start arcs
+//  void furthest_path();
 
-    std::ostream& write_route(std::ostream& os, std::size_t path_ix = std::size_t(-1)) const
-        { return ps.write_route(os, ps.path_arcs.at(path_ix == std::size_t(-1) ? found : path_ix)); }
+        // retrieval of route, sequence and length of a path
 
-    std::string sequence(std::size_t path_ix = std::size_t(-1)) const
-        { return ps.sequence(ps.path_arcs.at(path_ix == std::size_t(-1) ? found : path_ix)); }
+    // return the length of the path with index p_ix, or the found path by default
+    std::size_t length(std::size_t p_ix = std::size_t(-1)) const
+    { return p_ix == std::size_t(-1) ? found_len : ps.length(ps.path_arcs.at(p_ix)); }
 
-    std::ostream& write_sequence(std::ostream& os, std::size_t path_ix = std::size_t(-1)) const
-        { return ps.write_seq(os, ps.path_arcs.at(path_ix == std::size_t(-1) ? found : path_ix)); }
+    // return the route string of the path with index p_ix, or of the found path by default
+    std::string route(std::size_t p_ix = std::size_t(-1)) const
+    { return ps.route(ps.path_arcs.at(p_ix == std::size_t(-1) ? found_pix : p_ix)); }
+
+    // write the route string of the path with index p_ix, or the found path by default, to os
+    std::ostream& write_route(std::ostream& os, std::size_t p_ix = std::size_t(-1)) const
+    { return ps.write_route(os, ps.path_arcs.at(p_ix == std::size_t(-1) ? found_pix : p_ix)); }
+
+    // return the sequence of the path with index p_ix, or of the found path by default
+    std::string sequence(std::size_t p_ix = std::size_t(-1)) const
+    { return ps.sequence(ps.path_arcs.at(p_ix == std::size_t(-1) ? found_pix : p_ix)); }
+
+    // write the sequence of the path with index p_ix, or the found path by default, to os
+    std::ostream& write_sequence(std::ostream& os, std::size_t p_ix = std::size_t(-1)) const
+    { return ps.write_seq(os, ps.path_arcs.at(p_ix == std::size_t(-1) ? found_pix : p_ix)); }
 
 #ifdef NDEBUG
     private:    // hide implementation detail as private unless debugging

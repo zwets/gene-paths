@@ -29,6 +29,8 @@ static seg SEG1 = { 10, "SEG1", "CATTAGTACT" };
 
 static graph make_graph()
 {
+//  gene_paths::set_verbose(true);
+
     graph g;
     g.segs.reserve(1 + 3 /* two targets and a terminator */);
     g.arcs.reserve(2 * 4 /* four for each target */);
@@ -70,7 +72,7 @@ TEST(targets_test, start_pos_full) {
 TEST(targets_test, start_pos_part) {
     graph g = make_graph();
     target t(g);
-    t.set("SEG1+:2:5", target::role_t::START);
+    t.set("SEG1:2:5+", target::role_t::START);
     arc a = t.get_arc();
     ASSERT_EQ(a.v_lv, 2L<<32|0);
     ASSERT_EQ(a.w_lw, 4L<<32|0);
@@ -86,7 +88,7 @@ TEST(targets_test, start_pos_part) {
 TEST(targets_test, start_pos_point) {
     graph g = make_graph();
     target t(g);
-    t.set("SEG1+:7", target::role_t::START);
+    t.set("SEG1:7+", target::role_t::START);
     arc a = t.get_arc();
     ASSERT_EQ(a.v_lv, 2L<<32|0);
     ASSERT_EQ(a.w_lw, 4L<<32|0);
@@ -119,7 +121,7 @@ TEST(targets_test, start_neg_full) {
 TEST(targets_test, start_neg_part) {
     graph g = make_graph();
     target t(g);
-    t.set("SEG1-:2:5", target::role_t::START);
+    t.set("SEG1:2:5-", target::role_t::START);
     arc a = t.get_arc();
     ASSERT_EQ(a.v_lv, 2L<<32|0);
     ASSERT_EQ(a.w_lw, 5L<<32|0);
@@ -135,7 +137,7 @@ TEST(targets_test, start_neg_part) {
 TEST(targets_test, start_neg_point) {
     graph g = make_graph();
     target t(g);
-    t.set("SEG1-:7", target::role_t::START);
+    t.set("SEG1:7-", target::role_t::START);
     arc a = t.get_arc();
     ASSERT_EQ(a.v_lv, 2L<<32|0);
     ASSERT_EQ(a.w_lw, 5L<<32|0);
@@ -168,7 +170,7 @@ TEST(targets_test, end_pos_full) {
 TEST(targets_test, end_pos_part) {
     graph g = make_graph();
     target t(g);
-    t.set("SEG1+:2:5", target::role_t::END);
+    t.set("SEG1:2:5+", target::role_t::END);
     arc a = t.get_arc();
     ASSERT_EQ(a.v_lv, 4L<<32|(5-2));
     ASSERT_EQ(a.w_lw, 2L<<32|1);
@@ -184,7 +186,7 @@ TEST(targets_test, end_pos_part) {
 TEST(targets_test, end_pos_point) {
     graph g = make_graph();
     target t(g);
-    t.set("SEG1+:7", target::role_t::END);
+    t.set("SEG1:7+", target::role_t::END);
     arc a = t.get_arc();
     ASSERT_EQ(a.v_lv, 4L<<32|(7-7));
     ASSERT_EQ(a.w_lw, 2L<<32|1);
@@ -217,7 +219,7 @@ TEST(targets_test, end_neg_full) {
 TEST(targets_test, end_neg_part) {
     graph g = make_graph();
     target t(g);
-    t.set("SEG1-:2:5", target::role_t::END);
+    t.set("SEG1:2:5-", target::role_t::END);
     arc a = t.get_arc();
     ASSERT_EQ(a.v_lv, 5L<<32|(5-2));
     ASSERT_EQ(a.w_lw, 2L<<32|1);
@@ -233,7 +235,7 @@ TEST(targets_test, end_neg_part) {
 TEST(targets_test, end_neg_point) {
     graph g = make_graph();
     target t(g);
-    t.set("SEG1-:7", target::role_t::END);
+    t.set("SEG1:7-", target::role_t::END);
     arc a = t.get_arc();
     ASSERT_EQ(a.v_lv, 5L<<32|(7-7));
     ASSERT_EQ(a.w_lw, 2L<<32|1);
@@ -251,7 +253,7 @@ TEST(targets_test, reinsert_test) {
     graph g = make_graph();
     target t(g);
 
-    t.set("SEG1+:2:6", target::role_t::START);
+    t.set("SEG1:2:6+", target::role_t::START);
     arc a = t.get_arc();
     ASSERT_EQ(a.v_lv, 2L<<32|0);
     ASSERT_EQ(a.w_lw, 4L<<32|0);
@@ -263,7 +265,7 @@ TEST(targets_test, reinsert_test) {
     ASSERT_EQ(g.arcs.at(1).w_lw, 0L<<32|6);
     ASSERT_EQ(g.segs.at(2).data, "TTAG");
 
-    t.set("SEG1-:2:6", target::role_t::END);
+    t.set("SEG1:2:6-", target::role_t::END);
     a = t.get_arc();
     ASSERT_EQ(a.v_lv, 5L<<32|(6-2));
     ASSERT_EQ(a.w_lw, 2L<<32|1);
@@ -281,8 +283,8 @@ TEST(targets_test, two_pos_tgts) {
     graph g = make_graph();
     target t1(g), t2(g);
 
-    t1.set("SEG1+:1:3", target::role_t::START);
-    t2.set("SEG1+:4:8", target::role_t::END);
+    t1.set("SEG1:1:3+", target::role_t::START);
+    t2.set("SEG1:4:8+", target::role_t::END);
 
     arc a1 = t1.get_arc();
     ASSERT_EQ(a1.v_lv, 2L<<32|0);
@@ -340,8 +342,8 @@ TEST(targets_test, two_segs_two_tgts) {
     g.add_seg({ 9,  "SEG2", "TTGTATAGT" });
 
     target t1(g), t2(g);
-    t1.set("SEG1-:4:9", target::role_t::START);
-    t2.set("SEG2+:3:8", target::role_t::END);
+    t1.set("SEG1:4:9-", target::role_t::START);
+    t2.set("SEG2:3:8+", target::role_t::END);
 
     arc a1 = t1.get_arc();
     ASSERT_EQ(a1.v_lv, 4L<<32);
@@ -365,8 +367,8 @@ TEST(targets_test, two_segs_two_tgts) {
 
         // now flip them
 
-    t1.set("SEG1-:4:9", target::role_t::END);
-    t2.set("SEG2+:3:8", target::role_t::START);
+    t1.set("SEG1:4:9-", target::role_t::END);
+    t2.set("SEG2:3:8+", target::role_t::START);
 
     a1 = t1.get_arc();
     ASSERT_EQ(a1.v_lv, 7L<<32|(9-4));

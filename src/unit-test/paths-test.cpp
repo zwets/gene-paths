@@ -62,7 +62,7 @@ TEST(paths_test, empty_path) {
 
 TEST(paths_test, path_1) {
     graph g = make_graph();
-    const arc  *a = add_start(g, "s1+:0");
+    const arc  *a = add_start(g, "s1:0+");
     paths p(g);
     std::size_t i = p.extend(0, a);
     ASSERT_EQ(p.path_arcs.size(), 2);
@@ -72,7 +72,7 @@ TEST(paths_test, path_1) {
 
 TEST(paths_test, write_empty) {
     graph g = make_graph();
-    const arc  *a = add_start(g, "s1+:0");
+    const arc  *a = add_start(g, "s1:0+");
     paths p(g);
     std::size_t i = p.extend(0, a);
     ASSERT_EQ(p.path_arcs.size(), 2);
@@ -88,7 +88,7 @@ TEST(paths_test, write_empty) {
 
 TEST(paths_test, write_1) {
     graph g = make_graph();
-    const arc* a = add_start(g, "s3+:2"); // s3+ CA|TTA
+    const arc* a = add_start(g, "s3:2+"); // s3+ CA|TTA
     paths p(g);
     std::size_t i = p.extend(0, a);
     ASSERT_EQ(i, i);
@@ -104,13 +104,13 @@ TEST(paths_test, write_1) {
     ASSERT_EQ(pa.p_arc, &*arc_it);
     ASSERT_EQ(p.ride_len(pa), 2);
     ASSERT_EQ(p.length(pa), 2);
-    ASSERT_EQ(p.route(pa), "s3+:2:4");
+    ASSERT_EQ(p.route(pa), "s3:2:4+");
     ASSERT_EQ(p.sequence(pa), "TT");
 }
 
 TEST(paths_test, write_2) {
     graph g = make_graph();
-    const arc* a = add_start(g, "s3+:1"); // s3+ C|ATTA
+    const arc* a = add_start(g, "s3:1+"); // s3+ C|ATTA
     paths p = paths(g);
     std::size_t i = p.extend(0, a);
 
@@ -127,7 +127,7 @@ TEST(paths_test, write_2) {
     ASSERT_EQ(pa->p_arc, &*arc_it);
     ASSERT_EQ(p.ride_len(*pa), 3);
     ASSERT_EQ(p.length(*pa), 3);
-    ASSERT_EQ(p.route(*pa), "s3+:1:4");
+    ASSERT_EQ(p.route(*pa), "s3:1:4+");
     ASSERT_EQ(p.sequence(*pa), "ATT");
 
     // find first arc away from 1+, is return arc to where we came from
@@ -145,7 +145,7 @@ TEST(paths_test, write_2) {
     pa = &p.path_arcs.at(i);
     ASSERT_EQ(p.ride_len(*pa), 1);
     ASSERT_EQ(p.length(*pa), 4);
-    ASSERT_EQ(p.route(*pa), "s3+:1:4 s1+:0:1");
+    ASSERT_EQ(p.route(*pa), "s3:1:4+ s1:0:1+");
     ASSERT_EQ(p.sequence(*pa), "ATTA");
 
     // find first arc away from 2- is return arc to where we came from
@@ -162,7 +162,7 @@ TEST(paths_test, write_2) {
     pa = &p.path_arcs.at(i);
     ASSERT_EQ(p.ride_len(*pa), 6);
     ASSERT_EQ(p.length(*pa), 10);
-    ASSERT_EQ(p.route(*pa), "s3+:1:4 s1+:0:1 s2-:3:9");
+    ASSERT_EQ(p.route(*pa), "s3:1:4+ s1:0:1+ s2:3:9-");
     ASSERT_EQ(p.sequence(*pa), "ATTACGTATG");
 
     // find first arc away from 4+, is return arc to where we came from
@@ -177,7 +177,7 @@ TEST(paths_test, write_2) {
     pa = &p.path_arcs.at(i);
     ASSERT_EQ(p.ride_len(*pa), 3);
     ASSERT_EQ(p.length(*pa), 13);
-    ASSERT_EQ(p.route(*pa), "s3+:1:4 s1+:0:1 s2-:3:9 s4+:0:3");
+    ASSERT_EQ(p.route(*pa), "s3:1:4+ s1:0:1+ s2:3:9- s4:0:3+");
     ASSERT_EQ(p.sequence(*pa), "ATTACGTATGCTA");
 }
 

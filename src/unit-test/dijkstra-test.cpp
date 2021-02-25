@@ -28,15 +28,18 @@ namespace {
 
 static seg SEG1 = { 3, "s1", "CAT" };
 static seg SEG2 = { 4, "s2", "TAGT" };
-static std::string FROM = "s1+:0:1";
-static std::string TO = "s2+:2:3";
+static std::string FROM = "s1:0:1+";
+static std::string TO = "s2:2:3+";
 
 static graph simple_graph() {
     graph g;
-    g.segs.reserve(4);
-    g.add_seg(SEG1);
-    g.add_seg(SEG2);
-    g.arcs.reserve(1*8 + 2*2);
+    g.segs.reserve(2+3);  // 2 segs plus 2 targets and the TERminal
+    g.add_seg(SEG1);  // seg_ix 0
+    g.add_seg(SEG2);  // seg_ix 1
+    // TER            // seg_ix 2
+    // TGT1           // seg_ix 3
+    // TGT2           // seg_ix 4
+    g.arcs.reserve(1*8 + 4);  // 1 edge, 4 arcs for targets
     g.add_edge("s1+", 2, 3, "s2+", 0, 1);
     return g;
 }
@@ -61,23 +64,24 @@ TEST(dijkstra_test, make_graph) {
 TEST(dijkstra_test, add_targets) {
     graph g = simple_graph();
     parc_pair t = add_targets(g);
-    ASSERT_EQ(g.segs.size(), 4);
-    ASSERT_EQ(g.arcs.size(), 12);
-    ASSERT_EQ(t.first->v_lv, 0L);
-    ASSERT_EQ(t.first->w_lw, 2L<<33);
-    ASSERT_EQ(t.second->v_lv, 3L<<33|1);
-    ASSERT_EQ(t.second->w_lw, 1L<<33|3);
+    ASSERT_EQ(g.segs.size(), 2+3);
+    ASSERT_EQ(g.arcs.size(), 1*8+4);
+    ASSERT_EQ(t.first->v_lv, ((2L<<1)<<32)|0);  // TER+:0
+    ASSERT_EQ(t.first->w_lw, ((3L<<1)<<32)|0);  // to TGT1+:0
+    ASSERT_EQ(t.second->v_lv,((4L<<1)<<32)|1);  // TGT2+:$
+    ASSERT_EQ(t.second->w_lw,((2L<<1)<<32)|1);  // to TER+:1
 }
 
-TEST(dijkstra_test, dijkstra_con) {
+TEST(dijkstra_test, dijkstra_construct) {
     graph g = simple_graph();
     add_targets(g);
 
     dijkstra dk(g);
-    ASSERT_EQ(dk.ps.path_arcs.size(), 1);
-    ASSERT_EQ(dk.ds.size(), 12);
-    ASSERT_EQ(dk.vs.size(), 0);
-    ASSERT_FALSE(dk.found);
+    ASSERT_EQ(dk.ps.path_arcs.size(), 1);       // just the null path
+    ASSERT_EQ(dk.ds.size(), 12);                // 8 for the edge, 4 for targets
+    ASSERT_EQ(dk.vs.size(), 0);                 // nothing visitable
+    ASSERT_FALSE(dk.found_pix);                 // nothing found
+    ASSERT_EQ(dk.found_len, 0);
 }
 
 TEST(dijkstra_test, dijkstra_restart) {
@@ -85,42 +89,96 @@ TEST(dijkstra_test, dijkstra_restart) {
     parc_pair t = add_targets(g);
 
     dijkstra dk(g);
-    dk.restart(t.first);
-    ASSERT_EQ(dk.ps.path_arcs.size(), 2);
-    ASSERT_EQ(dk.ds.size(), 12);
-    ASSERT_EQ(dk.vs.size(), 1);
-    ASSERT_FALSE(dk.found);
+    dk.restart(t.first);                        // restart with given start arc
+    ASSERT_EQ(dk.ps.path_arcs.size(), 2);       // null and the start arc
+    ASSERT_EQ(dk.ds.size(), 12);                // same as before
+    ASSERT_EQ(dk.vs.size(), 1);                 // start node is single visitable
+    ASSERT_FALSE(dk.found_pix);
+    ASSERT_EQ(dk.found_len, 0);
 }
 
 TEST(dijkstra_test, pop_visit) {
     graph g = simple_graph();
     parc_pair t = add_targets(g);
+
     dijkstra dk(g);
     dk.restart(t.first);
+    ASSERT_EQ(dk.vs.size(), 1);                 // start node is single visitable
 
     dijkstra::dnode& d = dk.pop_visit();
-    ASSERT_EQ(dk.vs.size(), 0);
-    ASSERT_EQ(d.len, 0);
-    ASSERT_EQ(d.p_ref, 1);
-    ASSERT_FALSE(d.is_visited());
+    ASSERT_EQ(dk.vs.size(), 0);                 // visitable was removed
+    ASSERT_EQ(d.len, 0);                        // path to initial visit node is 0 length
+    ASSERT_EQ(d.p_ref, 1);                      // its path index is 1
+    ASSERT_FALSE(d.is_visited());               // and it is not yet marked visited
 }
 
-TEST(dijkstra_test, all_paths) {
+TEST(dijkstra_test, did_nay_run) {
     graph g = simple_graph();
-    parc_pair t = add_targets(g);
+    add_targets(g);
     dijkstra dk(g);
-    dk.all_paths(t.first);
+
+    ASSERT_EQ(dk.found_len, 0);
+    ASSERT_EQ(dk.length(), 0);                  // we don't want it to crash when
+    ASSERT_EQ(dk.route(), "");                  // no paths have yet been searched
+    ASSERT_EQ(dk.sequence(), "");
 }
 
 TEST(dijkstra_test, shortest_path) {
     graph g = simple_graph();
     parc_pair t = add_targets(g);
     dijkstra dk(g);
+
     ASSERT_TRUE(dk.shortest_path(t.first, t.second));
-    ASSERT_EQ(dk.route(), "s1+:0:1+ s1+:1:2 s2+:0:2 s2+:2:3+");
+    ASSERT_TRUE(dk.found_pix);
+    ASSERT_EQ(dk.found_len, 5);
+    ASSERT_EQ(dk.length(), 5);
+    ASSERT_EQ(dk.route(), "s1:0:1+ s1:1:2+ s2:0:2+ s2:2:3+");
     ASSERT_EQ(dk.sequence(), "CATAG");
 }
 
+TEST(dijkstra_test, shortest_paths) {
+    graph g = simple_graph();
+    parc_pair t = add_targets(g);
+    dijkstra dk(g);
+
+    dk.shortest_paths(t.first);
+    ASSERT_FALSE(dk.found_pix);                 // always unset when searching all paths
+    ASSERT_EQ(dk.found_len, 0);
+    ASSERT_EQ(dk.ps.path_arcs.size(), 4+4);     // half of the 8 from the edge, plus the target ones
+    size_t last = dk.ps.path_arcs.size() - 1;
+    ASSERT_EQ(dk.length(last), 5);
+    ASSERT_EQ(dk.route(last), "s1:0:1+ s1:1:2+ s2:0:2+ s2:2:3+");
+    ASSERT_EQ(dk.sequence(last), "CATAG");
+}
+
+TEST(dijkstra_test, furthest_path_from) {
+    graph g = simple_graph();
+    parc_pair t = add_targets(g);
+    dijkstra dk(g);
+
+    dk.furthest_path(t.first);
+    ASSERT_TRUE(dk.found_pix);
+    ASSERT_EQ(dk.found_len, 5);
+    ASSERT_EQ(dk.length(), 5);
+    ASSERT_EQ(dk.route(), "s1:0:1+ s1:1:2+ s2:0:2+ s2:2:3+");
+    ASSERT_EQ(dk.sequence(), "CATAG");
+}
+
+/*
+TEST(dijkstra_test, furthest_path) {
+    gene_paths::set_verbose(true);
+    graph g = simple_graph();
+    add_targets(g);
+    dijkstra dk(g);
+
+    dk.furthest_path();
+    ASSERT_TRUE(dk.found_pix);
+    ASSERT_EQ(dk.found_len, 5);
+    ASSERT_EQ(dk.length(), 5);
+    ASSERT_EQ(dk.route(), "s1:0:1+ s1:1:2+ s2:0:2+ s2:2:3+");
+    ASSERT_EQ(dk.sequence(), "CATAG");
+}
+*/
 
 } // namespace
   // vim: sts=4:sw=4:ai:si:et

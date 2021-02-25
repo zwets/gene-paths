@@ -16,10 +16,10 @@ _Determine gene order and orientation in assemblies._
 
 ## Usage
 
-> NOTE: gene-paths is evolving and still rough around the edges.
+> NOTE: gene-paths is still being built and rough around the edges.
 
 * `gene-paths --help`
-* `gene-paths assembly.gfa ctg1+ ctg2+
+* `gene-paths assembly.gfa ctg1+ ctg2+`
 
 
 ## Background

@@ -33,37 +33,38 @@ target::set(const std::string& ref, role_t role)
 {
         // parse the reference
 
-    std::regex re("([^[:space:]]+)(\\+|-)(:([[:digit:]]+)(:([[:digit:]]+))?)?");
+    std::regex re("([^:[:space:]]+)(:([[:digit:]]+)(:([[:digit:]]+))?)?(\\+|-)");
     std::smatch m;
 
     if (!std::regex_match(ref, m, re))
         raise_error("invalid target syntax: %s", ref.c_str());
 
     std::string ctg = m[1].str();
-    bool neg = m[2].str().at(0) == '-';
 
-    std::string _b = m[4].str();
+    std::string _b = m[3].str();
     std::size_t beg = _b.empty() ? std::uint64_t(-1) : std::stoul(_b);
 
-    std::string _e = m[6].str();
+    std::string _e = m[5].str();
     std::size_t end = _e.empty() ? std::uint64_t(-1) : std::stoul(_e);
 
-    verbose_emit("parsed target: %s%c:%ld:%ld", ctg.c_str(), neg ? '-' : '+', beg, end);
+    bool neg = m[6].str().at(0) == '-';
 
-        // locate or create the terminal dummy
+    verbose_emit("parsed target: %s:%ld:%ld%c", ctg.c_str(), beg, end, neg ? '-' : '+');
 
-    static const std::string T_NAME("__T__");
+        // locate or create the TERminal dummy
 
-    std::size_t ter_ix = g.find_seg_ix(T_NAME);
+    static const std::string TER("__T__");
+
+    std::size_t ter_ix = g.find_seg_ix(TER);
 
     if (ter_ix == std::uint64_t(-1)) {
-        g.add_seg( { 1, T_NAME, "X" } );
-        ter_ix = g.get_seg_ix(T_NAME);
+        g.add_seg( { 1, TER, "X" } );
+        ter_ix = g.get_seg_ix(TER);
 
-        verbose_emit("added terminal segment %lu: %s", ter_ix, T_NAME.c_str());
+        verbose_emit("added terminal segment %lu: %s", ter_ix, TER.c_str());
     }
     else {
-        verbose_emit("terminal segment %lu: %s", ter_ix, T_NAME.c_str());
+        verbose_emit("terminal segment %lu: %s", ter_ix, TER.c_str());
     }
 
         // locate the referenced contig in graph

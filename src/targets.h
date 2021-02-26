@@ -49,12 +49,26 @@ namespace gfa {
 //
 // We add two dummy zero-length segments that are the "terminals" for the
 // the path search.  The path starts with arc s_i and ends with e_o.
-// In fact we optimise and do with a single dummy of length 1, with s_i
-// leaving it at 0, and e_o arriving at 1 (they can't find each other).
+//
+// In fact we can optimise and do with a single "terminal" of length 1,
+// with s_i leaving it at 0, and e_o arriving at 1 (to prevent traversal)
+// We refer to this terminal segment as "ter" below.
+//
+// We can optimise further by noting that when the target has 0 length,
+// then we just need the ter can be omitted altogether, and we just need
+// the ter:
+//
+//       ter seg     TER               ter seg          TER
+//       arc s_i     v                 arc e_o            ^
+//        contig  ---i---------->       contig  ----------o--->
+//
+// When the graph has only links (non-overlapping tail-to-head edges),
+// as is the case with Unicycler, then any path to the end (or from the
+// start) of a contig must traverse the whole contig anyway.
 //
 struct target
 {
-    enum role_t { NONE, START, END };
+    enum role_t { START, END };
 
     // construct a target on graph g
     target(graph& gr)

@@ -45,7 +45,7 @@ target::set(const std::string& ref, role_t role)
     std::size_t beg = _b.empty() ? std::uint64_t(-1) : std::stoul(_b);
 
     std::string _e = m[5].str();
-    std::size_t end = _e.empty() ? std::uint64_t(-1) : std::stoul(_e);
+    std::size_t end = _e.empty() ? beg : std::stoul(_e);
 
     bool neg = m[6].str().at(0) == '-';
 
@@ -75,33 +75,40 @@ target::set(const std::string& ref, role_t role)
 
     const seg& ref_seg = g.get_seg(ref_ix);
     if (beg == std::uint64_t(-1))
-        { beg = 0; end = ref_seg.len; }
+        beg = end = role == START ? 0 : ref_seg.len;
     else if (beg > ref_seg.len)
         raise_error("start pos %lu exceeds segment length %lu for target: %s", beg, ref_seg.len, ctg.c_str());
-    else if (end == std::uint64_t(-1))
-        end = beg;
     else if (beg > end)
         raise_error("begin position beyond end position on target: %s", ctg.c_str());
 
         // locate or create the target segment
 
-    std::stringstream ss;
-    ss << ctg << ':' << beg << ':' << end;
-    std::string seg_name = ss.str();
+    std::uint64_t seg_ix = std::uint64_t(-1);
 
-    std::uint64_t seg_ix = g.find_seg_ix(seg_name);
-    if (seg_ix == std::uint64_t(-1)) {
+    if (beg != end) { // see targets.h, need need for one if we are 0-length ref
 
         std::stringstream ss;
-        ref_seg.write_seq(ss, false, beg, end);     // NOTE: we store the + segment
+        ss << ctg << ':' << beg << ':' << end;
+        std::string seg_name = ss.str();
 
-        g.add_seg({ end-beg, seg_name, ss.str() });
-        seg_ix = g.get_seg_ix(seg_name);
+        seg_ix= g.find_seg_ix(seg_name);
+        if (seg_ix == std::uint64_t(-1)) {
 
-        verbose_emit("added target segment %lu: %s", seg_ix, seg_name.c_str());
+            std::stringstream ss;
+            ref_seg.write_seq(ss, false, beg, end);  // Note: we store the + segment
+
+            g.add_seg({ end-beg, seg_name, ss.str() });
+            seg_ix = g.get_seg_ix(seg_name);
+
+            verbose_emit("added target segment %lu: %s", seg_ix, seg_name.c_str());
+        }
+        else {
+            verbose_emit("found target segment %lu: %s", seg_ix, seg_name.c_str());
+        }
     }
     else {
-        verbose_emit("found target segment %lu: %s", seg_ix, seg_name.c_str());
+        seg_ix = ref_ix;
+        verbose_emit("not adding target segment, is the contig segment %lu: %s", seg_ix, ctg.c_str());
     }
 
         // remove existing arcs
@@ -116,49 +123,56 @@ target::set(const std::string& ref, role_t role)
 
         // create the new ctg_arc
 
-    if (g.arcs.size() + 2 > g.arcs.capacity())
-        raise_error("programmer error: arcs vector exhausted (cap %lu)", g.arcs.size());
+    std::uint64_t v = 0L, w = 0L, lv = 0L, lw = 0L;
 
-    std::uint64_t v, w, lv, lw;
+    if (seg_ix != ref_ix) {
 
-    if (role == START) { // from seg_$ to ctg_end
-        v = neg ? graph::seg_vtx_n(seg_ix) : graph::seg_vtx_p(seg_ix);
-        w = neg ? graph::seg_vtx_n(ref_ix) : graph::seg_vtx_p(ref_ix);
-        lv = end - beg;
-        lw = neg ? ref_seg.len - beg : end;
-    }
-    else if (role == END) { // from ctg_beg to seg_0
-        v = neg ? graph::seg_vtx_n(ref_ix) : graph::seg_vtx_p(ref_ix);
-        w = neg ? graph::seg_vtx_n(seg_ix) : graph::seg_vtx_p(seg_ix);
-        lv = neg ? ref_seg.len - end : beg;
-        lw = 0;
+        if (g.arcs.size() == g.arcs.capacity())
+            raise_error("programmer error: arcs vector exhausted (cap %lu)", g.arcs.size());
+
+        if (role == START) { // from seg_$ to ctg_end
+            v = neg ? graph::seg_vtx_n(seg_ix) : graph::seg_vtx_p(seg_ix);
+            w = neg ? graph::seg_vtx_n(ref_ix) : graph::seg_vtx_p(ref_ix);
+            lv = end - beg;
+            lw = neg ? ref_seg.len - beg : end;
+        }
+        else if (role == END) { // from ctg_beg to seg_0
+            v = neg ? graph::seg_vtx_n(ref_ix) : graph::seg_vtx_p(ref_ix);
+            w = neg ? graph::seg_vtx_n(seg_ix) : graph::seg_vtx_p(seg_ix);
+            lv = neg ? ref_seg.len - end : beg;
+            lw = 0;
+        }
+        else {
+            raise_error("programmer error: target role not START or END");
+        }
+
+        ctg_arc = { graph::v_lv(v, lv), graph::v_lv(w, lw) };
+        g.add_arc(ctg_arc);
+
+        verbose_emit("added ctg arc %lu: %lu_%lu to %lu_%lu", g.arcs.size(), v, lv, w, lw);
     }
     else {
-        v = w = lv = lw = 0L; // silence "uninitialised variable" warning
-        raise_error("programmer error: target role not START or END");
+        ctg_arc = NO_ARC;
     }
-
-    ctg_arc = { graph::v_lv(v, lv), graph::v_lv(w, lw) };
-    g.add_arc(ctg_arc);
-
-    verbose_emit("added ctg arc %lu: %lu_%lu to %lu_%lu", g.arcs.size(), v, lv, w, lw);
 
         // create the new ter_arc
 
-    if (role == START) { // from ter_0 to seg_0
+    if (g.arcs.size() == g.arcs.capacity())
+        raise_error("programmer error: arcs vector exhausted (cap %lu)", g.arcs.size());
+
+    if (role == START) { // from ter_0 to seg_0 or ctg_b
         v = graph::seg_vtx_p(ter_ix);
         w = neg ? graph::seg_vtx_n(seg_ix) : graph::seg_vtx_p(seg_ix);
         lv = 0;
-        lw = 0;
+        lw = seg_ix == ref_ix ? neg ? ref_seg.len - beg : end : 0;
     }
-    else if (role == END) { // from seg_$ to ter_1
+    else if (role == END) { // from seg_$ or ctg_e to ter_1
         v = neg ? graph::seg_vtx_n(seg_ix) : graph::seg_vtx_p(seg_ix);
         w = graph::seg_vtx_p(ter_ix);
-        lv = end - beg;
+        lv = seg_ix == ref_ix ? neg ? ref_seg.len - end : beg : end - beg;
         lw = 1;
     }
     else {
-        v = w = lv = lw = 0L; // silence "uninitialised variable" warning
         raise_error("programmer error: target role not START or END");
     }
 

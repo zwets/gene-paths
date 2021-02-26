@@ -49,7 +49,8 @@ static graph make_graph() {
 static const arc* add_start(graph& g, std::string ref) {
     target t(g);
     t.set(ref, target::role_t::START);
-    return &*g.arcs_from_v_lv(t.get_arc().w_lw).first;
+    std::uint64_t ter_vlv = graph::seg_vtx_p(g.get_seg_ix("__T__"))<<32;
+    return &*g.arcs_from_v_lv(ter_vlv).first;
 }
 
 TEST(paths_test, empty_path) {
@@ -91,7 +92,7 @@ TEST(paths_test, write_1) {
     const arc* a = add_start(g, "s3:2+"); // s3+ CA|TTA
     paths p(g);
     std::size_t i = p.extend(0, a);
-    ASSERT_EQ(i, i);
+    ASSERT_EQ(i, 1);
 
     std::vector<arc>::const_iterator arc_it = g.arcs_from_v_lv(graph::v_lv(graph::seg_vtx_p(2), 2)).first;
     ASSERT_EQ(arc_it->v_lv, 2L<<33|4);  // s3+ CATT|A

@@ -42,10 +42,10 @@ static const std::string USAGE(
 "\n"
 "  FROM and TO are specified as SEG[:BEG[:END]]][+-], where SEG is the\n"
 "  contig identifier, BEG and END the optional start and end positions\n"
-"  of the target region on SEG, and + or - the (non-optional) strand.\n"
+"  of the target region on SEG, and + or - the  strand.\n"
 "\n"
 "  When END is omitted, BEG specifies a zero-length position.  When BEG\n"
-"  and END are both omitted they default to the start and end of SEG.\n"
+"  and END are omitted then this means the start of FROM or end of TO.\n"
 "\n"
 "  OPTIONS\n"
 "   -f, --fasta FILE  read sequences for GFA_FILE from FILE\n"
@@ -59,10 +59,10 @@ static const std::string USAGE(
 "  STRAND and POSITION are interpreted as in GFA2:\n"
 "  - We call the sequence data in GFA_FILE (or FASTA FILE) the + strand.\n"
 "    The - strand is its reverse complement.\n"
-"  - Positions are inbetween bases, starting at 0 left of the sequence,\n"
+"  - Positions are in between bases, starting at 0 left of the sequence,\n"
 "    and ending at L at its right, where L is the sequence length.\n"
 "  - Positions are interpreted on the segment BEFORE it is oriented, so\n"
-"    e.g. C-:0:5 refers to the FINAL 5 bases on C's reverse complement.\n"
+"    pos 0 is the upstream end for both positive and negative edges.\n"
 "\n");
 
 static void usage_exit()

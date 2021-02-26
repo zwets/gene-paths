@@ -43,14 +43,14 @@ static graph make_graph()
 
 // arcs will be
 //
-// 0_b   to 4_0      SEG1+ to TGT1+ [END]
-// 1_L-e to 5_0      SEG1- to TGT1- [END]
-// 2_0   to 4_0      TER+  to TGT1+ [START]
-// 2_0   to 5_0      TER+  to TGT1- [START]
-// 4_e-b to 0_e      TGT1+ to SEG1+ [START]
-// 4_e-b to 2_1      TGT1+ to TER+  [END]
-// 5_e-b to 1_L-b    TGT1- to SEG1- [START]
-// 5_e-b to 2_1      TGT1- to TER+  [END]
+// 0_b   to 4_0/2_1   SEG1+ to TGT1+/TER+ [END]
+// 1_L-e to 5_0/2_1   SEG1- to TGT1-/TER+ [END]
+// 2_0   to 4_0/0_0   TER+  to TGT1+/SEG1+ [START]
+// 2_0   to 5_0/1_L-b TER+  to TGT1-/SEG1- [START]
+// 4_e-b to 0_e       TGT1+ to SEG1+ [START]
+// 4_e-b to 2_1       TGT1+ to TER+  [END]
+// 5_e-b to 1_L-b     TGT1- to SEG1- [START]
+// 5_e-b to 2_1       TGT1- to TER+  [END]
 
 
 TEST(targets_test, start_pos_full) {
@@ -59,14 +59,10 @@ TEST(targets_test, start_pos_full) {
     t.set("SEG1+", target::role_t::START);
     arc a = t.get_arc();
     ASSERT_EQ(a.v_lv, 2L<<32|0);
-    ASSERT_EQ(a.w_lw, 4L<<32|0);
-    // 2_0   to 4_0      TER+  to TGT1+ [START]
+    ASSERT_EQ(a.w_lw, 0L<<32|0);
+    // 2_0   to 0_0      TER+  to SEG1+ [START]
     ASSERT_EQ(g.arcs.at(0).v_lv, 2L<<32|0);
-    ASSERT_EQ(g.arcs.at(0).w_lw, 4L<<32|0);
-    // 4_e-b to 0_e      TGT1+ to SEG1+ [START]
-    ASSERT_EQ(g.arcs.at(1).v_lv, 4L<<32|10);
-    ASSERT_EQ(g.arcs.at(1).w_lw, 0L<<32|10);
-    ASSERT_EQ(g.segs.at(2).data, SEG1.data);
+    ASSERT_EQ(g.arcs.at(0).w_lw, 0L<<32|0);
 }
 
 TEST(targets_test, start_pos_part) {
@@ -91,14 +87,10 @@ TEST(targets_test, start_pos_point) {
     t.set("SEG1:7+", target::role_t::START);
     arc a = t.get_arc();
     ASSERT_EQ(a.v_lv, 2L<<32|0);
-    ASSERT_EQ(a.w_lw, 4L<<32|0);
+    ASSERT_EQ(a.w_lw, 0L<<32|7);
     // 2_0   to 4_0      TER+  to TGT1+ [START]
     ASSERT_EQ(g.arcs.at(0).v_lv, 2L<<32|0);
-    ASSERT_EQ(g.arcs.at(0).w_lw, 4L<<32|0);
-    // 4_e-b to 0_e      TGT1+ to SEG1+ [START]
-    ASSERT_EQ(g.arcs.at(1).v_lv, 4L<<32|0);
-    ASSERT_EQ(g.arcs.at(1).w_lw, 0L<<32|7);
-    ASSERT_EQ(g.segs.at(2).data, "");
+    ASSERT_EQ(g.arcs.at(0).w_lw, 0L<<32|7);
 }
 
 
@@ -108,14 +100,10 @@ TEST(targets_test, start_neg_full) {
     t.set("SEG1-", target::role_t::START);
     arc a = t.get_arc();
     ASSERT_EQ(a.v_lv, 2L<<32|0);
-    ASSERT_EQ(a.w_lw, 5L<<32|0);
-    // 2_0   to 5_0      TER+  to TGT1- [START]
+    ASSERT_EQ(a.w_lw, 1L<<32|(10-0));
+    // 2_0   to 5_0/1_(L-b) TER+  to TGT1-/SEG1- [START]
     ASSERT_EQ(g.arcs.at(0).v_lv, 2L<<32|0);
-    ASSERT_EQ(g.arcs.at(0).w_lw, 5L<<32|0);
-    // 5_e-b to 1_L-b    TGT1- to SEG1- [START]
-    ASSERT_EQ(g.arcs.at(1).v_lv, 5L<<32|(10-0));
-    ASSERT_EQ(g.arcs.at(1).w_lw, 1L<<32|(10-0));
-    ASSERT_EQ(g.segs.at(2).data, SEG1.data);
+    ASSERT_EQ(g.arcs.at(0).w_lw, 1L<<32|(10-0));
 }
 
 TEST(targets_test, start_neg_part) {
@@ -140,14 +128,10 @@ TEST(targets_test, start_neg_point) {
     t.set("SEG1:7-", target::role_t::START);
     arc a = t.get_arc();
     ASSERT_EQ(a.v_lv, 2L<<32|0);
-    ASSERT_EQ(a.w_lw, 5L<<32|0);
+    ASSERT_EQ(a.w_lw, 1L<<32|(10-7));
     // 2_0   to 5_0      TER+  to TGT1- [START]
     ASSERT_EQ(g.arcs.at(0).v_lv, 2L<<32|0);
-    ASSERT_EQ(g.arcs.at(0).w_lw, 5L<<32|0);
-    // 5_e-b to 1_L-b    TGT1- to SEG1- [START]
-    ASSERT_EQ(g.arcs.at(1).v_lv, 5L<<32|(7-7));
-    ASSERT_EQ(g.arcs.at(1).w_lw, 1L<<32|(10-7));
-    ASSERT_EQ(g.segs.at(2).data, "");
+    ASSERT_EQ(g.arcs.at(0).w_lw, 1L<<32|(10-7));
 }
 
 
@@ -156,15 +140,11 @@ TEST(targets_test, end_pos_full) {
     target t(g);
     t.set("SEG1+", target::role_t::END);
     arc a = t.get_arc();
-    ASSERT_EQ(a.v_lv, 4L<<32|10);
+    ASSERT_EQ(a.v_lv, 0L<<32|10);
     ASSERT_EQ(a.w_lw, 2L<<32|1);
-    // 0_b   to 4_0      SEG1+ to TGT1+ [END]
-    ASSERT_EQ(g.arcs.at(0).v_lv, 0L<<32|0);
-    ASSERT_EQ(g.arcs.at(0).w_lw, 4L<<32|0);
-    // 4_e-b to 2_1      TGT1+ to TER+  [END]
-    ASSERT_EQ(g.arcs.at(1).v_lv, 4L<<32|10);
-    ASSERT_EQ(g.arcs.at(1).w_lw, 2L<<32|1);
-    ASSERT_EQ(g.segs.at(2).data, SEG1.data);
+    // 0_b   to 4_0/2_1   SEG1+ to TGT1+/TER+ [END]
+    ASSERT_EQ(g.arcs.at(0).v_lv, 0L<<32|10);
+    ASSERT_EQ(g.arcs.at(0).w_lw, 2L<<32|1);
 }
 
 TEST(targets_test, end_pos_part) {
@@ -188,15 +168,11 @@ TEST(targets_test, end_pos_point) {
     target t(g);
     t.set("SEG1:7+", target::role_t::END);
     arc a = t.get_arc();
-    ASSERT_EQ(a.v_lv, 4L<<32|(7-7));
+    ASSERT_EQ(a.v_lv, 0L<<32|7);
     ASSERT_EQ(a.w_lw, 2L<<32|1);
     // 0_b   to 4_0      SEG1+ to TGT1+ [END]
     ASSERT_EQ(g.arcs.at(0).v_lv, 0L<<32|7);
-    ASSERT_EQ(g.arcs.at(0).w_lw, 4L<<32|0);
-    // 4_e-b to 2_1      TGT1+ to TER+  [END]
-    ASSERT_EQ(g.arcs.at(1).v_lv, 4L<<32|(7-7));
-    ASSERT_EQ(g.arcs.at(1).w_lw, 2L<<32|1);
-    ASSERT_EQ(g.segs.at(2).data, "");
+    ASSERT_EQ(g.arcs.at(0).w_lw, 2L<<32|1);
 }
 
 
@@ -205,15 +181,11 @@ TEST(targets_test, end_neg_full) {
     target t(g);
     t.set("SEG1-", target::role_t::END);
     arc a = t.get_arc();
-    ASSERT_EQ(a.v_lv, 5L<<32|10);
+    ASSERT_EQ(a.v_lv, 1L<<32|(10-10));
     ASSERT_EQ(a.w_lw, 2L<<32|1);
-    // 1_L-e to 5_0      SEG1- to TGT1- [END]
+    // 1_L-e to 5_0/2_1   SEG1- to TGT1-/TER+ [END]
     ASSERT_EQ(g.arcs.at(0).v_lv, 1L<<32|(10-10));
-    ASSERT_EQ(g.arcs.at(0).w_lw, 5L<<32|0);
-    // 5_e-b to 2_1      TGT1- to TER+  [END]
-    ASSERT_EQ(g.arcs.at(1).v_lv, 5L<<32|(10-0));
-    ASSERT_EQ(g.arcs.at(1).w_lw, 2L<<32|1);
-    ASSERT_EQ(g.segs.at(2).data, SEG1.data);
+    ASSERT_EQ(g.arcs.at(0).w_lw, 2L<<32|1);
 }
 
 TEST(targets_test, end_neg_part) {
@@ -237,15 +209,11 @@ TEST(targets_test, end_neg_point) {
     target t(g);
     t.set("SEG1:7-", target::role_t::END);
     arc a = t.get_arc();
-    ASSERT_EQ(a.v_lv, 5L<<32|(7-7));
+    ASSERT_EQ(a.v_lv, 1L<<32|(10-7));
     ASSERT_EQ(a.w_lw, 2L<<32|1);
     // 1_L-e to 5_0      SEG1- to TGT1- [END]
     ASSERT_EQ(g.arcs.at(0).v_lv, 1L<<32|(10-7));
-    ASSERT_EQ(g.arcs.at(0).w_lw, 5L<<32|0);
-    // 5_e-b to 2_1      TGT1- to TER+  [END]
-    ASSERT_EQ(g.arcs.at(1).v_lv, 5L<<32|(7-7));
-    ASSERT_EQ(g.arcs.at(1).w_lw, 2L<<32|1);
-    ASSERT_EQ(g.segs.at(2).data, "");
+    ASSERT_EQ(g.arcs.at(0).w_lw, 2L<<32|1);
 }
 
 

@@ -71,12 +71,12 @@ TEST(gfa2logic_test, contained_vtx) {
     ASSERT_EQ(v.o(), v.l);
     ASSERT_EQ(v.l1(), 0);
     ASSERT_EQ(v.l2(), v.l);
-    ASSERT_EQ(v.r1(), 0);
-    ASSERT_EQ(v.r2(), v.l);
+    ASSERT_EQ(v.r1(), v.l);
+    ASSERT_EQ(v.r2(), 0);
     ASSERT_EQ(v.l1i(), 0);
     ASSERT_EQ(v.l2i(), v.l);
-    ASSERT_EQ(v.r1i(), 0);
-    ASSERT_EQ(v.r2i(), v.l);
+    ASSERT_EQ(v.r1i(), v.l);
+    ASSERT_EQ(v.r2i(), 0);
 }
 
 TEST(gfa2logic_test, contained_vtx_inv) {
@@ -85,12 +85,12 @@ TEST(gfa2logic_test, contained_vtx_inv) {
     ASSERT_EQ(v.o(), v.l);
     ASSERT_EQ(v.l1(), 0);
     ASSERT_EQ(v.l2(), v.l);
-    ASSERT_EQ(v.r1(), 0);
-    ASSERT_EQ(v.r2(), v.l);
+    ASSERT_EQ(v.r1(), v.l);
+    ASSERT_EQ(v.r2(), 0);
     ASSERT_EQ(v.l1i(), 0);
     ASSERT_EQ(v.l2i(), v.l);
-    ASSERT_EQ(v.r1i(), 0);
-    ASSERT_EQ(v.r2i(), v.l);
+    ASSERT_EQ(v.r1i(), v.l);
+    ASSERT_EQ(v.r2i(), 0);
 }
 
 TEST(gfa2logic_test, right_blunt) {
@@ -155,12 +155,12 @@ TEST(gfa2logic_test, right_dovetail) {
     ASSERT_EQ(v.o(), 2);
     ASSERT_EQ(v.l1(), 3);  // ---==
     ASSERT_EQ(v.l2(), 5);
-    ASSERT_EQ(v.r1(), 0);
-    ASSERT_EQ(v.r2(), 2);
+    ASSERT_EQ(v.r1(), 2);
+    ASSERT_EQ(v.r2(), 0);
     ASSERT_EQ(v.l1i(), 0); // ==----
     ASSERT_EQ(v.l2i(), 2);
-    ASSERT_EQ(v.r1i(), 3);
-    ASSERT_EQ(v.r2i(), 5);
+    ASSERT_EQ(v.r1i(), 5);
+    ASSERT_EQ(v.r2i(), 3);
 }
 
 TEST(gfa2logic_test, right_dovetail_inv) {
@@ -169,12 +169,12 @@ TEST(gfa2logic_test, right_dovetail_inv) {
     ASSERT_EQ(v.o(), 2);
     ASSERT_EQ(v.l1(), 3);  // ---==
     ASSERT_EQ(v.l2(), 5);
-    ASSERT_EQ(v.r1(), 0);
-    ASSERT_EQ(v.r2(), 2);
+    ASSERT_EQ(v.r1(), 2);
+    ASSERT_EQ(v.r2(), 0);
     ASSERT_EQ(v.l1i(), 0); // ==---
     ASSERT_EQ(v.l2i(), 2);
-    ASSERT_EQ(v.r1i(), 3);
-    ASSERT_EQ(v.r2i(), 5);
+    ASSERT_EQ(v.r1i(), 5);
+    ASSERT_EQ(v.r2i(), 3);
 }
 
 TEST(gfa2logic_test, left_dovetail) {
@@ -183,12 +183,12 @@ TEST(gfa2logic_test, left_dovetail) {
     ASSERT_EQ(v.o(), 2);
     ASSERT_EQ(v.l1(), 0);  // ==---
     ASSERT_EQ(v.l2(), 2);
-    ASSERT_EQ(v.r1(), 3);
-    ASSERT_EQ(v.r2(), 5);
+    ASSERT_EQ(v.r1(), 5);
+    ASSERT_EQ(v.r2(), 3);
     ASSERT_EQ(v.l1i(), 3); // ---==
     ASSERT_EQ(v.l2i(), 5);
-    ASSERT_EQ(v.r1i(), 0);
-    ASSERT_EQ(v.r2i(), 2);
+    ASSERT_EQ(v.r1i(), 2);
+    ASSERT_EQ(v.r2i(), 0);
 }
 
 TEST(gfa2logic_test, left_dovetail_inv) {
@@ -197,12 +197,12 @@ TEST(gfa2logic_test, left_dovetail_inv) {
     ASSERT_EQ(v.o(), 2);
     ASSERT_EQ(v.l1(), 0);
     ASSERT_EQ(v.l2(), 2);
-    ASSERT_EQ(v.r1(), 3);
-    ASSERT_EQ(v.r2(), 5);
+    ASSERT_EQ(v.r1(), 5);
+    ASSERT_EQ(v.r2(), 3);
     ASSERT_EQ(v.l1i(), 3);
     ASSERT_EQ(v.l2i(), 5);
-    ASSERT_EQ(v.r1i(), 0);
-    ASSERT_EQ(v.r2i(), 2);
+    ASSERT_EQ(v.r1i(), 2);
+    ASSERT_EQ(v.r2i(), 0);
 }
 
 TEST(gfa2logic_test, containing_vtx) {
@@ -211,12 +211,12 @@ TEST(gfa2logic_test, containing_vtx) {
     ASSERT_EQ(v.o(), 2);
     ASSERT_EQ(v.l1(), 1);
     ASSERT_EQ(v.l2(), 3);
-    ASSERT_EQ(v.r1(), 3);
-    ASSERT_EQ(v.r2(), 5);
+    ASSERT_EQ(v.r1(), 5);
+    ASSERT_EQ(v.r2(), 3);
     ASSERT_EQ(v.l1i(), 3);
     ASSERT_EQ(v.l2i(), 5);
-    ASSERT_EQ(v.r1i(), 1);
-    ASSERT_EQ(v.r2i(), 3);
+    ASSERT_EQ(v.r1i(), 3);
+    ASSERT_EQ(v.r2i(), 1);
 }
 
 TEST(gfa2logic_test, containing_vtx_inv) {
@@ -225,12 +225,12 @@ TEST(gfa2logic_test, containing_vtx_inv) {
     ASSERT_EQ(v.o(), 2);
     ASSERT_EQ(v.l1(), 3);  // ---==-
     ASSERT_EQ(v.l2(), 5);
-    ASSERT_EQ(v.r1(), 1);
-    ASSERT_EQ(v.r2(), 3);
+    ASSERT_EQ(v.r1(), 3);
+    ASSERT_EQ(v.r2(), 1);
     ASSERT_EQ(v.l1i(), 1); // -==---
     ASSERT_EQ(v.l2i(), 3);
-    ASSERT_EQ(v.r1i(), 3);
-    ASSERT_EQ(v.r2i(), 5);
+    ASSERT_EQ(v.r1i(), 5);
+    ASSERT_EQ(v.r2i(), 3);
 }
 
 TEST(gfa2logic_test, dovetail_edge) {

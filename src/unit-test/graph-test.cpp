@@ -81,7 +81,7 @@ TEST(graph_test, add_edge) {
     gfa.add_seg(SEG2);                         //  CGTATGCTA
     gfa.add_edge("s1+", 1, 4, "s2-", 6, 9);
     ASSERT_EQ(gfa.segs.size(), 2);
-    ASSERT_EQ(gfa.arcs.size(), 8);
+    ASSERT_EQ(gfa.arcs.size(), 4);
 
     auto s1 = gfa.segs[0];
     auto s2 = gfa.segs[1];
@@ -94,23 +94,12 @@ TEST(graph_test, add_edge) {
     ASSERT_EQ(gfa.arcs[1].v_lv, 0L<<32 | 4);
     ASSERT_EQ(gfa.arcs[1].w_lw, 3L<<32 | 3);
 
-    ASSERT_EQ(gfa.arcs[2].v_lv, 1L<<32 | 0);
-    ASSERT_EQ(gfa.arcs[2].w_lw, 2L<<32 | 6);
+    ASSERT_EQ(gfa.arcs[2].v_lv, 2L<<32 | 6);
+    ASSERT_EQ(gfa.arcs[2].w_lw, 1L<<32 | 0);
 
-    ASSERT_EQ(gfa.arcs[3].v_lv, 1L<<32 | 3);
-    ASSERT_EQ(gfa.arcs[3].w_lw, 2L<<32 | 9);
+    ASSERT_EQ(gfa.arcs[3].v_lv, 2L<<32 | 9);
+    ASSERT_EQ(gfa.arcs[3].w_lw, 1L<<32 | 3);
 
-    ASSERT_EQ(gfa.arcs[4].v_lv, gfa.arcs[2].w_lw);
-    ASSERT_EQ(gfa.arcs[4].w_lw, gfa.arcs[2].v_lv);
-
-    ASSERT_EQ(gfa.arcs[5].v_lv, gfa.arcs[3].w_lw);
-    ASSERT_EQ(gfa.arcs[5].w_lw, gfa.arcs[3].v_lv);
-
-    ASSERT_EQ(gfa.arcs[6].v_lv, gfa.arcs[0].w_lw);
-    ASSERT_EQ(gfa.arcs[6].w_lw, gfa.arcs[0].v_lv);
-
-    ASSERT_EQ(gfa.arcs[7].v_lv, gfa.arcs[1].w_lw);
-    ASSERT_EQ(gfa.arcs[7].w_lw, gfa.arcs[1].v_lv);
 }
 
 TEST(graph_test, add_blunt_edge) {
@@ -119,19 +108,13 @@ TEST(graph_test, add_blunt_edge) {
     gfa.add_seg(SEG2);                         // CGTATGCTA
     gfa.add_edge("s1-", 4, 4, "s2+", 9, 9);
     ASSERT_EQ(gfa.segs.size(), 2);
-    ASSERT_EQ(gfa.arcs.size(), 4);
+    ASSERT_EQ(gfa.arcs.size(), 2);
 
-    ASSERT_EQ(gfa.arcs[0].v_lv, 0L<<32 | 4);   // v+
+    ASSERT_EQ(gfa.arcs[0].v_lv, 0L<<32 | 4);   // v is s1-
     ASSERT_EQ(gfa.arcs[0].w_lw, 3L<<32 | 0);
 
-    ASSERT_EQ(gfa.arcs[1].v_lv, 1L<<32 | 0);   // v- 
-    ASSERT_EQ(gfa.arcs[1].w_lw, 2L<<32 | 9);
-
-    ASSERT_EQ(gfa.arcs[2].v_lv, gfa.arcs[1].w_lw);  // back w+ to v-
-    ASSERT_EQ(gfa.arcs[2].w_lw, gfa.arcs[1].v_lv);
-
-    ASSERT_EQ(gfa.arcs[3].v_lv, gfa.arcs[0].w_lw);  // back w- to v+
-    ASSERT_EQ(gfa.arcs[3].w_lw, gfa.arcs[0].v_lv);
+    ASSERT_EQ(gfa.arcs[1].v_lv, 2L<<32 | 9);
+    ASSERT_EQ(gfa.arcs[1].w_lw, 1L<<32 | 0);
 }
 
 TEST(graph_test, vtx_iter) {
@@ -145,46 +128,32 @@ TEST(graph_test, vtx_iter) {
 
     auto afv = gfa.arcs_from_vtx(0); // s1+
     ASSERT_EQ(std::distance(gfa.arcs.cbegin(), afv.first), 0);
-    ASSERT_EQ(std::distance(afv.first, afv.second), 4);
-    ASSERT_EQ(afv.first->v_lv, 0);
-    ASSERT_EQ(afv.first->w_lw, 4L<<32|4);
+    ASSERT_EQ(std::distance(afv.first, afv.second), 2);
 
-    auto nxt = ++afv.first;
+    auto nxt = afv.first;
     ASSERT_EQ(nxt->v_lv, 1);
     ASSERT_EQ(nxt->w_lw, 3L<<32|0);
-
-    nxt = ++afv.first;
-    ASSERT_EQ(nxt->v_lv, 1);
-    ASSERT_EQ(nxt->w_lw, 4L<<32|5);
 
     nxt = ++afv.first;
     ASSERT_EQ(nxt->v_lv, 4);
     ASSERT_EQ(nxt->w_lw, 3L<<32|4);
 
     afv = gfa.arcs_from_vtx(1); // s1-
-    ASSERT_EQ(std::distance(afv.first, afv.second), 4);
-    ASSERT_EQ(afv.first->v_lv, 1L<<32|0);
-    ASSERT_EQ(afv.first->w_lw, 2L<<32|5);
+    ASSERT_EQ(std::distance(afv.first, afv.second), 2);
+    ASSERT_EQ(afv.first->v_lv, 1L<<32|3);
+    ASSERT_EQ(afv.first->w_lw, 5L<<32|0);
 
     afv = gfa.arcs_from_vtx(2); // s2+
-    ASSERT_EQ(std::distance(afv.first, afv.second), 3);
+    ASSERT_EQ(std::distance(afv.first, afv.second), 2);
 
     afv = gfa.arcs_from_vtx(3); // s2-
-    ASSERT_EQ(std::distance(afv.first, afv.second), 3);
+    ASSERT_EQ(std::distance(afv.first, afv.second), 1);
 
     afv = gfa.arcs_from_vtx(4); // s3+
-    ASSERT_EQ(std::distance(afv.first, afv.second), 3);
+    ASSERT_EQ(std::distance(afv.first, afv.second), 2);
 
     afv = gfa.arcs_from_vtx(5); // s3-
-    ASSERT_EQ(std::distance(afv.first, afv.second), 3);
-    ASSERT_EQ(afv.first->v_lv, 5L<<32|0);
-    ASSERT_EQ(afv.first->w_lw, 1L<<32|3);
-
-    nxt = ++afv.first;
-    ASSERT_EQ(afv.first->v_lv, 5L<<32|1);
-    ASSERT_EQ(afv.first->w_lw, 1L<<32|4);
-
-    nxt = ++afv.first;
+    ASSERT_EQ(std::distance(afv.first, afv.second), 1);
     ASSERT_EQ(afv.first->v_lv, 5L<<32|5);
     ASSERT_EQ(afv.first->w_lw, 2L<<32|0);
 }

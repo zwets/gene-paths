@@ -131,13 +131,8 @@ TEST(paths_test, write_2) {
     ASSERT_EQ(p.route(*pa), "s3:1:4+");
     ASSERT_EQ(p.sequence(*pa), "ATT");
 
-    // find first arc away from 1+, is return arc to where we came from
+    // find first arc away from 1+ is A[CTG] overlap to s2- [CGTA]TGCTA
     arc_it = g.arcs_from_v_lv(arc_it->w_lw).first;
-    ASSERT_EQ(arc_it->v_lv, 0);          // s1+:0
-    ASSERT_EQ(arc_it->w_lw, 2L<<33|4);   // s3+:4
-
-    // but next is A[CTG] overlap to s2- [CGTA]TGCTA
-    arc_it = arc_it + 1;
     ASSERT_EQ(arc_it->v_lv, 1);          // s1+:1
     ASSERT_EQ(arc_it->w_lw, 3L<<32|0);   // s2-:0
 
@@ -149,12 +144,8 @@ TEST(paths_test, write_2) {
     ASSERT_EQ(p.route(*pa), "s3:1:4+ s1:0:1+");
     ASSERT_EQ(p.sequence(*pa), "ATTA");
 
-    // find first arc away from 2- is return arc to where we came from
+    // find first arc away from 2- is to s4+ start
     arc_it = g.arcs_from_v_lv(arc_it->w_lw).first;
-    // next is to s1+ end
-    arc_it = arc_it + 1;
-    // next is to s4+ start
-    arc_it = arc_it + 1;
     ASSERT_EQ(arc_it->v_lv, 3L<<32|6);   // s2-:6
     ASSERT_EQ(arc_it->w_lw, 6L<<32|0);   // s4+:0
 
@@ -166,20 +157,9 @@ TEST(paths_test, write_2) {
     ASSERT_EQ(p.route(*pa), "s3:1:4+ s1:0:1+ s2:3:9-");
     ASSERT_EQ(p.sequence(*pa), "ATTACGTATG");
 
-    // find first arc away from 4+, is return arc to where we came from
-    arc_it = g.arcs_from_v_lv(arc_it->w_lw).first;
-    // and next is to s2- end
-    arc_it = arc_it + 1;
-    ASSERT_EQ(arc_it->v_lv, 6L<<32|3);   // s4+:3   // adds CTA
-    ASSERT_EQ(arc_it->w_lw, 3L<<32|9);   // s2-:9
-
-    // we take it and have |ATT|A|CGTATG|CTA|
-    i = p.extend(i, &*arc_it);
-    pa = &p.path_arcs.at(i);
-    ASSERT_EQ(p.ride_len(*pa), 3);
-    ASSERT_EQ(p.length(*pa), 13);
-    ASSERT_EQ(p.route(*pa), "s3:1:4+ s1:0:1+ s2:3:9- s4:0:3+");
-    ASSERT_EQ(p.sequence(*pa), "ATTACGTATGCTA");
+    // find first arc away from 4+, but there is none
+    auto found = g.arcs_from_v_lv(arc_it->w_lw);
+    ASSERT_EQ(found.first, found.second);
 }
 
 } // namespace

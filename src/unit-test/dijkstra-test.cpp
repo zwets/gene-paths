@@ -58,14 +58,14 @@ static parc_pair add_targets(graph& g) {
 TEST(dijkstra_test, make_graph) {
     graph g = simple_graph();
     ASSERT_EQ(g.segs.size(), 2);
-    ASSERT_EQ(g.arcs.size(), 8);
+    ASSERT_EQ(g.arcs.size(), 4);
 }
 
 TEST(dijkstra_test, add_targets) {
     graph g = simple_graph();
     parc_pair t = add_targets(g);
     ASSERT_EQ(g.segs.size(), 2+3);
-    ASSERT_EQ(g.arcs.size(), 1*8+4);
+    ASSERT_EQ(g.arcs.size(), 1*4+4);
     ASSERT_EQ(t.first->v_lv, ((2L<<1)<<32)|0);  // TER+:0
     ASSERT_EQ(t.first->w_lw, ((3L<<1)<<32)|0);  // to TGT1+:0
     ASSERT_EQ(t.second->v_lv,((4L<<1)<<32)|1);  // TGT2+:$
@@ -78,7 +78,7 @@ TEST(dijkstra_test, dijkstra_construct) {
 
     dijkstra dk(g);
     ASSERT_EQ(dk.ps.path_arcs.size(), 1);       // just the null path
-    ASSERT_EQ(dk.ds.size(), 12);                // 8 for the edge, 4 for targets
+    ASSERT_EQ(dk.ds.size(), 8);                 // 4 for the edge, 4 for targets
     ASSERT_EQ(dk.vs.size(), 0);                 // nothing visitable
     ASSERT_FALSE(dk.found_pix);                 // nothing found
     ASSERT_EQ(dk.found_len, 0);
@@ -91,7 +91,7 @@ TEST(dijkstra_test, dijkstra_restart) {
     dijkstra dk(g);
     dk.restart(t.first);                        // restart with given start arc
     ASSERT_EQ(dk.ps.path_arcs.size(), 2);       // null and the start arc
-    ASSERT_EQ(dk.ds.size(), 12);                // same as before
+    ASSERT_EQ(dk.ds.size(), 8);                 // same as before
     ASSERT_EQ(dk.vs.size(), 1);                 // start node is single visitable
     ASSERT_FALSE(dk.found_pix);
     ASSERT_EQ(dk.found_len, 0);
@@ -144,7 +144,7 @@ TEST(dijkstra_test, shortest_paths) {
     dk.shortest_paths(t.first);
     ASSERT_FALSE(dk.found_pix);                 // always unset when searching all paths
     ASSERT_EQ(dk.found_len, 0);
-    ASSERT_EQ(dk.ps.path_arcs.size(), 4+4);     // half of the 8 from the edge, plus the target ones
+    ASSERT_EQ(dk.ps.path_arcs.size(), 4+3);     // half of the 8 from the edge, plus the target ones
     size_t last = dk.ps.path_arcs.size() - 1;
     ASSERT_EQ(dk.length(last), 5);
     ASSERT_EQ(dk.route(last), "s1:0:1+ s1:1:2+ s2:0:2+ s2:2:3+");

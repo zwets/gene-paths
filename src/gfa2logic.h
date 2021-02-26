@@ -39,24 +39,27 @@ struct vtx {
         // after taking into account orientation.
         // So if !p, they are measured from the end.
         //
-        //      <--- l1 ---><- o -><-- r1 -->
+        //      <--- l1 ---><----- r1 ------>
+        //      <------ l2 -------><-- r2 --> 
+        //                  <- o ->
         //   v: ------------=======----------
-        //      <------ l2 ------->
-        //                  <------ r2 ----->
+        //                  <- o ->
+        //      <------ r1i ------><-- l1i -->
+        //      <-- r2i ---><------ l2i ----->
 
     inline std::uint32_t o() const { return e - b; }
 
     inline std::uint32_t l1() const { return p ? b : l - e; }
     inline std::uint32_t l2() const { return p ? e : l - b; }
-    inline std::uint32_t r1() const { return p ? l - e : b; }
-    inline std::uint32_t r2() const { return p ? l - b : e; }
+    inline std::uint32_t r1() const { return p ? l - b : e; }
+    inline std::uint32_t r2() const { return p ? l - e : b; }
 
         // same for inverse of the vertex
 
-    inline std::uint32_t l1i() const { return r1(); }
-    inline std::uint32_t l2i() const { return r2(); }
-    inline std::uint32_t r1i() const { return l1(); }
-    inline std::uint32_t r2i() const { return l2(); }
+    inline std::uint32_t l1i() const { return r2(); }
+    inline std::uint32_t l2i() const { return r1(); }
+    inline std::uint32_t r1i() const { return l2(); }
+    inline std::uint32_t r2i() const { return l1(); }
 
 };
 
@@ -73,17 +76,25 @@ struct edge {
         // at the end of the overlap.  The ~i methods return the
         // parameters for the inverse orientation of the segment.
 
-    inline std::uint32_t ov() const { return v.o(); }
-    inline std::uint32_t lv() const { return v.l1(); }
-    inline std::uint32_t lv2() const { return v.l2(); }
-    inline std::uint32_t lvi() const { return v.l1i(); }
+    inline std::uint32_t ov() const   { return v.o(); }
+    inline std::uint32_t lv() const   { return v.l1(); }
+    inline std::uint32_t lv2() const  { return v.l2(); }
+    inline std::uint32_t lvi() const  { return v.l1i(); }
     inline std::uint32_t lv2i() const { return v.l2i(); }
+    inline std::uint32_t rv() const   { return v.r1(); }
+    inline std::uint32_t rv2() const  { return v.r2(); }
+    inline std::uint32_t rvi() const  { return v.r1i(); }
+    inline std::uint32_t rv2i() const { return v.r2i(); }
 
-    inline std::uint32_t ow() const { return w.o(); }
-    inline std::uint32_t lw() const { return w.l1(); }
-    inline std::uint32_t lw2() const { return w.l2(); }
-    inline std::uint32_t lwi() const { return w.l1i(); }
+    inline std::uint32_t ow() const   { return w.o(); }
+    inline std::uint32_t lw() const   { return w.l1(); }
+    inline std::uint32_t lw2() const  { return w.l2(); }
+    inline std::uint32_t lwi() const  { return w.l1i(); }
     inline std::uint32_t lw2i() const { return w.l2i(); }
+    inline std::uint32_t rw() const   { return w.r1(); }
+    inline std::uint32_t rw2() const  { return w.r2(); }
+    inline std::uint32_t rwi() const  { return w.r1i(); }
+    inline std::uint32_t rw2i() const { return w.r2i(); }
 
 };
 

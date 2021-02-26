@@ -163,34 +163,18 @@ graph::add_edge(const std::string& sref, std::uint32_t sbeg, std::uint32_t send,
     std::uint64_t vi = v^(1L<<32);
     std::uint64_t wi = w^(1L<<32);
 
-    arc as[4] = {
-        { v |edge.lv(),  w |edge.lw() },
-        { w |edge.lw(),  v |edge.lv() },
-        { vi|edge.lvi(), wi|edge.lwi() },
-        { wi|edge.lwi(), vi|edge.lvi() }
-    };
+    if (edge.lv()  != 0 && edge.rw()  != 0) add_arc({ v |edge.lv(),  w |edge.lw()  });
+    if (edge.lw()  != 0 && edge.rv()  != 0) add_arc({ w |edge.lw(),  v |edge.lv()  });
+    if (edge.lvi() != 0 && edge.rwi() != 0) add_arc({ vi|edge.lvi(), wi|edge.lwi() });
+    if (edge.lwi() != 0 && edge.rvi() != 0) add_arc({ wi|edge.lwi(), vi|edge.lvi() });
 
-        // add them to the arcs array
-
-    for (arc a : as) {
-        add_arc(a);
-    }
-
-        // if non-zero overlap add the arc at the end of the overlap
-        // again create arc from v to w, and back, and their complements
+        // if non-zero overlap on either, add the second set of arcs
 
     if (edge.ov() != 0 || edge.ow() != 0) {
-
-        arc as2[4] = {
-            { v |edge.lv2(),  w |edge.lw2() },
-            { w |edge.lw2(),  v |edge.lv2() },
-            { vi|edge.lv2i(), wi|edge.lw2i() },
-            { wi|edge.lw2i(), vi|edge.lv2i() }
-        };
-
-        for (arc a : as2) {
-            add_arc(a);
-        }
+        if (edge.lv2()  != 0 && edge.rw2()  != 0) add_arc({ v |edge.lv2(),  w |edge.lw2()  });
+        if (edge.lw2()  != 0 && edge.rv2()  != 0) add_arc({ w |edge.lw2(),  v |edge.lv2()  });
+        if (edge.lv2i() != 0 && edge.rw2i() != 0) add_arc({ vi|edge.lv2i(), wi|edge.lw2i() });
+        if (edge.lw2i() != 0 && edge.rv2i() != 0) add_arc({ wi|edge.lw2i(), vi|edge.lv2i() });
     }
 }
 

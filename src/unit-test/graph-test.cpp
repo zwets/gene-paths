@@ -79,7 +79,7 @@ TEST(graph_test, add_edge) {
     graph gfa;
     gfa.add_seg(SEG1);                         // ACGT
     gfa.add_seg(SEG2);                         //  CGTATGCTA
-    gfa.add_edge("s1+", 1, 4, "s2-", 6, 9);
+    gfa.add_edge("s1+", 1, 4, "s2-", 0, 3);
     ASSERT_EQ(gfa.segs.size(), 2);
     ASSERT_EQ(gfa.arcs.size(), 4);
 
@@ -106,7 +106,7 @@ TEST(graph_test, add_blunt_edge) {
     graph gfa;
     gfa.add_seg(SEG1);                         //          ACGT
     gfa.add_seg(SEG2);                         // CGTATGCTA
-    gfa.add_edge("s1-", 4, 4, "s2+", 9, 9);
+    gfa.add_edge("s1-", 0, 0, "s2+", 9, 9);
     ASSERT_EQ(gfa.segs.size(), 2);
     ASSERT_EQ(gfa.arcs.size(), 2);
 
@@ -122,8 +122,8 @@ TEST(graph_test, vtx_iter) {
     gfa.add_seg(SEG1);
     gfa.add_seg(SEG2);
     gfa.add_seg(SEG3);
-    gfa.add_edge("s1+", 1, 4, "s2-", 5, 9); // s1+ .[--) s2- (---].....   and s2+ .....[---) s1- (--].
-    gfa.add_edge("s2-", 0, 0, "s3+", 0, 0); // s2- .........) s3+ (.....  and s3- .....) s2+ (.........
+    gfa.add_edge("s1+", 1, 4, "s2-", 0, 4); // s1+ .[--) s2- (---].....   and s2+ .....[---) s1- (--].
+    gfa.add_edge("s2-", 9, 9, "s3+", 0, 0); // s2- .........) s3+ (.....  and s3- .....) s2+ (.........
     gfa.add_edge("s3+", 4, 5, "s1+", 0, 1); // s3+ ....[) s1+ (]...       and s1- ...[) s3- (]...
 
     auto afv = gfa.arcs_from_vtx(0); // s1+

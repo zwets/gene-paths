@@ -51,7 +51,7 @@ target::set(const std::string& ref, role_t role)
 
     verbose_emit("parsed target: %s:%ld:%ld%c", ctg.c_str(), beg, end, neg ? '-' : '+');
 
-        // locate or create the TERminal dummy
+        // locate or create the terminator
 
     static const std::string TER("__T__");
 
@@ -85,7 +85,7 @@ target::set(const std::string& ref, role_t role)
 
     std::uint64_t seg_ix = std::uint64_t(-1);
 
-    if (beg != end) { // see targets.h, need need for one if we are 0-length ref
+    if (beg != end) { // see targets.h, no need if ref is 0 length
 
         std::stringstream ss;
         ss << ctg << ':' << beg << ':' << end;
@@ -95,7 +95,7 @@ target::set(const std::string& ref, role_t role)
         if (seg_ix == std::uint64_t(-1)) {
 
             std::stringstream ss;
-            ref_seg.write_seq(ss, false, beg, end);  // Note: we store the + segment
+            ref_seg.write_seq(ss, false, beg, end);  // Store the + segment always
 
             g.add_seg({ end-beg, seg_name, ss.str() });
             seg_ix = g.get_seg_ix(seg_name);
@@ -108,7 +108,7 @@ target::set(const std::string& ref, role_t role)
     }
     else {
         seg_ix = ref_ix;
-        verbose_emit("not adding target segment, is the contig segment %lu: %s", seg_ix, ctg.c_str());
+        verbose_emit("target segment is contig %lu: %s", seg_ix, ctg.c_str());
     }
 
         // remove existing arcs
@@ -131,15 +131,15 @@ target::set(const std::string& ref, role_t role)
             raise_error("programmer error: arcs vector exhausted (cap %lu)", g.arcs.size());
 
         if (role == START) { // from seg_$ to ctg_end
-            v = neg ? graph::seg_vtx_n(seg_ix) : graph::seg_vtx_p(seg_ix);
-            w = neg ? graph::seg_vtx_n(ref_ix) : graph::seg_vtx_p(ref_ix);
+            v = graph::seg_vtx(seg_ix, neg);
+            w = graph::seg_vtx(ref_ix, neg);
             lv = end - beg;
-            lw = neg ? ref_seg.len - beg : end;
+            lw = end;
         }
         else if (role == END) { // from ctg_beg to seg_0
-            v = neg ? graph::seg_vtx_n(ref_ix) : graph::seg_vtx_p(ref_ix);
-            w = neg ? graph::seg_vtx_n(seg_ix) : graph::seg_vtx_p(seg_ix);
-            lv = neg ? ref_seg.len - end : beg;
+            v = graph::seg_vtx(ref_ix, neg);
+            w = graph::seg_vtx(seg_ix, neg);
+            lv = beg;
             lw = 0;
         }
         else {
@@ -161,15 +161,15 @@ target::set(const std::string& ref, role_t role)
         raise_error("programmer error: arcs vector exhausted (cap %lu)", g.arcs.size());
 
     if (role == START) { // from ter_0 to seg_0 or ctg_b
-        v = graph::seg_vtx_p(ter_ix);
-        w = neg ? graph::seg_vtx_n(seg_ix) : graph::seg_vtx_p(seg_ix);
+        v = graph::seg_vtx(ter_ix, false); // pos
+        w = graph::seg_vtx(seg_ix, neg);
         lv = 0;
-        lw = seg_ix == ref_ix ? neg ? ref_seg.len - beg : end : 0;
+        lw = seg_ix == ref_ix ? end : 0;
     }
     else if (role == END) { // from seg_$ or ctg_e to ter_1
-        v = neg ? graph::seg_vtx_n(seg_ix) : graph::seg_vtx_p(seg_ix);
-        w = graph::seg_vtx_p(ter_ix);
-        lv = seg_ix == ref_ix ? neg ? ref_seg.len - end : beg : end - beg;
+        v = graph::seg_vtx(seg_ix, neg);
+        w = graph::seg_vtx(ter_ix, false); // pos
+        lv = seg_ix == ref_ix ? beg : end - beg;
         lw = 1;
     }
     else {

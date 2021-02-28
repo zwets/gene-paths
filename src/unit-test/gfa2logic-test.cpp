@@ -26,8 +26,6 @@ namespace {
 std::string s("s+");
 std::string sn("s-");
 std::string s1p("s1+");
-std::string s1n("s1-");
-std::string s2p("s2+");
 std::string s2n("s2-");
 
 TEST(gfa2logic_test, empty_seq) {
@@ -108,7 +106,7 @@ TEST(gfa2logic_test, right_blunt) {
 }
 
 TEST(gfa2logic_test, right_blunt_inv) {
-    vtx v = { sn, 5, 0, 0, false };
+    vtx v = { sn, 5, 5, 5, false };
     v.validate();
     ASSERT_EQ(v.o(), 0);
     ASSERT_EQ(v.l1(), v.l);
@@ -136,7 +134,7 @@ TEST(gfa2logic_test, left_blunt) {
 }
 
 TEST(gfa2logic_test, left_blunt_inv) {
-    vtx v = { sn, 5, 5, 5, false };
+    vtx v = { sn, 5, 0, 0, false };
     v.validate();
     ASSERT_EQ(v.o(), 0);
     ASSERT_EQ(v.l1(), 0);
@@ -164,7 +162,7 @@ TEST(gfa2logic_test, right_dovetail) {
 }
 
 TEST(gfa2logic_test, right_dovetail_inv) {
-    vtx v = { sn, 5, 0, 2, false }; // ---== (==---)
+    vtx v = { sn, 5, 3, 5, false }; // ---== (==---)
     v.validate();
     ASSERT_EQ(v.o(), 2);
     ASSERT_EQ(v.l1(), 3);  // ---==
@@ -192,7 +190,7 @@ TEST(gfa2logic_test, left_dovetail) {
 }
 
 TEST(gfa2logic_test, left_dovetail_inv) {
-    vtx v = { sn, 5, 3, 5, false };
+    vtx v = { sn, 5, 0, 2, false };
     v.validate();
     ASSERT_EQ(v.o(), 2);
     ASSERT_EQ(v.l1(), 0);
@@ -220,7 +218,7 @@ TEST(gfa2logic_test, containing_vtx) {
 }
 
 TEST(gfa2logic_test, containing_vtx_inv) {
-    vtx v = { sn, 6, 1, 3, false };  // ---==-  (-==---)
+    vtx v = { sn, 6, 3, 5, false };  // ---==-  (-==---)
     v.validate();
     ASSERT_EQ(v.o(), 2);
     ASSERT_EQ(v.l1(), 3);  // ---==-
@@ -236,7 +234,7 @@ TEST(gfa2logic_test, containing_vtx_inv) {
 TEST(gfa2logic_test, dovetail_edge) {
     edge e = {
      { s1p, 3, 2, 3, true },
-     { s2n, 5, 3, 5, false }};
+     { s2n, 5, 0, 2, false }};
     e.validate();
     ASSERT_EQ(e.ov(), 1);
     ASSERT_EQ(e.lv(), 2);
@@ -252,7 +250,7 @@ TEST(gfa2logic_test, dovetail_edge) {
 
 TEST(gfa2logic_test, general_edge) {
     edge e = {
-     { s2n, 6, 3, 5, false },   // neg -==---    (---==-)
+     { s2n, 6, 1, 3, false },   // neg -==---    (---==-)
      { s1p, 9, 2, 5, true }};   // pos --===----
     e.validate();
     ASSERT_EQ(e.ov(), 2);

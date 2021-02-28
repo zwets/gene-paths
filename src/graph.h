@@ -198,10 +198,9 @@ struct graph {
 
         // segment to vertex mapping
 
-    inline static std::uint64_t seg_vtx_p(std::size_t seg_ix) { return seg_ix<<1; }
-    inline static std::uint64_t seg_vtx_n(std::size_t seg_ix) { return seg_ix<<1|1; }
-    inline static std::uint64_t inv_vtx(std::uint64_t vtx_ix) { return vtx_ix^1; }
+    inline static std::uint64_t seg_vtx(std::size_t seg_ix, bool neg) { return seg_ix<<1|!!neg; }
     inline static std::uint64_t vtx_seg(std::uint64_t vtx_ix) { return vtx_ix>>1; }
+    inline static std::uint64_t inv_vtx(std::uint64_t vtx_ix) { return vtx_ix^1; }
 
         // query vertex properties
 

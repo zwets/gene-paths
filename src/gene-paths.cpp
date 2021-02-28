@@ -62,7 +62,7 @@ static const std::string USAGE(
 "  - Positions are in between bases, starting at 0 left of the sequence,\n"
 "    and ending at L at its right, where L is the sequence length.\n"
 "  - Positions are interpreted on the segment before it is oriented, so\n"
-"    pos 0 is always the upstream end of a segment.\n"
+"    pos 0 is at the upstream end of a segment, regardless of sign.\n"
 "\n");
 
 static void usage_exit()

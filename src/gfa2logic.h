@@ -49,17 +49,17 @@ struct vtx {
 
     inline std::uint32_t o() const { return e - b; }
 
-    inline std::uint32_t l1() const { return p ? b : l - e; }
-    inline std::uint32_t l2() const { return p ? e : l - b; }
-    inline std::uint32_t r1() const { return p ? l - b : e; }
-    inline std::uint32_t r2() const { return p ? l - e : b; }
+    inline std::uint32_t l1() const { return b; }
+    inline std::uint32_t l2() const { return e; }
+    inline std::uint32_t r1() const { return l-b; }
+    inline std::uint32_t r2() const { return l-e; }
 
         // same for inverse of the vertex
 
-    inline std::uint32_t l1i() const { return r2(); }
-    inline std::uint32_t l2i() const { return r1(); }
-    inline std::uint32_t r1i() const { return l2(); }
-    inline std::uint32_t r2i() const { return l1(); }
+    inline std::uint32_t l1i() const { return l-e; }
+    inline std::uint32_t l2i() const { return l-b; }
+    inline std::uint32_t r1i() const { return e; }
+    inline std::uint32_t r2i() const { return b; }
 
 };
 

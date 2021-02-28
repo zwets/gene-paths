@@ -39,9 +39,9 @@ static graph make_graph() {
     g.add_seg(SEG3);
     g.add_seg(SEG4);
     g.arcs.reserve(4*8+1);
-    g.add_edge("s1+", 1, 4, "s2-", 5, 9); // s1+ .[--) s2- (---].....     and s2+ .....[---) s1- (--].
-    g.add_edge("s2-", 0, 0, "s3+", 0, 0); // s2- .........) s3+ (.....    and s3- .....) s2+ (.........
-    g.add_edge("s2-", 0, 3, "s4+", 0, 3); // s2- ......[..) s4+ (..]..... and s4- .....[..) s2+ (..]......
+    g.add_edge("s1+", 1, 4, "s2-", 0, 4); // s1+ .[--) s2- (---].....     and s2+ .....[---) s1- (--].
+    g.add_edge("s2-", 9, 9, "s3+", 0, 0); // s2- .........) s3+ (.....    and s3- .....) s2+ (.........
+    g.add_edge("s2-", 6, 9, "s4+", 0, 3); // s2- ......[..) s4+ (..]..... and s4- .....[..) s2+ (..]......
     g.add_edge("s3+", 4, 5, "s1+", 0, 1); // s3+ ....[) s1+ (]...         and s1- ...[) s3- (]...
     return g;
 }
@@ -49,7 +49,7 @@ static graph make_graph() {
 static const arc* add_start(graph& g, std::string ref) {
     target t(g);
     t.set(ref, target::role_t::START);
-    std::uint64_t ter_vlv = graph::seg_vtx_p(g.get_seg_ix("__T__"))<<32;
+    std::uint64_t ter_vlv = graph::seg_vtx(g.get_seg_ix("__T__"), false)<<32;
     return &*g.arcs_from_v_lv(ter_vlv).first;
 }
 
@@ -94,7 +94,7 @@ TEST(paths_test, write_1) {
     std::size_t i = p.extend(0, a);
     ASSERT_EQ(i, 1);
 
-    std::vector<arc>::const_iterator arc_it = g.arcs_from_v_lv(graph::v_lv(graph::seg_vtx_p(2), 2)).first;
+    std::vector<arc>::const_iterator arc_it = g.arcs_from_v_lv(graph::v_lv(graph::seg_vtx(2, false), 2)).first;
     ASSERT_EQ(arc_it->v_lv, 2L<<33|4);  // s3+ CATT|A
     ASSERT_EQ(arc_it->w_lw, 0);         // s1+ |ACGT
 
@@ -115,7 +115,7 @@ TEST(paths_test, write_2) {
     paths p = paths(g);
     std::size_t i = p.extend(0, a);
 
-    std::vector<arc>::const_iterator arc_it = g.arcs_from_v_lv(graph::v_lv(graph::seg_vtx_p(g.get_seg_ix("s3")),1)).first;
+    std::vector<arc>::const_iterator arc_it = g.arcs_from_v_lv(graph::v_lv(graph::seg_vtx(g.get_seg_ix("s3"), false),1)).first;
     ASSERT_EQ(arc_it->v_lv, 2L<<33|4);   // s3+:4 C|ATT|A
     ASSERT_EQ(arc_it->w_lw, 0);          // s1+:0 |A|CGT
 
@@ -144,7 +144,7 @@ TEST(paths_test, write_2) {
     ASSERT_EQ(p.route(*pa), "s3:1:4+ s1:0:1+");
     ASSERT_EQ(p.sequence(*pa), "ATTA");
 
-    // find first arc away from 2- is to s4+ start
+    // find first arc away from 2- is to s4:0+ start
     arc_it = g.arcs_from_v_lv(arc_it->w_lw).first;
     ASSERT_EQ(arc_it->v_lv, 3L<<32|6);   // s2-:6
     ASSERT_EQ(arc_it->w_lw, 6L<<32|0);   // s4+:0

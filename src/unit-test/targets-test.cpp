@@ -44,9 +44,9 @@ static graph make_graph()
 // arcs will be
 //
 // 0_b   to 4_0/2_1   SEG1+ to TGT1+/TER+ [END]
-// 1_L-e to 5_0/2_1   SEG1- to TGT1-/TER+ [END]
+// 1_b   to 5_0/2_1   SEG1- to TGT1-/TER+ [END]
 // 2_0   to 4_0/0_0   TER+  to TGT1+/SEG1+ [START]
-// 2_0   to 5_0/1_L-b TER+  to TGT1-/SEG1- [START]
+// 2_0   to 5_0/1_e   TER+  to TGT1-/SEG1- [START]
 // 4_e-b to 0_e       TGT1+ to SEG1+ [START]
 // 4_e-b to 2_1       TGT1+ to TER+  [END]
 // 5_e-b to 1_L-b     TGT1- to SEG1- [START]
@@ -100,10 +100,10 @@ TEST(targets_test, start_neg_full) {
     t.set("SEG1-", target::role_t::START);
     arc a = t.get_arc();
     ASSERT_EQ(a.v_lv, 2L<<32|0);
-    ASSERT_EQ(a.w_lw, 1L<<32|(10-0));
-    // 2_0   to 5_0/1_(L-b) TER+  to TGT1-/SEG1- [START]
+    ASSERT_EQ(a.w_lw, 1L<<32|0);
+    // 2_0   to 5_0/1_e     TER+  to TGT1-/SEG1- [START]
     ASSERT_EQ(g.arcs.at(0).v_lv, 2L<<32|0);
-    ASSERT_EQ(g.arcs.at(0).w_lw, 1L<<32|(10-0));
+    ASSERT_EQ(g.arcs.at(0).w_lw, 1L<<32|0);
 }
 
 TEST(targets_test, start_neg_part) {
@@ -116,9 +116,9 @@ TEST(targets_test, start_neg_part) {
     // 2_0   to 5_0      TER+  to TGT1- [START]
     ASSERT_EQ(g.arcs.at(0).v_lv, 2L<<32|0);
     ASSERT_EQ(g.arcs.at(0).w_lw, 5L<<32|0);
-    // 5_e-b to 1_L-b    TGT1- to SEG1- [START]
+    // 5_e-b to 1_e      TGT1- to SEG1- [START]
     ASSERT_EQ(g.arcs.at(1).v_lv, 5L<<32|(5-2));
-    ASSERT_EQ(g.arcs.at(1).w_lw, 1L<<32|(10-2));
+    ASSERT_EQ(g.arcs.at(1).w_lw, 1L<<32|5);
     ASSERT_EQ(g.segs.at(2).data, "TTA");
 }
 
@@ -128,10 +128,10 @@ TEST(targets_test, start_neg_point) {
     t.set("SEG1:7-", target::role_t::START);
     arc a = t.get_arc();
     ASSERT_EQ(a.v_lv, 2L<<32|0);
-    ASSERT_EQ(a.w_lw, 1L<<32|(10-7));
+    ASSERT_EQ(a.w_lw, 1L<<32|7);
     // 2_0   to 5_0      TER+  to TGT1- [START]
     ASSERT_EQ(g.arcs.at(0).v_lv, 2L<<32|0);
-    ASSERT_EQ(g.arcs.at(0).w_lw, 1L<<32|(10-7));
+    ASSERT_EQ(g.arcs.at(0).w_lw, 1L<<32|7);
 }
 
 
@@ -181,10 +181,10 @@ TEST(targets_test, end_neg_full) {
     target t(g);
     t.set("SEG1-", target::role_t::END);
     arc a = t.get_arc();
-    ASSERT_EQ(a.v_lv, 1L<<32|(10-10));
+    ASSERT_EQ(a.v_lv, 1L<<32|10);
     ASSERT_EQ(a.w_lw, 2L<<32|1);
-    // 1_L-e to 5_0/2_1   SEG1- to TGT1-/TER+ [END]
-    ASSERT_EQ(g.arcs.at(0).v_lv, 1L<<32|(10-10));
+    // 1_b to 5_0/2_1   SEG1- to TGT1-/TER+ [END]
+    ASSERT_EQ(g.arcs.at(0).v_lv, 1L<<32|10);
     ASSERT_EQ(g.arcs.at(0).w_lw, 2L<<32|1);
 }
 
@@ -195,8 +195,8 @@ TEST(targets_test, end_neg_part) {
     arc a = t.get_arc();
     ASSERT_EQ(a.v_lv, 5L<<32|(5-2));
     ASSERT_EQ(a.w_lw, 2L<<32|1);
-    // 1_L-e to 5_0      SEG1- to TGT1- [END]
-    ASSERT_EQ(g.arcs.at(0).v_lv, 1L<<32|(10-5));
+    // 1_b   to 5_0      SEG1- to TGT1- [END]
+    ASSERT_EQ(g.arcs.at(0).v_lv, 1L<<32|2);
     ASSERT_EQ(g.arcs.at(0).w_lw, 5L<<32|0);
     // 5_e-b to 2_1      TGT1- to TER+  [END]
     ASSERT_EQ(g.arcs.at(1).v_lv, 5L<<32|(5-2));
@@ -209,10 +209,10 @@ TEST(targets_test, end_neg_point) {
     target t(g);
     t.set("SEG1:7-", target::role_t::END);
     arc a = t.get_arc();
-    ASSERT_EQ(a.v_lv, 1L<<32|(10-7));
+    ASSERT_EQ(a.v_lv, 1L<<32|7);
     ASSERT_EQ(a.w_lw, 2L<<32|1);
-    // 1_L-e to 5_0      SEG1- to TGT1- [END]
-    ASSERT_EQ(g.arcs.at(0).v_lv, 1L<<32|(10-7));
+    // 1_b   to 5_0      SEG1- to TGT1- [END]
+    ASSERT_EQ(g.arcs.at(0).v_lv, 1L<<32|7);
     ASSERT_EQ(g.arcs.at(0).w_lw, 2L<<32|1);
 }
 
@@ -237,8 +237,8 @@ TEST(targets_test, reinsert_test) {
     a = t.get_arc();
     ASSERT_EQ(a.v_lv, 5L<<32|(6-2));
     ASSERT_EQ(a.w_lw, 2L<<32|1);
-    // 1_L-e to 5_0      SEG1- to TGT1- [END]
-    ASSERT_EQ(g.arcs.at(0).v_lv, 1L<<32|(10-6));
+    // 1_b   to 5_0      SEG1- to TGT1- [END]
+    ASSERT_EQ(g.arcs.at(0).v_lv, 1L<<32|2);
     ASSERT_EQ(g.arcs.at(0).w_lw, 5L<<32|0);
     // 5_e-b to 2_1      TGT1- to TER+  [END]
     ASSERT_EQ(g.arcs.at(1).v_lv, 5L<<32|(6-2));
@@ -326,9 +326,9 @@ TEST(targets_test, two_segs_two_tgts) {
     // 4_0   to 7_0      TER+  to TGT1- [START]
     ASSERT_EQ(g.arcs.at(1).v_lv, 4L<<32|0);
     ASSERT_EQ(g.arcs.at(1).w_lw, 7L<<32|0);
-    // 7_e-b to 1_L-b    TGT1- to SEG1- [START]
+    // 7_e-b to 1_e      TGT1- to SEG1- [START]
     ASSERT_EQ(g.arcs.at(2).v_lv, 7L<<32|(9-4));
-    ASSERT_EQ(g.arcs.at(2).w_lw, 1L<<32|(11-4));
+    ASSERT_EQ(g.arcs.at(2).w_lw, 1L<<32|9);
     // 8_e-b to 4_1      TGT2+ to TER+  [END]
     ASSERT_EQ(g.arcs.at(3).v_lv, 8L<<32|(8-3));
     ASSERT_EQ(g.arcs.at(3).w_lw, 4L<<32|1);
@@ -345,8 +345,8 @@ TEST(targets_test, two_segs_two_tgts) {
     ASSERT_EQ(a2.v_lv, 4L<<32|0);
     ASSERT_EQ(a2.w_lw, 8L<<32|0);
 
-    // 1_L-e to 7_0      SEG1- to TGT1- [END]
-    ASSERT_EQ(g.arcs.at(0).v_lv, 1L<<32|(11-9));
+    // 1_b   to 7_0      SEG1- to TGT1- [END]
+    ASSERT_EQ(g.arcs.at(0).v_lv, 1L<<32|4);
     ASSERT_EQ(g.arcs.at(0).w_lw, 7L<<32|0);
     // 4_0   to 8_0      TER+  to TGT2+ [START]
     ASSERT_EQ(g.arcs.at(1).v_lv, 4L<<32|0);

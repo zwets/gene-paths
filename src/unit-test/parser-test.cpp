@@ -74,7 +74,7 @@ TEST(parser_test, read_gfa_and_edge) {
     std::istringstream s_gfa("H\tVN:Z:2.0\n"
         "S\ts1\t4\tACGT\n"
         "S\ts2\t9\tTAGCATACG\n"
-        "E\t*\ts1+\ts2-\t1\t4$\t5\t9\t*\n");
+        "E\t*\ts1+\ts2-\t1\t4$\t0\t4\t*\n");
 
     graph gfa = parse(s_gfa);
     ASSERT_EQ(gfa.segs.size(), 2);

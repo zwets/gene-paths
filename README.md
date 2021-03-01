@@ -5,41 +5,50 @@ _Determine gene order and orientation in assemblies._
 
 ## Requirements
 
-* C++ compiler supporting the c++14 standard
+* C++ compiler supporting the C++14 standard
 * (not yet) BLAST+ suite (`blastn`, `makeblastdb`)
 
 
 ## Installation
 
 * `cd src && make && make test`
-* `./src/gene-paths --help`
+* `src/gene-paths --help`
 
 
 ## Usage
 
-> NOTE: gene-paths is still being built and a bit rough around the edges.
+`gene-paths` searches an assembly graph (in GFA format) for the shortest
+path between locations on the graph.
 
 * See `gene-paths --help`
 
+
+#### Examples
+
 * `gene-paths assembly.gfa ctg1+ ctg2+`
 
-  Searches `assembly.gfa` for the shortest path from the left side of
-  the + strand of `ctg1` to the 'right' end of the + strand of `ctg2`.
+  Searches `assembly.gfa` for the shortest path starting with `ctg1` and
+  ending with `ctg2`.
 
-* `gene-paths assembly.gfa ctg1:100:200- ctg2:300+`
+* `gene-paths assembly.gfa ctg1:$- ctg2:0+`
 
-  Returns the shortest path from genomic region 100-200 on the minus strand
-  of `ctg1`, to the base at pos 300 on `ctg2-`.
+  Returns the shortest path from the end of the - strand of `ctg1` to the
+  start of `ctg2`. 
 
-* `gene-paths assembly.gfa ctg:1+ ctg:0+`
+* `gene-paths assembly.gfa ctg1:100:$- ctg2:300+`
 
-  Find the shortest path that starts at pos 1 on ctg, and ends one pos
-  to its left, i.e. find the shortest _cyclical_ path from & to ctg.
+  Returns the shortest path from genomic region 100-$ on the minus strand
+  of `ctg1`, to the base at pos 300 on the plus strand of `ctg2+`.
+
+* `gene-paths assembly.gfa ctg+ ctg:0+`
+
+  Find the shortest path starting with `ctg+` and ending at its left hand
+  side, i.e. the shortest _cyclical_ path from and to `ctg`.
 
 
 ## Background
 
-#### Motivation
+### Motivation
 
 These tools  were developed to help answer the question "where are genes
 relative to each other?"  For instance, when typing _Staphyloccos aureus_
@@ -86,6 +95,8 @@ assembled contigs rather than assembly graphs.  This was the motivation for
 writing `gene-paths`: to have a tool to rapidly query an assembly graph for
 paths between arbitrary regions on its contigs.
 
+### Caveats
+
 Clearly, as the number of edges between the features of interest increases,
 the number of possible paths connecting them rapidly explodes.  It is already
 impossible to predict from this section of the graph:
@@ -99,8 +110,9 @@ which of the sequences `1-2-4-5`, `1-2-4-6`, `1-3-4-5`, `1-3-4-6` are present
 with certainty on the genome (though we know that at least two must be, and
 that each contains contigs 1 and 4).
 
-This is the motivation for writing `gene-paths` (and yes, the work is still
-in progress).
+An important point to remember is that _shortest path_ does not mean it is
+the biological reality!
+
 
 ### FAQ
 

@@ -53,16 +53,57 @@ static graph make_graph()
 // 5_e-b to 2_1       TGT1- to TER+  [END]
 
 
+TEST(targets_test, dollar_ref1) {
+    graph g = make_graph();
+    target t(g);
+    t.set("SEG1:$+", target::role_t::START);
+    arc a = t.get_arc();
+    ASSERT_EQ(a.v_lv, 2L<<32|0);
+    ASSERT_EQ(a.w_lw, 0L<<32|10);
+    // 2_0   to 0_0      TER+  to SEG1+ [START]
+    ASSERT_EQ(g.arcs.at(0).v_lv, 2L<<32|0);
+    ASSERT_EQ(g.arcs.at(0).w_lw, 0L<<32|10);
+}
+
+TEST(targets_test, dollar_ref2) {
+    graph g = make_graph();
+    target t(g);
+    t.set("SEG1:$:$+", target::role_t::START);
+    arc a = t.get_arc();
+    ASSERT_EQ(a.v_lv, 2L<<32|0);
+    ASSERT_EQ(a.w_lw, 0L<<32|10);
+    // 2_0   to 0_0      TER+  to SEG1+ [START]
+    ASSERT_EQ(g.arcs.at(0).v_lv, 2L<<32|0);
+    ASSERT_EQ(g.arcs.at(0).w_lw, 0L<<32|10);
+}
+
+TEST(targets_test, dollar_ref3) {
+    graph g = make_graph();
+    target t(g);
+    t.set("SEG1:0:$+", target::role_t::START);
+    arc a = t.get_arc();
+    ASSERT_EQ(a.v_lv, 2L<<32|0);
+    ASSERT_EQ(a.w_lw, 4L<<32|0);
+    // 2_0   to 4_0      TER+  to TGT1+ [START]
+    ASSERT_EQ(g.arcs.at(0).v_lv, 2L<<32|0);
+    ASSERT_EQ(g.arcs.at(0).w_lw, 4L<<32|0);
+}
+
+
 TEST(targets_test, start_pos_full) {
     graph g = make_graph();
     target t(g);
     t.set("SEG1+", target::role_t::START);
     arc a = t.get_arc();
     ASSERT_EQ(a.v_lv, 2L<<32|0);
-    ASSERT_EQ(a.w_lw, 0L<<32|0);
-    // 2_0   to 0_0      TER+  to SEG1+ [START]
+    ASSERT_EQ(a.w_lw, 4L<<32|0);
+    // 2_0   to 4_0      TER+  to TGT1+ [START]
     ASSERT_EQ(g.arcs.at(0).v_lv, 2L<<32|0);
-    ASSERT_EQ(g.arcs.at(0).w_lw, 0L<<32|0);
+    ASSERT_EQ(g.arcs.at(0).w_lw, 4L<<32|0);
+    // 4_e-b to 0_e      TGT1+ to SEG1+ [START]
+    ASSERT_EQ(g.arcs.at(1).v_lv, 4L<<32|10);
+    ASSERT_EQ(g.arcs.at(1).w_lw, 0L<<32|10);
+    ASSERT_EQ(g.segs.at(2).data, "CATTAGTACT");
 }
 
 TEST(targets_test, start_pos_part) {
@@ -100,10 +141,14 @@ TEST(targets_test, start_neg_full) {
     t.set("SEG1-", target::role_t::START);
     arc a = t.get_arc();
     ASSERT_EQ(a.v_lv, 2L<<32|0);
-    ASSERT_EQ(a.w_lw, 1L<<32|0);
-    // 2_0   to 5_0/1_e     TER+  to TGT1-/SEG1- [START]
+    ASSERT_EQ(a.w_lw, 5L<<32|0);
+    // 2_0   to 5_0/1_e     TER+  to TGT1- [START]
     ASSERT_EQ(g.arcs.at(0).v_lv, 2L<<32|0);
-    ASSERT_EQ(g.arcs.at(0).w_lw, 1L<<32|0);
+    ASSERT_EQ(g.arcs.at(0).w_lw, 5L<<32|0);
+    // 5_e-b to 1_e      TGT1- to SEG1- [START]
+    ASSERT_EQ(g.arcs.at(1).v_lv, 5L<<32|10);
+    ASSERT_EQ(g.arcs.at(1).w_lw, 1L<<32|10);
+    ASSERT_EQ(g.segs.at(2).data, "CATTAGTACT");
 }
 
 TEST(targets_test, start_neg_part) {
@@ -140,11 +185,15 @@ TEST(targets_test, end_pos_full) {
     target t(g);
     t.set("SEG1+", target::role_t::END);
     arc a = t.get_arc();
-    ASSERT_EQ(a.v_lv, 0L<<32|10);
+    ASSERT_EQ(a.v_lv, 4L<<32|10);
     ASSERT_EQ(a.w_lw, 2L<<32|1);
-    // 0_b   to 4_0/2_1   SEG1+ to TGT1+/TER+ [END]
-    ASSERT_EQ(g.arcs.at(0).v_lv, 0L<<32|10);
-    ASSERT_EQ(g.arcs.at(0).w_lw, 2L<<32|1);
+    // 0_b   to 4_0/2_1   SEG1+ to TGT1+ [END]
+    ASSERT_EQ(g.arcs.at(0).v_lv, 0L<<32|0);
+    ASSERT_EQ(g.arcs.at(0).w_lw, 4L<<32|0);
+    // 4_e-b to 2_1      TGT1+ to TER+  [END]
+    ASSERT_EQ(g.arcs.at(1).v_lv, 4L<<32|10);
+    ASSERT_EQ(g.arcs.at(1).w_lw, 2L<<32|1);
+    ASSERT_EQ(g.segs.at(2).data, "CATTAGTACT");
 }
 
 TEST(targets_test, end_pos_part) {
@@ -181,11 +230,14 @@ TEST(targets_test, end_neg_full) {
     target t(g);
     t.set("SEG1-", target::role_t::END);
     arc a = t.get_arc();
-    ASSERT_EQ(a.v_lv, 1L<<32|10);
+    ASSERT_EQ(a.v_lv, 5L<<32|10);
     ASSERT_EQ(a.w_lw, 2L<<32|1);
     // 1_b to 5_0/2_1   SEG1- to TGT1-/TER+ [END]
-    ASSERT_EQ(g.arcs.at(0).v_lv, 1L<<32|10);
-    ASSERT_EQ(g.arcs.at(0).w_lw, 2L<<32|1);
+    ASSERT_EQ(g.arcs.at(0).v_lv, 1L<<32|0);
+    ASSERT_EQ(g.arcs.at(0).w_lw, 5L<<32|0);
+    // 5_e-b to 2_1      TGT1- to TER+  [END]
+    ASSERT_EQ(g.arcs.at(1).v_lv, 5L<<32|10);
+    ASSERT_EQ(g.arcs.at(1).w_lw, 2L<<32|1);
 }
 
 TEST(targets_test, end_neg_part) {

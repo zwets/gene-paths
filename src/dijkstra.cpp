@@ -148,12 +148,12 @@ dijkstra::find_paths(const arc* start, const arc* end)
         // retrieve the path index, path arc and len to arrive at vn
         std::size_t cur_pix = vn.p_ref;
         std::size_t cur_len = vn.len;
-        const path_arc& cur_pa = ps.at(cur_pix);
+        const arc*  cur_arc = ps.at(cur_pix).p_arc;
 #ifndef NDEBUG
         verbose_emit("start visit of p_ref %lu at %lu", cur_pix, cur_len);
 #endif
         // the dest (w_lw) of that arc is the new start (v_lv)
-        std::uint64_t v_lv = cur_pa.p_arc->w_lw;
+        std::uint64_t v_lv = cur_arc->w_lw;
 
         // get all arcs leaving from vn's vertex at lv or later
         const auto iters = g.arcs_from_v_lv(v_lv);
@@ -162,7 +162,7 @@ dijkstra::find_paths(const arc* start, const arc* end)
         for (auto a_it = iters.first; a_it != iters.second; ++a_it) {
 
             // ignore any arc that would take us right back
-            if (a_it->w_lw == cur_pa.p_arc->v_lv)
+            if (a_it->w_lw == cur_arc->v_lv)
                 continue;
 
             // Note how we iterate over outbound arcs, where added length
@@ -225,7 +225,7 @@ dijkstra::find_paths(const arc* start, const arc* end)
         vn.mark_visited();
 
         // check if we are done, i.e. the vn took the end arc
-        if (end && cur_pa.p_arc == end) {
+        if (end && cur_arc == end) {
             found_pix = vn.p_ix();
             found_len = vn.len;
             verbose_emit("shortest path found with length %lu (index %lu)", found_len, found_pix);

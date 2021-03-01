@@ -5,21 +5,36 @@ _Determine gene order and orientation in assemblies._
 
 ## Requirements
 
-* C++ compiler
+* C++ compiler supporting the c++14 standard
 * (not yet) BLAST+ suite (`blastn`, `makeblastdb`)
 
 
 ## Installation
 
 * `cd src && make && make test`
+* `./src/gene-paths --help`
 
 
 ## Usage
 
-> NOTE: gene-paths is still being built and rough around the edges.
+> NOTE: gene-paths is still being built and a bit rough around the edges.
 
-* `gene-paths --help`
+* See `gene-paths --help`
+
 * `gene-paths assembly.gfa ctg1+ ctg2+`
+
+  Searches `assembly.gfa` for the shortest path from the left side of
+  the + strand of `ctg1` to the 'right' end of the + strand of `ctg2`.
+
+* `gene-paths assembly.gfa ctg1:100:200- ctg2:300+`
+
+  Returns the shortest path from genomic region 100-200 on the minus strand
+  of `ctg1`, to the base at pos 300 on `ctg2-`.
+
+* `gene-paths assembly.gfa ctg:1+ ctg:0+`
+
+  Find the shortest path that starts at pos 1 on ctg, and ends one pos
+  to its left, i.e. find the shortest _cyclical_ path from & to ctg.
 
 
 ## Background
@@ -43,8 +58,8 @@ to the other, and certainly not their distance.  Or so you'd think.
 You may be surprised to learn that quite the opposite is true.
 
 Contigs in an assembly do not generally end because of a lack of data, i.e.
-because what comes next is not covered.  On the contrary, their ends are
-often covered by reads, but these imply multiple possible continuations.
+because what comes next was not covered by reads.  On the contrary, their
+ends are often covered, but the reads imply multiple continuations.
 
 In the assembly graph this could look like this:
 
@@ -59,34 +74,35 @@ followed by the different sequence in contig 3.
 
 However, if we know that our genes of interest are on contigs 1 and 2, then,
 with the knowledge of the assembly graph, we can actually find their genomic
-distance, relative orientation, and order.  In fact, we know the exact
-nucleotide sequence connecting the two genes!
+distance, relative orientation, and order.  In fact, we can know the exact
+nucleotide sequence connecting the two genes.
 
 Even if the features were located on contigs 1 and 4, we could still put a
-bound on their genomic distance, and (with a bit of luck) know their relative
-orientation and order with certainty.
+bound on their genomic distance, and (with a bit of luck) find out their
+relative orientation and order.
 
 It is remarkable how much information we discard by routinely working with
-assembled contigs rather than assembly graphs.
+assembled contigs rather than assembly graphs.  This was the motivation for
+writing `gene-paths`: to have a tool to rapidly query an assembly graph for
+paths between arbitrary regions on its contigs.
 
 Clearly, as the number of edges between the features of interest increases,
 the number of possible paths connecting them rapidly explodes.  It is already
-impossible to predict from this continuation of the graph:
+impossible to predict from this section of the graph:
 
-     __ contig 2 ___                    ___ contig 5 __
-                    \                  /
-                     +--- contig 4 ---+
-     __ contig 3 ___/                  \___ contig 6 __
+                   __ contig 2 __                  __ contig 5 __
+                  /              \                /              
+    -- contig 1--+                +-- contig 4 --+              
+                  \__ contig 3 __/                \__ contig 6 __
 
-which of the sequences `2-4-5`, `2-4-6`, `3-4-5`, `3-4-6` are present with
-certainty on the genome (though we know that at least two must be).
-
-Nevertheless, for the analysis of localised features such as arrangement of
-gene cassettes, insertion sites, promoter regions, etc. the assembly graph
-provides indispensable information.
+which of the sequences `1-2-4-5`, `1-2-4-6`, `1-3-4-5`, `1-3-4-6` are present
+with certainty on the genome (though we know that at least two must be, and
+that each contains contigs 1 and 4).
 
 This is the motivation for writing `gene-paths` (and yes, the work is still
 in progress).
+
+### FAQ
 
 #### How are assembly graphs stored?
 
@@ -133,8 +149,8 @@ Yes, and it's very insightful.  Get the fabulous
   basic data structures, VG is the tool of the trade for working with [genome
   variation graphs]().
 
-
 ---
+
 #### Licence
 
 gene-paths - determine gene order and orientation in assemblies  

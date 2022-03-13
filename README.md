@@ -12,7 +12,6 @@ _Determine gene order and orientation in assemblies._
 ## Installation
 
 * `cd src && make && make test`
-* `src/gene-paths --help`
 
 
 ## Usage
@@ -20,8 +19,7 @@ _Determine gene order and orientation in assemblies._
 `gene-paths` searches an assembly graph (in GFA format) for the shortest
 path between locations on the graph.
 
-* See `gene-paths --help`
-
+* `src/gene-paths --help`
 
 #### Examples
 
@@ -66,20 +64,21 @@ to the other, and certainly not their distance.  Or so you'd think.
 
 You may be surprised to learn that quite the opposite is true.
 
-Contigs in an assembly do not generally end because of a lack of data, i.e.
-because what comes next was not covered by reads.  On the contrary, their
-ends are often covered, but the reads imply multiple continuations.
+The lengths of contigs in an assembly are not generally limited by a lack
+of data, i.e. no reads to cover their continuation.  On the contrary, usually
+there are reads, but these imply multiple _different_ continuations, meaning
+the contig cannot be extended further unambiguously.
 
 In the assembly graph this could look like this:
 
-                       ___ contig 2 ___                
-                      /                \                
-     --- contig 1 ---+                  +--- contig 4 ---
-                      \___ contig 3 ___/
+     _                    ___ contig 2 ___                
+      \                  /                \
+       +--- contig 1 ---+                  +--- contig 4 ---
+     _/                  \___ contig 3 ___/
 
-Here contig 1 cannot be extended further because in one place on the genome
+Here contig 1 cannot be extended further, because in some place on the genome
 it is followed by the sequence captured in contig 2, whereas elsewhere it is
-followed by the different sequence in contig 3.
+followed by the sequence of contig 3.
 
 However, if we know that our genes of interest are on contigs 1 and 2, then,
 with the knowledge of the assembly graph, we can actually find their genomic
@@ -110,8 +109,8 @@ which of the sequences `1-2-4-5`, `1-2-4-6`, `1-3-4-5`, `1-3-4-6` are present
 with certainty on the genome (though we know that at least two must be, and
 that each contains contigs 1 and 4).
 
-An important point to remember is that _shortest path_ does not mean it is
-the biological reality!
+An important point to remember as well is that _shortest path_ does not imply
+that it represents biological reality.
 
 
 ### FAQ

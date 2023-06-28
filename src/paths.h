@@ -57,7 +57,7 @@ namespace gfa {
 
 struct path_arc {
     std::size_t pre_ix;     // index of preceding path in paths or 0
-    const arc* p_arc;       // pointer to the arc its that path
+    const arc* p_arc;       // pointer to the arc extending that path
 
         // convenience selectors of the src (v) and dst (w) fields
 
@@ -79,7 +79,7 @@ struct path_arc {
  * p_arc, producing a new path.
  *
  * The "null" path at path_ix 0 signifies the start of a path.  Therefore
- * to create a new path starting with some arc* pa use extend(0, pa).
+ * to create a new path starting with some arc* pa using extend(0, pa).
  */
 struct paths {
 

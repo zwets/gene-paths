@@ -24,48 +24,53 @@
 namespace gfa {
 
 
-// target - helper structure to capture start and end targets on a graph
-//
-// In order to find a path between the start and end regions, we add them
-// as segments to the graph, but with arcs such that they are traversed
-// only at the start and end of the path:
-//
-//      FROM seg     i------o           TO seg     i------x
-//       arc s_o            v          arc e_i     ^
-//        contig  ---b======e--->       contig  ---b======e--->
-//
-// The s_o (start-out) arc goes from the end of the FROM segment to the
-// end of the target region on the contig.  Thus if we start the path at
-// i, we first cover the target and then leave it (for good) over s_o.
-//
-// The e_i (end-in) arc is trickier.  We need to get to x (rather than i)
-// so need an arc at x.  The solution is this:
-//
-//       "S" seg     S                 "E" seg            E
-//       arc s_i     v                 arc e_o            ^
-//      FROM seg     i------o           TO seg     i------x
-//       arc s_o            v          arc e_i     ^
-//        contig  ---b======e--->       contig  ---b======e--->
-//
-// We add two dummy zero-length segments that are the "terminals" for the
-// the path search.  The path starts with arc s_i and ends with e_o.
-//
-// In fact we can optimise and do with a single "terminal" of length 1,
-// with s_i leaving it at 0, and e_o arriving at 1 (to prevent traversal)
-// We refer to this terminal segment as "ter" below.
-//
-// We can optimise further by noting that when the target has 0 length,
-// then we just need the ter can be omitted altogether, and we just need
-// the ter:
-//
-//       ter seg     TER               ter seg          TER
-//       arc s_i     v                 arc e_o            ^
-//        contig  ---i---------->       contig  ----------o--->
-//
-// When the graph has only links (non-overlapping tail-to-head edges),
-// as is the case with Unicycler, then any path to the end (or from the
-// start) of a contig must traverse the whole contig anyway.
-//
+/* target - helper structure to capture start and end targets on a graph
+ *
+ * Recall that we store a path as merely a sequence of arcs, each a jump
+ * from one contig onto another.  The actual path is implicit: it is the
+ * sequence of traversed bits of contig between the in and out arcs.
+ *
+ * Our purpose is to find the minimal path between a start and end region.
+ *
+ * In order to find a path between the start and end regions, we add a
+ * segment for each to the graph, but with arcs such that they can only
+ * be traversed at the start and end of the path:
+ *
+ *      FROM seg     i------o           TO seg     i------x
+ *       arc s_o            v          arc e_i     ^
+ *        contig  ---b======e--->       contig  ---b======e--->
+ *
+ * The s_o (start-out) arc goes from the end of the FROM segment to the
+ * end of the target region on the contig.  Thus if we start the path at
+ * i, we first cover the target and then leave it (for good) over s_o.
+ *
+ * The e_i (end-in) arc is trickier.  We need to get to x (rather than i)
+ * so need an arc at x (see "recall" above).  The solution is this:
+ *
+ *       "S" seg     S                 "E" seg            E
+ *       arc s_i     v                 arc e_o            ^
+ *      FROM seg     i------o           TO seg     i------x
+ *       arc s_o            v          arc e_i     ^
+ *        contig  ---b======e--->       contig  ---b======e--->
+ *
+ * We add two dummy zero-length segments that are the "terminals" for the
+ * the path search.  The path starts with arc s_i and ends with e_o.
+ *
+ * In fact we can optimise and do with a single "terminal" of length 1,
+ * with s_i leaving it at 0, and e_o arriving at 1 (to prevent traversal)
+ * We refer to this terminal segment as "ter" below.
+ *
+ * We can optimise further by noting that when the target has 0 length,
+ * then the segment can be omitted altogether, and we just need ter:
+ *
+ *       ter seg     TER               ter seg          TER
+ *       arc s_i     v                 arc e_o            ^
+ *        contig  ---i---------->       contig  ----------o--->
+ *
+ * When the graph has only links (non-overlapping tail-to-head edges), as
+ * is the case for Unicycler, then any path to the end (or from the start)
+ * will always traverse the whole contig, as its arcs are only at 0 and $.
+ */
 struct target
 {
     enum role_t { START, END };

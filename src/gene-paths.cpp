@@ -58,17 +58,17 @@ static const std::string USAGE(
 "  so the reference is the whole contig.\n"
 "\n"
 "  STRAND and POSITION are interpreted as in GFA2:\n"
-"  - we define the data in the GFA or FASTA file to be the + strand,\n"
+"  - We define the data in the GFA or FASTA file to be the + strand,\n"
 "    and its reverse reverse complement the - strand;\n"
-"  - positions are in between bases, with 0 to the left of the sequence,\n"
+"  - Positions are in between bases, with 0 to the left of the sequence,\n"
 "    and $ to the right, $ being the sequence length;\n"
-"  - positions are interpreted before orienting the segment, so pos 0 is\n"
+"  - Positions are interpreted before orienting the segment, so pos 0 is\n"
 "    at the upstream end of a segment, regardless of sign.\n"
 "\n"
-"  TIP: 'gene-paths 1+ 1:0+' finds the shortest CYCLICAL path starting at\n"
-"  (the + strand of) contig 1: it starts out going across all of 1+, then\n"
-"  searches for a path ending at its upstream end.  Note how '1:$+ 1:0+'\n"
-"  is similar, but does not include contig 1 itself.\n"
+"  TIP: 'gene-paths 1+ 1:0+' finds the shortest CYCLICAL path that contains\n"
+"  contig 1.  It starts out going across all of 1, then searches for a path\n"
+"  to where it started.  Note how 'gene-paths 1:$+ 1:0+' is similar, but\n"
+"  excludes contig 1 itself.\n"
 "\n"
 "  Note: if you use '$' in FROM or TO you will likely need to quote it,\n"
 "  to prevent interpretation by your command shell.\n"
@@ -140,7 +140,7 @@ int main (int /*argc*/, char *argv[])
     std::string from_ref = *argv++;
 
     std::string to_ref;
-    if (!furthest && *argv) 
+    if (!furthest && *argv)
         to_ref = *argv++;
 
     if (*argv) usage_exit();
@@ -157,7 +157,7 @@ int main (int /*argc*/, char *argv[])
         if (!fna_file)
             raise_error("failed to open file: %s", fna_fname.c_str());
         verbose_emit("reading FASTA from file: %s", fna_fname.c_str());
-      
+
         g = gfa::parse(gfa_file, fna_file, 3, 4);
     }
     else {
@@ -194,7 +194,7 @@ int main (int /*argc*/, char *argv[])
         verbose_emit("searching shortest path: %s -> %s", from_ref.c_str(), to_ref.c_str());
 
         to.set(to_ref, gfa::target::END);
-        
+
         success = dijkstra.shortest_path(from.p_arc(), to.p_arc());
         write_path(dijkstra);
 

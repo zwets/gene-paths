@@ -101,12 +101,12 @@ namespace gfa {
  *
  * Also awkward are w:ow → v:$ and v':ov → w':$.  They take arrivals
  * over the overlap, but then to the end of the other vertex (without
- * including any of its bases), then hop onto any arc.
+ * including any of its bases).
  *
  * -- Special case 3 = 1+2: abutment (ov=ow=0 && (rv=lw=0 || lv=rw=0))
  *
  * Combining special cases 1 & 2, we have non-overlapping links, with
- * arcs v:$ → w:0 and its complement w':$ → v':$, and their inverses:
+ * arcs v:$ → w:0 and its complement w':$ → v':0, and their inverses:
  *
  *      |<--- lv --->|
  *   v: --------------              (or v and w reversed)
